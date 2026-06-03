@@ -6,10 +6,11 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { analyzeEnding, calculateEnding, createInitialState, explainEnding, loadStateFromStorage, localizedEndingTitle } from "@/lib/game-rules";
 import { endingSceneForEnding } from "@/lib/audio";
-import { commonText, endingText, fallbackFinalReportText, languageName, metricLabel, type LanguageCode } from "@/lib/i18n";
+import { choiceText, commonText, endingText, fallbackFinalReportText, languageName, metricLabel, type LanguageCode } from "@/lib/i18n";
 import { endingFacetsForState } from "@/lib/narrative";
 import { useLanguage } from "@/hooks/use-language";
 import { useGameAudio } from "@/app/audio-provider";
+import AuthControl from "@/app/auth-control";
 import {
   achievementDefinition,
   clearCurrentRunId,
@@ -138,6 +139,7 @@ export default function EndingClient() {
           <Link href="/credits">{commonText("credits", language)}</Link>
         </nav>
         <div className="topbar-actions">
+          <AuthControl language={language} compact />
           <button className="language-toggle" onClick={toggleLanguage} aria-label={commonText("switchLanguage", language)}>
             <span className={language === "en" ? "active" : ""}>{languageName("en")}</span>
             <span className={language === "zh" ? "active" : ""}>{languageName("zh")}</span>
@@ -162,10 +164,10 @@ export default function EndingClient() {
               <i />
               <i />
             </div>
-            <div className="doc-label">Narrative Record / Closed Case</div>
+            <div className="doc-label">{language === "zh" ? "本局记录 / 已封存" : "Narrative Record / Closed Case"}</div>
             <h3>{copy.title}</h3>
             <div className="archive-meta">
-              <span>Classification: {copy.title}</span>
+              <span>{language === "zh" ? `结局：${copy.title}` : `Classification: ${copy.title}`}</span>
               <span>{language === "zh" ? "编译：宫廷叙事引擎" : "Compiled by: Palace Narrative Engine"}</span>
               <span>{language === "zh" ? "编辑轨迹：宫廷信息流编辑" : "Editor Trace: Royal Feed Editor"}</span>
             </div>
@@ -181,7 +183,7 @@ export default function EndingClient() {
                   <b>{language === "zh" ? "本局新成就" : "New records unlocked"}</b>
                   <div>
                     {newUnlocks.map((unlock) => (
-                      <span key={`${unlock.id}-${unlock.unlockedAt}`}>{achievementDefinition(unlock.id).title}</span>
+                      <span key={`${unlock.id}-${unlock.unlockedAt}`}>{language === "zh" ? achievementDefinition(unlock.id).titleZh : achievementDefinition(unlock.id).title}</span>
                     ))}
                     {recordedRun?.engineFragmentsUnlocked?.map((id) => (
                       <span key={id}>{language === "zh" ? engineFragmentDefinition(id).titleZh : engineFragmentDefinition(id).title}</span>
@@ -231,7 +233,7 @@ export default function EndingClient() {
                 {state.history.map((entry, index) => (
                   <div className="history-item" key={entry.id}>
                     <b>{String(index + 1).padStart(2, "0")} / {entry.actionTitle}</b>
-                    <span>{entry.choice} · {entry.publishedText}</span>
+                    <span>{choiceText(entry.choice, language)} · {entry.publishedText}</span>
                   </div>
                 ))}
                 {state.history.length === 0 && (
@@ -249,7 +251,7 @@ export default function EndingClient() {
                   <div className="path-node" data-tone={actionPathTone(entry.choice)} key={entry.id}>
                     <b>{String(index + 1).padStart(2, "0")}</b>
                     <span>{entry.actionTitle}</span>
-                    <small>{entry.choice}</small>
+                    <small>{choiceText(entry.choice, language)}</small>
                   </div>
                 ))}
                 {state.history.length === 0 && (
@@ -306,8 +308,8 @@ export default function EndingClient() {
                   const definition = achievementDefinition(unlock.id);
                   return (
                     <div className="history-item achievement-history-item" key={`${unlock.id}-${unlock.unlockedAt}`}>
-                      <b>{definition.title}</b>
-                      <span>{definition.description}</span>
+                      <b>{language === "zh" ? definition.titleZh : definition.title}</b>
+                      <span>{language === "zh" ? definition.descriptionZh : definition.description}</span>
                     </div>
                   );
                 })}
@@ -325,7 +327,7 @@ export default function EndingClient() {
                 {profile.runs.slice(0, 5).map((run, index) => (
                   <div className="history-item" key={run.id}>
                     <b>{String(index + 1).padStart(2, "0")} / {localizedEndingTitle(run.endingId, language)}</b>
-                    <span>{run.actionPath.length} actions · {run.dialogueCount} transmissions · {new Date(run.completedAt).toLocaleDateString()}</span>
+                    <span>{language === "zh" ? `${run.actionPath.length} 次操作 · ${run.dialogueCount} 次交流` : `${run.actionPath.length} actions · ${run.dialogueCount} transmissions`} · {new Date(run.completedAt).toLocaleDateString()}</span>
                   </div>
                 ))}
               </div>

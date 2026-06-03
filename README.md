@@ -9,6 +9,7 @@ The app is bilingual (`en` / `zh`) and can run with or without a live OpenAI-com
 - Next.js 16 App Router
 - React 19
 - TypeScript
+- SQLite account and cloud-save storage
 - GSAP and Motion for interface animation
 - Zod for request validation
 - Vitest for unit/API tests
@@ -58,6 +59,9 @@ OPENAI_BASE_URL=https://api.openai.com/v1
 OPENAI_MODEL=gpt-5.2
 OPENAI_MAX_OUTPUT_TOKENS=1000
 OPENAI_PROVIDER_MODE=chat
+DATA_DIR=.data
+AUTH_COOKIE_SECURE=false
+AUTH_SESSION_DAYS=30
 ```
 
 `OPENAI_PROVIDER_MODE` supports:
@@ -66,6 +70,28 @@ OPENAI_PROVIDER_MODE=chat
 - `responses` - sends requests to `/v1/responses`
 
 Do not commit `.env.local` or real API keys.
+
+`DATA_DIR` stores the SQLite database at `DATA_DIR/the-emperors-feed.sqlite`. Use `AUTH_COOKIE_SECURE=false` for plain HTTP local/shared testing, and set it to `true` when serving through HTTPS.
+
+## Accounts and Cloud Saves
+
+The game supports guest play and optional email/password accounts. Guests keep using browser `localStorage`; logged-in players sync profile, current run, endings, achievements, and engine fragments to SQLite through httpOnly session cookies. Passwords are hashed with `scrypt`; session tokens are stored only as server-side hashes.
+
+## Docker
+
+The included Docker setup runs the Next.js app and stores SQLite data in a persistent `/data` volume:
+
+```bash
+docker compose up --build
+```
+
+Open:
+
+```text
+http://100.100.10.10:6677
+```
+
+The compose file maps host port `6677` to container port `3000` and mounts `emperors-feed-data:/data`. To back up account data, export the volume or copy `/data/the-emperors-feed.sqlite` from the running container.
 
 ## Scripts
 
@@ -88,6 +114,7 @@ The Playwright config starts a keyless dev server on `localhost:3027`, so E2E te
 ## Main Routes
 
 - `/` - title screen and briefing
+- `/login` - login, registration, and save-conflict resolution
 - `/dashboard` - core six-action editorial game
 - `/ending` - final outcome and report
 - `/archive` - post-run archive view

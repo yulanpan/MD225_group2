@@ -30,8 +30,8 @@ function fallbackGuidance(
     return language === "zh"
       ? {
           mode,
-          message: "提示：先确认每条行动的风险，再让证据、公众反馈和声誉保持可控平衡。",
-          objective: "检查轨迹，选择能推进目标且不会立即触发访问限制的行动。",
+          message: "提示：先确认每条操作的风险，再让证据、公众反馈和编辑声誉保持可控平衡。",
+          objective: "预览后果，选择能推进目标且不会立即触发访问限制的操作。",
           risk: highRisk ? "high" : "medium"
         }
       : {
@@ -59,7 +59,7 @@ function fallbackGuidance(
   return language === "zh"
     ? {
         mode,
-        message: "宫廷叙事引擎已上线。我会协助你降低风险、维持声誉，并避免单一证据扰乱游行。",
+        message: "宫廷叙事引擎已上线。我会协助你降低风险、维持编辑声誉，并避免单一证据扰乱游行。",
         objective: "优先选择稳定叙事与安全措辞。",
         risk: highRisk ? "high" : "low"
       }

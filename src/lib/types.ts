@@ -96,7 +96,9 @@ export type NarrativeBeat = {
   phase: NarrativePhase;
   thread: NarrativeThreadId;
   title: string;
+  titleZh: string;
   text: string;
+  textZh: string;
   priority: number;
 };
 
@@ -280,7 +282,9 @@ export type AchievementId =
 export type AchievementDefinition = {
   id: AchievementId;
   title: string;
+  titleZh: string;
   description: string;
+  descriptionZh: string;
   rarity: "standard" | "rare" | "critical";
 };
 

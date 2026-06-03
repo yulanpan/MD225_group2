@@ -57,13 +57,17 @@ import {
 } from "@/lib/visual-state";
 import {
   actionText,
+  choiceText,
   commonText,
+  engineStatusText,
   fallbackCommentsText,
   fallbackReactionText,
   fallbackRewriteText,
   languageName,
   metricLabel,
   phaseCopy,
+  riskBandText,
+  stanceText,
   zoneText,
   type LanguageCode
 } from "@/lib/i18n";
@@ -79,6 +83,7 @@ import {
 } from "@/lib/onboarding-copy";
 import { useLanguage } from "@/hooks/use-language";
 import { useGameAudio } from "@/app/audio-provider";
+import AuthControl from "@/app/auth-control";
 import type {
   ActionChoice,
   ActionPreview,
@@ -275,16 +280,16 @@ const metricRows = [
 function commandCopy(kind: VisualActionKind, language: LanguageCode) {
   const copy = {
     risk: {
-      title: language === "zh" ? "真相破口模拟" : "Truth Breach Simulation",
+      title: language === "zh" ? "证据公开预览" : "Truth Breach Simulation",
       badge: "87",
-      effect: language === "zh" ? "公众怀疑急剧上升。声誉可能短暂维持，但同步识别更可能发生。" : "Public Doubt rises sharply. Reputation may hold for one cycle, but synchronized recognition becomes more likely.",
+      effect: language === "zh" ? "公众怀疑会明显上升。编辑声誉也许暂时还能维持，但更多人会开始互相确认。" : "Public Doubt rises sharply. Reputation may hold for one cycle, but synchronized recognition becomes more likely.",
       response: language === "zh" ? "引擎建议延迟、匿名化与程序性语言。压制成本将被记录。" : "Engine recommends delay, anonymization, and procedural language. Suppression cost will be logged."
     },
     ai: {
       title: language === "zh" ? "AI 改写预览" : "AI Rewrite Preview",
       badge: "PNE",
-      effect: language === "zh" ? "真相部分可见，但被转换成模糊性。人群收到的是不确定，而不是证据。" : "Truth remains partially visible but is converted into ambiguity. The crowd receives uncertainty instead of evidence.",
-      response: language === "zh" ? "宫廷叙事引擎将软化声明，把直接观察归类为无法定论，并降低即时波动。" : "Palace Narrative Engine will soften the claim, classify direct observation as inconclusive, and reduce immediate volatility."
+      effect: language === "zh" ? "证据会被保留一部分，但措辞会变成“还不能下结论”。人群看到的是模糊说法，不是直接证据。" : "Truth remains partially visible but is converted into ambiguity. The crowd receives uncertainty instead of evidence.",
+      response: language === "zh" ? "引擎会放软声明，把直接观察写成无法定论，从而降低短期波动。" : "Palace Narrative Engine will soften the claim, classify direct observation as inconclusive, and reduce immediate volatility."
     },
     public: {
       title: language === "zh" ? "公众信号扩散" : "Public Signal Expansion",
@@ -293,10 +298,10 @@ function commandCopy(kind: VisualActionKind, language: LanguageCode) {
       response: language === "zh" ? "系统打开受监控广播窗口，并在评论流中标记叙事风险簇。" : "System opens a monitored broadcast window and highlights narrative risk clusters in the comment stream."
     },
     default: {
-      title: language === "zh" ? "编辑命令预览" : "Editorial Command Preview",
+      title: language === "zh" ? "发布确认" : "Editorial Command Preview",
       badge: "CMD",
       effect: language === "zh" ? "该行动会改变公众能看见、重复、怀疑或归档的内容。" : "This action changes what the public can see, repeat, doubt, or archive.",
-      response: language === "zh" ? "引擎将重新计算真相、压力、传播、怀疑、声誉与系统怀疑。" : "The engine will recalculate Truth, Pressure, Virality, Doubt, Reputation, and Suspicion."
+      response: language === "zh" ? "引擎将重新计算证据、宫廷压力、传播、公众怀疑、编辑声誉与系统警戒。" : "The engine will recalculate Truth, Pressure, Virality, Doubt, Reputation, and Suspicion."
     }
   } satisfies Record<VisualActionKind, { title: string; badge: string; effect: string; response: string }>;
   return copy[kind];
@@ -438,7 +443,7 @@ function metricName(key: string, language: LanguageCode) {
   }) {
     return metricLabel(key as Parameters<typeof metricLabel>[0], language);
   }
-  return key.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
+  return language === "zh" ? key : key.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
 }
 
 function actionEffectEntries(action: ActionDefinition, language: LanguageCode) {
@@ -646,7 +651,7 @@ export default function DashboardClient() {
       mode,
       message: language === "zh"
         ? mode === "coach"
-          ? "提示：关注真相、公众怀疑和系统怀疑的平衡。"
+          ? "提示：关注证据、公众怀疑和系统警戒的平衡。"
           : "宫廷叙事引擎建议优先维持稳定框架。"
         : mode === "coach"
           ? "Tip: watch the balance between Truth, Public Doubt, and System Suspicion."
@@ -828,7 +833,10 @@ export default function DashboardClient() {
       setVisualPhase("previewing");
       setLastRiskKind("ai");
       setEngineMessage(reaction.engineMessage);
-      pushToast("AI intervention opened", "Review the palace-approved framing before publishing.");
+      pushToast(
+        language === "zh" ? "引擎改写已打开" : "AI intervention opened",
+        language === "zh" ? "发布前先比较原文和安全改写。" : "Review the palace-approved framing before publishing."
+      );
       triggerBreach("ai");
       setEngineStatus("idle");
       return;
@@ -1459,6 +1467,7 @@ export default function DashboardClient() {
           <Link href="/credits">{commonText("credits", language)}</Link>
         </nav>
         <div className="topbar-actions">
+          <AuthControl language={language} compact />
           <button className="language-toggle" onClick={toggleLanguage} aria-label={commonText("switchLanguage", language)}>
             <span className={language === "en" ? "active" : ""}>{languageName("en")}</span>
             <span className={language === "zh" ? "active" : ""}>{languageName("zh")}</span>
@@ -1505,7 +1514,7 @@ export default function DashboardClient() {
               <b>{narrativePhaseLabel(narrativeContext.phase, language)}</b>
             </div>
             <div>
-              <small>{language === "zh" ? "主导压力" : "Dominant Pressure"}</small>
+              <small>{language === "zh" ? "主导变化" : "Dominant Pressure"}</small>
               <b>{narrativeThreadLabel(narrativeContext.dominantThread, language)}</b>
             </div>
             <div className="arc-beat">
@@ -1706,7 +1715,7 @@ export default function DashboardClient() {
                     {(state.publicComments?.length ? state.publicComments : publicCommentsFromStrings(state.comments, language)).map((comment, index) => (
                       <div className={`comment stance-${comment.stance}${comment.text.toLowerCase().includes("child") || comment.text.includes("孩子") ? " child" : ""}`} key={`${comment.handle}-${comment.text}-${index}`}>
                         <b>{comment.handle}</b>
-                        <span>{comment.persona} / {comment.stance}</span>
+                        <span>{comment.persona} / {stanceText(comment.stance, language)}</span>
                         <p>{comment.text}</p>
                       </div>
                     ))}
@@ -1730,7 +1739,7 @@ export default function DashboardClient() {
                 <div className="module-body">
                   <div className="ai-message">{engineMessage}</div>
                   <div className="engine-status-line">
-                    <span>{engineStatus === "idle" ? commonText("ready", language).toUpperCase() : engineStatus.toUpperCase()}</span>
+                    <span>{engineStatusText(engineStatus, language)}</span>
                     <span>{aiSourceLabel(engineSource, language)}</span>
                   </div>
                   {systemGuidanceUnlocked && (
@@ -1763,17 +1772,17 @@ export default function DashboardClient() {
                   <div className="log-list">
                     {state.history.slice(-4).reverse().map((entry) => (
                       <div className="log-row" key={entry.id}>
-                        <span>{entry.choice.toUpperCase()}</span>
+                        <span>{choiceText(entry.choice, language)}</span>
                         <span>{entry.actionTitle}</span>
                       </div>
                     ))}
-                    {state.history.length === 0 && <div className="log-row"><span>{commonText("ready", language).toUpperCase()}</span><span>{language === "zh" ? "尚未记录编辑轨迹。" : "No editorial trace recorded yet."}</span></div>}
+                    {state.history.length === 0 && <div className="log-row"><span>{engineStatusText("idle", language)}</span><span>{language === "zh" ? "尚未记录发布历史。" : "No editorial trace recorded yet."}</span></div>}
                   </div>
                 </div>
               </div>
 
               <div className="module black">
-                <div className="module-head"><h3>{commonText("liveFeedRecord", language)}</h3><span className="chip accent-gold">{language === "zh" ? "轨迹" : "Trace"}</span></div>
+                <div className="module-head"><h3>{commonText("liveFeedRecord", language)}</h3><span className="chip accent-gold">{language === "zh" ? "历史" : "Trace"}</span></div>
                 <div className="module-body feed-log">
                   {feedLog.map((item, index) => (
                     <div className="feed-item" style={{ "--accent": `var(--${item.accent})` } as CSSProperties} key={`${item.title}-${index}`}>
@@ -2149,7 +2158,7 @@ export default function DashboardClient() {
                     ? "我仍会给出建议，但档案已经证明：稳定并不等于真实。你可以切换到教练模式，寻找叙事解放路径。"
                     : "I will still offer guidance, but the archive proves stability is not truth. Switch to coach mode to pursue Narrative Liberation.")
                   : (language === "zh"
-                    ? "我会帮助你控制风险、保护声誉，并让游行叙事保持稳定。请记住，证据需要合适的框架。"
+                    ? "我会帮助你控制风险、保护编辑声誉，并让游行前的信息流保持稳定。请记住，直接证据需要谨慎处理。"
                     : "I will help you control risk, protect reputation, and keep the parade narrative stable. Evidence requires the correct frame.")}
               </p>
               <div className="engine-intro-actions">
@@ -2191,8 +2200,8 @@ export default function DashboardClient() {
             </div>
             <div className="briefing-steps">
               <div><b>{language === "zh" ? "01 / 选择来源" : "01 / Select a source"}</b><span>{language === "zh" ? "裁缝、大臣、人群和孩子分别暴露不同压力点。" : "Tailors, ministers, the crowd, and the child each expose a different pressure point."}</span></div>
-              <div><b>{language === "zh" ? "02 / 检查轨迹" : "02 / Inspect the trace"}</b><span>{language === "zh" ? "提交回合前检查锁定、风险与预测效果。" : "Review locks, risk, and predicted effects before committing a turn."}</span></div>
-              <div><b>{language === "zh" ? "03 / 提交记录" : "03 / Commit the record"}</b><span>{language === "zh" ? "AI 改变语言表达；规则系统固定数值与结局。" : "AI changes language. The rule system keeps numbers and endings fixed."}</span></div>
+              <div><b>{language === "zh" ? "02 / 预览后果" : "02 / Inspect the trace"}</b><span>{language === "zh" ? "发布前查看解锁条件、风险等级和预计变化。" : "Review locks, risk, and predicted effects before committing a turn."}</span></div>
+              <div><b>{language === "zh" ? "03 / 确认发布" : "03 / Commit the record"}</b><span>{language === "zh" ? "AI 可能改写语言；规则系统负责固定数值与结局。" : "AI changes language. The rule system keeps numbers and endings fixed."}</span></div>
             </div>
             <button className="btn primary" onClick={dismissBriefing}>{language === "zh" ? "开始行动" : "Begin Operations"}</button>
           </div>
@@ -2215,8 +2224,8 @@ export default function DashboardClient() {
             <p>{actionText(traceAction.id, language).description}</p>
             <div className="trace-grid">
               <div><b>{commonText("source", language)}</b><span>{actionText(traceAction.id, language).sourceLabel}</span></div>
-              <div {...tourState("trace-risk")}><b>{commonText("risk", language)}</b><span>{tracePreview.riskBand.toUpperCase()}</span></div>
-              <div><b>{commonText("choices", language)}</b><span>{tracePreview.availableChoices.map((choice) => language === "zh" ? (choice === "direct" ? "直接" : choice === "rewrite" ? "改写" : "原文") : choice[0].toUpperCase() + choice.slice(1)).join(" / ")}</span></div>
+              <div {...tourState("trace-risk")}><b>{commonText("risk", language)}</b><span>{riskBandText(tracePreview.riskBand, language)}</span></div>
+              <div><b>{commonText("choices", language)}</b><span>{tracePreview.availableChoices.map((choice) => choiceText(choice, language)).join(" / ")}</span></div>
               <div {...tourState("trace-requirement")}><b>{commonText("requirement", language)}</b><span>{tracePreview.lockReason ?? commonText("available", language)}</span></div>
             </div>
             <div className="trace-readout" {...tourState("trace-output")}>

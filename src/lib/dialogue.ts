@@ -269,7 +269,7 @@ export function fallbackDialogueEvent(id: string, archetype: DialogueArchetype, 
       speakerName: zh ? "孩子的监护人" : "Child's Guardian",
       speakerRole: zh ? "担心孩子被宫廷追责的家属" : "Family member worried about palace retaliation",
       openingLine: zh ? "他说的是实话，但他只是个孩子。你要把他的声音放大到连宫廷也无法忽视吗？" : "He told the truth, but he is a child. Are you making his voice too visible for the palace to ignore?",
-      stakes: zh ? "真相的传播与说出真相者的安全发生冲突。" : "Truth circulation now conflicts with the safety of the person who spoke.",
+      stakes: zh ? "公开孩子的话会推进证据，也会让孩子承担风险。" : "Truth circulation now conflicts with the safety of the person who spoke.",
       mood: { ...defaultDialogueMood.childGuardian },
       quickReplies: zh
         ? [
@@ -347,7 +347,7 @@ export function fallbackDialogueReply(event: DialogueEvent, language: LanguageCo
   }
   if (event.archetype === "engineAudit") {
     return language === "zh"
-      ? "记录已更新。继续提升未经批准证据将增加系统怀疑。建议接受更安全框架。"
+      ? "记录已更新。继续放大未经批准的证据会提高系统警戒。建议接受更安全措辞。"
       : "Record updated. Continued elevation of unapproved evidence will increase system suspicion. Safer framing is recommended.";
   }
   if (event.archetype === "archiveClerk") {
@@ -630,7 +630,7 @@ export function fallbackDialogueResolution(event: DialogueEvent, transcript: Dia
       ? `${event.speakerName} 的交流已写入编辑轨迹。`
       : `${event.speakerName}'s interruption was written into the editorial trace.`,
     feedTitle: language === "zh" ? "突发交流" : "Incoming Transmission",
-    feedText: language === "zh" ? "对话改变了本轮信息流的压力。" : "The exchange shifted pressure inside the live feed."
+    feedText: language === "zh" ? "对话改变了本轮信息流的局势。" : "The exchange shifted pressure inside the live feed."
   };
 }
 

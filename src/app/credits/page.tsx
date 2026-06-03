@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { commonText, languageName } from "@/lib/i18n";
 import { useLanguage } from "@/hooks/use-language";
+import AuthControl from "@/app/auth-control";
 
 export default function CreditsPage() {
   const { language, toggleLanguage } = useLanguage();
@@ -19,6 +20,7 @@ export default function CreditsPage() {
           <Link href="/credits">{commonText("credits", language)}</Link>
         </nav>
         <div className="topbar-actions">
+          <AuthControl language={language} compact />
           <button className="language-toggle" onClick={toggleLanguage} aria-label={commonText("switchLanguage", language)}>
             <span className={language === "en" ? "active" : ""}>{languageName("en")}</span>
             <span className={language === "zh" ? "active" : ""}>{languageName("zh")}</span>

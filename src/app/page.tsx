@@ -10,6 +10,7 @@ import { commonText, languageName } from "@/lib/i18n";
 import { useLanguage } from "@/hooks/use-language";
 import { clearCurrentRunId, ensureCurrentRunId } from "@/lib/profile";
 import { useGameAudio } from "./audio-provider";
+import AuthControl from "./auth-control";
 
 gsap.registerPlugin(useGSAP);
 
@@ -56,8 +57,8 @@ const briefingCards = {
       no: "03",
       tone: "red",
       source: "失败条件",
-      title: "当人们共同认出真相时，真相会变得危险。",
-      body: "孩子、空织布机和公众评论都可能把私人怀疑转化为可见破口。"
+      title: "当大家发现彼此都在怀疑，局势会变得危险。",
+      body: "孩子、空织布机和公众评论都可能把私下怀疑变成公开问题。"
     }
   ]
 };
@@ -117,6 +118,9 @@ export default function StartPage() {
         <span className={language === "en" ? "active" : ""}>{languageName("en")}</span>
         <span className={language === "zh" ? "active" : ""}>{languageName("zh")}</span>
       </button>
+      <div className="title-auth-control">
+        <AuthControl language={language} compact />
+      </div>
 
       <section className="hero title-hero" id="start">
         <div data-reveal>
@@ -144,7 +148,7 @@ export default function StartPage() {
             <article className="system-card prime" data-id="01">
               <div className="mini-label">{language === "zh" ? "公共现实路由" : "Public Reality Routing"}</div>
               <h3>{language === "zh" ? "公众会看见什么？" : "What will the public see?"}</h3>
-              <p>{language === "zh" ? "真相不只是被发现。它还必须被发布、被看见、被传播，并免于被改写。" : "Truth is not only discovered. It must be published, seen, circulated, and protected from being rewritten."}</p>
+              <p>{language === "zh" ? "证据不只是被发现。它还必须被发布、被看见、被传播，并避免被改写成安全说法。" : "Truth is not only discovered. It must be published, seen, circulated, and protected from being rewritten."}</p>
               <div className="micro-data"><span>{language === "zh" ? "当前身份" : "Current Role"}</span><span>{language === "zh" ? "宫廷信息流编辑" : "Royal Feed Editor"}</span></div>
             </article>
             <article className="system-card alert" data-id="06">
@@ -161,7 +165,7 @@ export default function StartPage() {
               <div className="mini-label">{language === "zh" ? "宫廷叙事引擎" : "Palace Narrative Engine"}</div>
               <h3>{language === "zh" ? "稳定优先。" : "Stability preferred."}</h3>
               <p>{language === "zh" ? "该系统保护宫廷信心，推荐更安全措辞，生成评论，并监控高风险编辑行为。" : "This system protects palace confidence, recommends safer wording, generates comments, and monitors risky editorial behavior."}</p>
-              <div className="micro-data"><span>{language === "zh" ? "系统怀疑" : "System Suspicion"}</span><span>0 / 10</span></div>
+              <div className="micro-data"><span>{language === "zh" ? "系统警戒" : "System Suspicion"}</span><span>0 / 10</span></div>
             </article>
           </div>
         </div>

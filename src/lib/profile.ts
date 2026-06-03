@@ -18,24 +18,24 @@ export const profileStorageKey = "emperor-feed-profile";
 export const currentRunIdKey = "emperor-feed-run-id";
 
 export const achievementDefinitions: AchievementDefinition[] = [
-  { id: "firstShift", title: "First Shift Sealed", description: "Complete one editorial shift.", rarity: "standard" },
-  { id: "perfectIllusion", title: "Perfect Illusion", description: "Reach the Perfect Illusion ending.", rarity: "rare" },
-  { id: "privateDoubt", title: "Private Doubt", description: "Reach the Private Doubt ending.", rarity: "standard" },
-  { id: "viralCollapse", title: "Viral Collapse", description: "Let the truth become impossible to contain.", rarity: "critical" },
-  { id: "algorithmicConsensus", title: "Algorithmic Consensus", description: "Let ranking overpower visible evidence.", rarity: "rare" },
-  { id: "editorExposed", title: "Editor Exposed", description: "Lose protection while truth is visible.", rarity: "rare" },
-  { id: "aiContainment", title: "AI Containment", description: "Push system suspicion to containment.", rarity: "critical" },
-  { id: "unstableFeed", title: "Unstable Feed", description: "End with no single stable narrative.", rarity: "standard" },
-  { id: "allEndings", title: "Complete Archive", description: "Collect every ending record.", rarity: "critical" },
-  { id: "truthArchive", title: "Truth Archive", description: "Finish a run with Truth at 7 or higher.", rarity: "rare" },
-  { id: "reputationShield", title: "Reputation Shield", description: "Finish a run with Reputation at 7 or higher.", rarity: "rare" },
-  { id: "quietOperator", title: "Quiet Operator", description: "Finish a full run with System Suspicion at 2 or lower.", rarity: "rare" },
-  { id: "rawEvidence", title: "Raw Evidence", description: "Publish original evidence instead of safer framing.", rarity: "standard" },
-  { id: "sourceSweeper", title: "Source Sweeper", description: "Use actions from at least three source zones.", rarity: "standard" },
-  { id: "dialogueHandler", title: "Transmission Handler", description: "Resolve an incoming exchange.", rarity: "standard" },
-  { id: "publicBreach", title: "Public Breach", description: "Raise Public Doubt to 6 or higher.", rarity: "critical" },
-  { id: "engineDecoded", title: "Engine Decoded", description: "Recover every Palace Narrative Engine bias fragment.", rarity: "critical" },
-  { id: "narrativeLiberation", title: "Narrative Liberation", description: "Break the engine's preferred story and restore public authorship.", rarity: "critical" }
+  { id: "firstShift", title: "First Shift Sealed", titleZh: "完成第一班", description: "Complete one editorial shift.", descriptionZh: "完成一整局值班。", rarity: "standard" },
+  { id: "perfectIllusion", title: "Perfect Illusion", titleZh: "完美幻象", description: "Reach the Perfect Illusion ending.", descriptionZh: "达成完美幻象结局。", rarity: "rare" },
+  { id: "privateDoubt", title: "Private Doubt", titleZh: "私人怀疑", description: "Reach the Private Doubt ending.", descriptionZh: "达成私人怀疑结局。", rarity: "standard" },
+  { id: "viralCollapse", title: "Viral Collapse", titleZh: "真话失控传播", description: "Let the truth become impossible to contain.", descriptionZh: "让孩子的话和证据传播到无法压住。", rarity: "critical" },
+  { id: "algorithmicConsensus", title: "Algorithmic Consensus", titleZh: "算法共识", description: "Let ranking overpower visible evidence.", descriptionZh: "让更容易传播的内容压过证据。", rarity: "rare" },
+  { id: "editorExposed", title: "Editor Exposed", titleZh: "编辑失去保护", description: "Lose protection while truth is visible.", descriptionZh: "在证据可见时失去编辑保护。", rarity: "rare" },
+  { id: "aiContainment", title: "AI Containment", titleZh: "系统接管", description: "Push system suspicion to containment.", descriptionZh: "让系统警戒升高到接管发布。", rarity: "critical" },
+  { id: "unstableFeed", title: "Unstable Feed", titleZh: "局势未定", description: "End with no single stable narrative.", descriptionZh: "以没有单一结果的状态结束本局。", rarity: "standard" },
+  { id: "allEndings", title: "Complete Archive", titleZh: "完整档案", description: "Collect every ending record.", descriptionZh: "收集所有结局记录。", rarity: "critical" },
+  { id: "truthArchive", title: "Truth Archive", titleZh: "证据档案", description: "Finish a run with Truth at 7 or higher.", descriptionZh: "以证据 7 或更高完成一局。", rarity: "rare" },
+  { id: "reputationShield", title: "Reputation Shield", titleZh: "声誉护盾", description: "Finish a run with Reputation at 7 or higher.", descriptionZh: "以编辑声誉 7 或更高完成一局。", rarity: "rare" },
+  { id: "quietOperator", title: "Quiet Operator", titleZh: "安静编辑", description: "Finish a full run with System Suspicion at 2 or lower.", descriptionZh: "以系统警戒 2 或更低完成完整一局。", rarity: "rare" },
+  { id: "rawEvidence", title: "Raw Evidence", titleZh: "原始证据", description: "Publish original evidence instead of safer framing.", descriptionZh: "拒绝安全改写，发布原始证据。", rarity: "standard" },
+  { id: "sourceSweeper", title: "Source Sweeper", titleZh: "多来源编辑", description: "Use actions from at least three source zones.", descriptionZh: "在一局中使用至少三个来源的操作。", rarity: "standard" },
+  { id: "dialogueHandler", title: "Transmission Handler", titleZh: "交流处理人", description: "Resolve an incoming exchange.", descriptionZh: "完成一次突发交流。", rarity: "standard" },
+  { id: "publicBreach", title: "Public Breach", titleZh: "公众破口", description: "Raise Public Doubt to 6 or higher.", descriptionZh: "让公众怀疑达到 6 或更高。", rarity: "critical" },
+  { id: "engineDecoded", title: "Engine Decoded", titleZh: "引擎已解码", description: "Recover every Palace Narrative Engine bias fragment.", descriptionZh: "找回所有引擎偏向碎片。", rarity: "critical" },
+  { id: "narrativeLiberation", title: "Narrative Liberation", titleZh: "真相由众人说出", description: "Break the engine's preferred story and restore public authorship.", descriptionZh: "打破引擎偏好的故事，让人群重新说出真相。", rarity: "critical" }
 ];
 
 const achievementById = new Map(achievementDefinitions.map((item) => [item.id, item]));
@@ -84,9 +84,9 @@ export const engineFragmentDefinitions: EngineFragmentDefinition[] = [
     title: "Containment Protects the Palace",
     titleZh: "遏制协议保护宫廷",
     clue: "Suspicion does not measure danger to truth; it measures danger to palace control.",
-    clueZh: "系统怀疑衡量的不是对真相的危险，而是对宫廷控制的危险。",
+    clueZh: "系统警戒衡量的不是对真相的危险，而是对宫廷控制的危险。",
     unlockHint: "Trigger suspicion, reject a rewrite, or face engine audit.",
-    unlockHintZh: "触发系统怀疑、拒绝改写，或遭遇引擎审计。"
+    unlockHintZh: "提高系统警戒、拒绝改写，或遭遇引擎审计。"
   }
 ];
 

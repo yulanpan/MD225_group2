@@ -9,9 +9,10 @@ import {
   loadProfile
 } from "@/lib/profile";
 import { localizedEndingTitle } from "@/lib/game-rules";
-import { commonText, languageName } from "@/lib/i18n";
+import { choiceText, commonText, languageName, metricLabel } from "@/lib/i18n";
 import { useLanguage } from "@/hooks/use-language";
 import { useGameAudio } from "@/app/audio-provider";
+import AuthControl from "@/app/auth-control";
 import type { PlayerProfile } from "@/lib/types";
 
 function emptyProfile(): PlayerProfile {
@@ -32,7 +33,9 @@ function achievementArchiveCopy(
   language: "en" | "zh"
 ) {
   if (unlocked || !["engineDecoded", "narrativeLiberation"].includes(achievement.id)) {
-    return { title: achievement.title, description: achievement.description };
+    return language === "zh"
+      ? { title: achievement.titleZh, description: achievement.descriptionZh }
+      : { title: achievement.title, description: achievement.description };
   }
   return language === "zh"
     ? { title: "封存档案信号", description: "继续完成不同值班，更多信息会在档案中开放。" }
@@ -78,6 +81,7 @@ export default function ArchivePage() {
           <Link href="/credits">{commonText("credits", language)}</Link>
         </nav>
         <div className="topbar-actions">
+          <AuthControl language={language} compact />
           <button className="language-toggle" onClick={toggleLanguage} aria-label={commonText("switchLanguage", language)}>
             <span className={language === "en" ? "active" : ""}>{languageName("en")}</span>
             <span className={language === "zh" ? "active" : ""}>{languageName("zh")}</span>
@@ -148,7 +152,7 @@ export default function ArchivePage() {
                   }}
                 >
                   <b>{String(index + 1).padStart(2, "0")} / {localizedEndingTitle(run.endingId, language)}</b>
-                  <span>{run.actionPath.length} actions · {run.dialogueCount} transmissions · {new Date(run.completedAt).toLocaleDateString()}</span>
+                  <span>{language === "zh" ? `${run.actionPath.length} 次操作 · ${run.dialogueCount} 次交流` : `${run.actionPath.length} actions · ${run.dialogueCount} transmissions`} · {new Date(run.completedAt).toLocaleDateString()}</span>
                 </button>
               ))}
               {profile.runs.length === 0 && (
@@ -171,14 +175,14 @@ export default function ArchivePage() {
                   </div>
                   <div className="state-list archive-state-list">
                     {Object.entries(selectedRun.finalMetrics).map(([key, value]) => (
-                      <div key={key}><dt>{key.replace(/([A-Z])/g, " $1")}</dt><dd>{value}</dd></div>
+                      <div key={key}><dt>{metricLabel(key as Parameters<typeof metricLabel>[0], language)}</dt><dd>{value}</dd></div>
                     ))}
                   </div>
                   <div className="history-list">
                     {selectedRun.actionPath.map((action, index) => (
                       <div className="history-item" key={`${action.actionId}-${index}`}>
                         <b>{String(index + 1).padStart(2, "0")} / {action.title}</b>
-                        <span>{action.choice}</span>
+                        <span>{choiceText(action.choice, language)}</span>
                       </div>
                     ))}
                     {selectedRun.engineFragmentsUnlocked?.map((id) => (

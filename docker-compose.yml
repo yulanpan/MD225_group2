@@ -1,0 +1,16 @@
+services:
+  emperors-feed:
+    build: .
+    ports:
+      - "6677:3000"
+    env_file:
+      - .env.local
+    environment:
+      DATA_DIR: /data
+      AUTH_COOKIE_SECURE: "false"
+      AUTH_SESSION_DAYS: "30"
+    volumes:
+      - emperors-feed-data:/data
+
+volumes:
+  emperors-feed-data:

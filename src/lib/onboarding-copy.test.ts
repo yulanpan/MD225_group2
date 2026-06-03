@@ -96,4 +96,30 @@ describe("onboarding copy", () => {
       }
     }
   });
+
+  it("keeps Chinese tutorial copy in player language without English UI labels", () => {
+    const forbiddenChineseTutorialTerms = [
+      "Requirement",
+      "Available",
+      "Risk",
+      "Projected Output",
+      "readout",
+      "Selected Action",
+      "System Response",
+      "Stakes",
+      "Metric focus",
+      "Inspect Trace",
+      "Commit Action",
+      "Command Preview",
+      "Commit Simulation"
+    ];
+
+    const steps = onboardingTourSteps("zh");
+    for (const step of steps) {
+      const fullCopy = `${step.eyebrow} ${step.title} ${step.body} ${step.detail} ${step.why ?? ""} ${step.actionLabel ?? ""}`;
+      for (const term of forbiddenChineseTutorialTerms) {
+        expect(fullCopy).not.toContain(term);
+      }
+    }
+  });
 });

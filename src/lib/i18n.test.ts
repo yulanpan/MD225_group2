@@ -7,6 +7,7 @@ import {
   commonText,
   commentsForToneText,
   endingText,
+  engineStatusText,
   fallbackCommentsText,
   fallbackFinalReportText,
   fallbackReactionText,
@@ -20,6 +21,8 @@ import {
   normalizeLanguage,
   phaseCopy,
   pollResultText,
+  riskBandText,
+  stanceText,
   zoneText
 } from "./i18n";
 
@@ -38,19 +41,37 @@ describe("i18n helpers", () => {
     expect(actionText("publishTailorsClaim", "en").title).toBe("Publish the Tailors' Claim");
     expect(actionText("publishTailorsClaim", "zh").title).toBe("发布裁缝声明");
     expect(zoneText("child", "zh").title).toBe("孩子的声音");
+    expect(metricLabel("truth", "zh")).toBe("证据");
+    expect(metricLabel("pressure", "zh")).toBe("宫廷压力");
     expect(metricLabel("publicDoubt", "zh")).toBe("公众怀疑");
+    expect(metricLabel("reputation", "zh")).toBe("编辑声誉");
+    expect(metricLabel("systemSuspicion", "zh")).toBe("系统警戒");
     expect(commonText("startShift", "zh")).toBe("开始值班");
     expect(commonText("aiFallback", "en")).toBe("RULE MODE");
     expect(commonText("aiFallback", "zh")).toBe("规则回应");
-    expect(phaseCopy("scanning", "zh").label).toBe("引擎扫描");
+    expect(phaseCopy("scanning", "zh").label).toBe("风险预览");
+    expect(choiceText("direct", "zh")).toBe("直接发布");
+    expect(choiceText("rewrite", "zh")).toBe("接受改写");
     expect(choiceText("original", "zh")).toBe("发布原文");
     expect(lockReasonText("requiresLooms", "zh")).toContain("检查织布机");
     expect(pollResultText("safe", "zh")).toContain("82%");
   });
 
+  it("localizes UI enum labels used by dashboard, archive, and ending screens", () => {
+    expect(riskBandText("low", "zh")).toBe("低");
+    expect(riskBandText("medium", "zh")).toBe("中");
+    expect(riskBandText("high", "zh")).toBe("高");
+    expect(riskBandText("severe", "zh")).toBe("极高");
+    expect(stanceText("procedural", "zh")).toBe("观望");
+    expect(stanceText("witness", "zh")).toBe("目击");
+    expect(engineStatusText("idle", "zh")).toBe("就绪");
+    expect(engineStatusText("rewriting", "zh")).toBe("改写中");
+    expect(engineStatusText("commenting", "zh")).toBe("生成评论");
+  });
+
   it("returns localized ending copy without changing state", () => {
     const copy = endingText("viralCollapse", "zh");
-    expect(copy.title).toBe("病毒式崩塌");
+    expect(copy.title).toBe("真话失控传播");
     expect(initialState.actionsLeft).toBe(6);
   });
 
@@ -58,9 +79,9 @@ describe("i18n helpers", () => {
     expect(aiLanguageInstruction("en")).toContain("English");
     expect(aiLanguageInstruction("zh")).toContain("简体中文");
     expect(fallbackReactionText("zh").engineMessage).toContain("直接证据");
-    expect(fallbackRewriteText("zh").strategy).toContain("程序性不确定");
+    expect(fallbackRewriteText("zh").strategy).toContain("暂时不能下结论");
     expect(fallbackCommentsText("zh")).toHaveLength(4);
-    expect(fallbackFinalReportText("zh")).toContain("未解决");
+    expect(fallbackFinalReportText("zh")).toContain("本局没有形成单一结果");
     expect(initialCommentsText("zh")).toHaveLength(4);
     expect(initialFeedEventText("zh").title).toBe("值班已开启");
     expect(commentsForToneText("praise", "zh")[0]).toContain("愚人");

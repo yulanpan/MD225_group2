@@ -61,7 +61,9 @@ export const narrativeBeats: NarrativeBeat[] = [
     phase: "setup",
     thread: "officialPerformance",
     title: "The Shame Frame Holds",
+    titleZh: "羞辱式说法站住了",
     text: "The feed teaches citizens that doubt reflects on the viewer, not the cloth.",
+    textZh: "信息流让市民觉得：看不见布料是自己的问题，不是衣服的问题。",
     priority: 60
   },
   {
@@ -69,7 +71,9 @@ export const narrativeBeats: NarrativeBeat[] = [
     phase: "setup",
     thread: "evidenceTrail",
     title: "Empty Loom Recorded",
+    titleZh: "空织布机被记录",
     text: "The absence of thread becomes a record the engine must classify away.",
+    textZh: "没有线这件事进入记录，引擎需要想办法把它说得不那么直接。",
     priority: 70
   },
   {
@@ -77,7 +81,9 @@ export const narrativeBeats: NarrativeBeat[] = [
     phase: "fracture",
     thread: "evidenceTrail",
     title: "Authority Splits in Private",
+    titleZh: "权威在私下裂开",
     text: "A private admission now contradicts the public chain of certainty.",
+    textZh: "大臣私下承认没看见，这和公开称赞互相冲突。",
     priority: 80
   },
   {
@@ -85,7 +91,9 @@ export const narrativeBeats: NarrativeBeat[] = [
     phase: "fracture",
     thread: "publicRecognition",
     title: "Doubt Finds Company",
+    titleZh: "怀疑者发现彼此",
     text: "The crowd begins to notice that private hesitation is shared.",
+    textZh: "人群开始发现：不是只有自己在怀疑。",
     priority: 90
   },
   {
@@ -93,7 +101,9 @@ export const narrativeBeats: NarrativeBeat[] = [
     phase: "crisis",
     thread: "engineContainment",
     title: "Containment Learns the Editor",
+    titleZh: "系统开始盯上编辑",
     text: "The system stops only reading posts and starts reading the editor.",
+    textZh: "系统不只看你发布了什么，也开始判断你这个编辑是否危险。",
     priority: 100
   },
   {
@@ -101,7 +111,9 @@ export const narrativeBeats: NarrativeBeat[] = [
     phase: "crisis",
     thread: "childSignal",
     title: "The Child's Sentence Escapes",
+    titleZh: "孩子的话传出去了",
     text: "A simple sentence becomes easier to repeat than the official frame.",
+    textZh: "孩子那句简单的话，比宫廷说法更容易被人重复。",
     priority: 110
   },
   {
@@ -109,7 +121,9 @@ export const narrativeBeats: NarrativeBeat[] = [
     phase: "reckoning",
     thread: "publicRecognition",
     title: "The Parade Record Seals",
+    titleZh: "游行记录封存",
     text: "The live interface hardens into an archive of what was made visible.",
+    textZh: "本局结束时，大家看见过什么、重复过什么，都会变成档案。",
     priority: 40
   }
 ];
@@ -276,7 +290,7 @@ export function endingFacetsForState(state: GameState, endingId: EndingId, langu
       return zh ? "引擎学到：遏制编辑本身比改写每一条内容更有效。" : "The engine learns that containing the editor can be more efficient than rewriting every post.";
     }
     if (endingId === "algorithmicConsensus") {
-      return zh ? "引擎学到：不必删除真相，只要让它比赞美更难抵达公众。" : "The engine learns that truth need not be deleted when it can be made harder to reach.";
+      return zh ? "引擎学到：不必删除证据，只要让它比赞美更难抵达公众。" : "The engine learns that truth need not be deleted when it can be made harder to reach.";
     }
     return zh ? "引擎学到：叙事稳定来自可见度、风险和重复性的分配。" : "The engine learns that stability is a distribution of visibility, risk, and repetition.";
   })();

@@ -216,7 +216,7 @@ test("dialogue interruptions allow quick replies and resolve into the feed", asy
   await expect(page.locator(".dialogue-panel")).toHaveCount(0, { timeout: 5000 });
 });
 
-test("dialogue silence timeout locks replies and resolves cleanly", async ({ page }) => {
+test("guided dialogue pauses timeout and resolves cleanly", async ({ page }) => {
   await page.addInitScript(() => {
     (window as Window & { __PNE_DIALOGUE_TIMEOUT_MS?: number }).__PNE_DIALOGUE_TIMEOUT_MS = 700;
   });
@@ -232,10 +232,11 @@ test("dialogue silence timeout locks replies and resolves cleanly", async ({ pag
   const panel = page.locator(".dialogue-panel");
   await expect(panel).toBeVisible();
   await expect(panel.locator(".dialogue-timeout-bar")).toBeVisible();
-  await expect(panel).toContainText("Your silence reads as uncertainty.");
-  await expect(panel.getByRole("button", { name: "The public should know." })).toBeDisabled();
-  await expect(panel.getByPlaceholder("Type a response, 280 characters max")).toBeDisabled();
-  await panel.getByRole("button", { name: /Close Exchange|Resolve Exchange/ }).click({ force: true });
+  await expect(panel.locator(".dialogue-timeout.paused")).toContainText("Guide Pause");
+  await expect(panel).not.toContainText("Your silence reads as uncertainty.");
+  await expect(panel.getByRole("button", { name: "The public should know." })).toBeEnabled();
+  await expect(panel.getByPlaceholder("Type a response, 280 characters max")).toBeEnabled();
+  await panel.getByRole("button", { name: /End Exchange|Close Exchange|Resolve Exchange/ }).click({ force: true });
   await expect(panel).toHaveCount(0);
 });
 
@@ -486,20 +487,37 @@ test("language toggle switches UI and AI fallback output to Chinese", async ({ p
   await expect(page).toHaveURL(/\/dashboard/);
   await expect(page.getByRole("dialog", { name: "值班简报" })).toBeVisible();
   await beginOperationsAndSkipTutorial(page, "开始行动", "跳过");
-  await expect(page.getByRole("heading", { name: "宫廷信息流控制台" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "宫廷信息流" })).toBeVisible();
   await expect(page.locator(".phase-step.active")).toContainText("来源选择");
 
-  await page.locator(".action-card").filter({ hasText: "发布裁缝声明" }).getByRole("button", { name: "提交行动" }).click();
-  await page.getByRole("button", { name: "提交模拟" }).click();
-  await page.locator(".action-card").filter({ hasText: "检查织布机" }).getByRole("button", { name: "提交行动" }).click();
+  await page.locator(".action-card").filter({ hasText: "发布裁缝声明" }).getByRole("button", { name: "准备提交" }).click();
+  await page.getByRole("button", { name: "确认发布" }).click();
+  await page.locator(".action-card").filter({ hasText: "检查织布机" }).getByRole("button", { name: "准备提交" }).click();
   await expect(page.locator(".command-overlay.active")).toContainText("检查织布机");
-  await expect(page.locator(".command-overlay.active")).toContainText("真相 +2");
-  await page.getByRole("button", { name: "提交模拟" }).click();
+  await expect(page.locator(".command-overlay.active")).toContainText("证据 +2");
+  await page.getByRole("button", { name: "确认发布" }).click();
   await expect(page.locator(".feed-log")).toContainText("检查织布机");
   await resolveDialogueIfOpen(page);
 
-  await page.locator(".action-card").filter({ hasText: "泄露织布机照片" }).getByRole("button", { name: "请求引擎审查" }).click();
+  await page.locator(".action-card").filter({ hasText: "泄露织布机照片" }).getByRole("button", { name: "请求改写" }).click();
   await expect(page.getByRole("dialog", { name: "AI 介入" })).toBeVisible();
   await expect(page.getByRole("dialog", { name: "AI 介入" })).toContainText("直接证据");
   await expect(page.getByRole("button", { name: "发布原始证据" })).toBeVisible();
+});
+
+test("registers an account and exposes cloud save status", async ({ page }) => {
+  const email = `player-${Date.now()}@example.com`;
+  await page.goto("/login");
+  await page.getByRole("button", { name: "Register" }).click();
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill("correct-password");
+  await page.getByRole("button", { name: "Register and login" }).click();
+
+  await expect(page).toHaveURL(/\/dashboard/);
+  await expect(page.locator(".auth-chip")).toContainText(email);
+  await expect(page.locator(".auth-chip")).toContainText(/Cloud saved|Saving/);
+
+  await page.request.post("/api/auth/logout");
+  await page.reload();
+  await expect(page.locator(".auth-link")).toContainText("Login / Register");
 });
