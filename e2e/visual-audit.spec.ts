@@ -42,8 +42,8 @@ async function collectVisualIssues(page: Page): Promise<VisualIssue[]> {
   return page.evaluate(() => {
     const selectors = [
       ".briefing-panel",
+      ".onboarding-panel",
       ".tutorial-panel",
-      ".guided-coach-panel",
       ".engine-intro-panel",
       ".command-panel",
       ".modal-panel",
@@ -121,13 +121,10 @@ async function resetGame(page: Page) {
   await page.goto("/dashboard");
 }
 
-async function beginAndReachEngineIntro(page: Page) {
+async function beginAndShowOnboarding(page: Page) {
   await page.getByRole("button", { name: "Begin Operations" }).click();
-  const tutorialPanel = page.locator(".tutorial-panel");
+  const tutorialPanel = page.locator(".onboarding-panel");
   await expect(tutorialPanel).toBeVisible();
-  await tutorialPanel.getByRole("button", { name: "Skip" }).click();
-  await expect(tutorialPanel).toHaveCount(0);
-  await expect(page.locator(".engine-intro-panel")).toBeVisible();
 }
 
 async function setArchiveProfile(page: Page) {
@@ -194,27 +191,27 @@ test.describe("desktop visual audit", () => {
     await resetGame(page);
     await captureAudit(page, testInfo, "01-briefing");
 
-    await beginAndReachEngineIntro(page);
-    await captureAudit(page, testInfo, "02-engine-intro");
-    await page.locator(".engine-intro-panel").getByRole("button", { name: "Connect Engine" }).click();
+    await beginAndShowOnboarding(page);
+    await captureAudit(page, testInfo, "02-onboarding-spotlight");
+    await page.locator(".onboarding-panel").getByRole("button", { name: "Skip Tutorial" }).click();
+    await expect(page.locator(".onboarding-panel")).toHaveCount(0);
     await expect(page.locator(".engine-intro-panel")).toHaveCount(0);
-    await expect(page.locator(".guided-coach-panel")).toBeVisible();
-    await captureAudit(page, testInfo, "03-guided-coach");
+    await expect(page.locator(".guidance-card")).toBeVisible();
+    await captureAudit(page, testInfo, "03-guidance");
 
-    await page.locator(".guided-coach-panel").getByRole("button", { name: "Open the trace brief" }).click();
+    await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Inspect Trace" }).click();
     await expect(page.locator(".trace-panel")).toBeVisible();
     await captureAudit(page, testInfo, "04-trace-panel");
     await page.getByRole("button", { name: "Close Trace" }).click();
 
-    await page.locator(".guided-coach-panel").getByRole("button", { name: "Commit the first record" }).click();
+    await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Commit Action" }).click();
     await expect(page.locator(".command-panel")).toBeVisible();
     await captureAudit(page, testInfo, "05-command-preview");
     await page.getByRole("button", { name: "Commit Simulation" }).click();
 
-    await expect(page.locator(".guided-coach-panel")).toContainText("Read the public signal");
-    await page.locator(".guided-coach-panel").getByRole("button", { name: "Go to Public Comments" }).click();
+    await page.getByRole("button", { name: "The Public Comments" }).click();
     await captureAudit(page, testInfo, "06-public-guidance");
-    await page.locator(".guided-coach-panel").getByRole("button", { name: "Go to Public Comments" }).click();
+    await page.locator(".action-card").filter({ hasText: "Show Unfiltered Comments" }).getByRole("button", { name: "Commit Action" }).click();
     await expect(page.locator(".command-panel")).toBeVisible();
     await page.getByRole("button", { name: "Commit Simulation" }).click();
 
@@ -224,6 +221,46 @@ test.describe("desktop visual audit", () => {
     await activateButton(dialoguePanel.getByRole("button", { name: "The public should know." }));
     await expect(dialoguePanel.locator(".dialogue-message.speaker").last()).not.toContainText("Signal forming", { timeout: 15000 });
     await captureAudit(page, testInfo, "08-dialogue-response");
+  });
+
+  test("keeps core operations in bounds across desktop viewport ratios", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "chromium", "Desktop-only visual audit.");
+    test.setTimeout(180000);
+
+    const viewports = [
+      { name: "1280x720", width: 1280, height: 720 },
+      { name: "1366x768", width: 1366, height: 768 },
+      { name: "1440x900", width: 1440, height: 900 },
+      { name: "1920x1080", width: 1920, height: 1080 }
+    ];
+
+    for (const viewport of viewports) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await resetGame(page);
+      await captureAudit(page, testInfo, `${viewport.name}-briefing`);
+
+      await beginAndShowOnboarding(page);
+      await captureAudit(page, testInfo, `${viewport.name}-onboarding`);
+      await page.locator(".onboarding-panel").getByRole("button", { name: "Skip Tutorial" }).click();
+      await expect(page.locator(".onboarding-panel")).toHaveCount(0);
+
+      await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Inspect Trace" }).click();
+      await expect(page.locator(".trace-panel")).toBeVisible();
+      await captureAudit(page, testInfo, `${viewport.name}-trace`);
+      await page.getByRole("button", { name: "Close Trace" }).click();
+
+      await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Commit Action" }).click();
+      await expect(page.locator(".command-panel")).toBeVisible();
+      await captureAudit(page, testInfo, `${viewport.name}-command`);
+      await page.getByRole("button", { name: "Commit Simulation" }).click();
+
+      await page.getByRole("button", { name: "The Public Comments" }).click();
+      await page.locator(".action-card").filter({ hasText: "Show Unfiltered Comments" }).getByRole("button", { name: "Commit Action" }).click();
+      await expect(page.locator(".command-panel")).toBeVisible();
+      await page.getByRole("button", { name: "Commit Simulation" }).click();
+      await expect(page.locator(".dialogue-panel")).toBeVisible({ timeout: 15000 });
+      await captureAudit(page, testInfo, `${viewport.name}-dialogue`);
+    }
   });
 
   test("captures archive and ending layouts", async ({ page }, testInfo) => {

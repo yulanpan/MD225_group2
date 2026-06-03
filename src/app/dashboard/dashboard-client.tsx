@@ -19,9 +19,6 @@ import {
 } from "@/lib/game-rules";
 import {
   getGuidedCampaignStep,
-  getGuidedTarget,
-  getLockedMetricsForGuidedStep,
-  getLockedZonesForGuidedStep,
   getUnlockEvents,
   isGuidedCampaignActive,
   isMetricVisibleInGuidedStep,
@@ -73,11 +70,12 @@ import {
 import { layerIntensitiesForState, type MusicLayer } from "@/lib/audio";
 import {
   glossaryText,
-  guidedStepCopy,
   lockedFeatureText,
-  tutorialSteps,
-  tutorialUi,
-  type TutorialStepId
+  onboardingTourSteps,
+  onboardingTourUi,
+  type OnboardingAdvance,
+  type OnboardingSurface,
+  type OnboardingTargetId
 } from "@/lib/onboarding-copy";
 import { useLanguage } from "@/hooks/use-language";
 import { useGameAudio } from "@/app/audio-provider";
@@ -106,6 +104,70 @@ const briefingKey = "emperor-feed-briefing-dismissed";
 const guidanceUnlockedKey = "emperor-feed-guidance-unlocked";
 const replayTargetKey = "emperor-feed-replay-target";
 const dialogueTimeoutDefaultMs = 60000;
+
+type SpotlightRect = {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+  right: number;
+  bottom: number;
+};
+
+type SpotlightPanelPosition = {
+  top: number;
+  left: number;
+  width: number;
+};
+
+function clampToRange(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function escapeTourTarget(targetId: OnboardingTargetId) {
+  if (typeof CSS !== "undefined" && "escape" in CSS) return CSS.escape(targetId);
+  return targetId.replace(/"/g, "\\\"");
+}
+
+function spotlightPanelPosition(rect: SpotlightRect | null, panelSize?: { width: number; height: number } | null): SpotlightPanelPosition {
+  if (typeof window === "undefined" || !rect) return { top: 96, left: 24, width: 460 };
+  const width = Math.min(480, window.innerWidth - 48);
+  const gap = 18;
+  const estimatedHeight = Math.min(panelSize?.height ?? 560, window.innerHeight - 40);
+  const hasRightRoom = rect.right + gap + width <= window.innerWidth - 20;
+  const hasLeftRoom = rect.left - gap - width >= 20;
+  if (!hasRightRoom && !hasLeftRoom) {
+    const left = Math.max(16, (window.innerWidth - width) / 2);
+    const hasTopRoom = rect.top >= estimatedHeight + gap + 32;
+    const hasBottomRoom = rect.bottom + estimatedHeight + gap <= window.innerHeight - 20;
+    const preferredTop = hasTopRoom
+      ? rect.top - estimatedHeight - gap
+      : hasBottomRoom
+        ? rect.bottom + gap
+        : rect.top > window.innerHeight / 2
+          ? 72
+          : Math.max(72, window.innerHeight - estimatedHeight - 24);
+    return {
+      top: clampToRange(preferredTop, 72, Math.max(72, window.innerHeight - estimatedHeight - 20)),
+      left,
+      width
+    };
+  }
+  const left = hasRightRoom ? rect.right + gap : rect.left - gap - width;
+  const preferredTop = rect.top + rect.height / 2 - estimatedHeight / 2;
+  const top = clampToRange(preferredTop, 84, Math.max(84, window.innerHeight - estimatedHeight - 20));
+  return { top, left, width };
+}
+
+function actionHintStyle(rect: SpotlightRect | null): CSSProperties {
+  if (typeof window === "undefined" || !rect) return { left: 24, top: 96 };
+  const width = Math.min(220, window.innerWidth - 28);
+  const centeredLeft = rect.left + rect.width / 2 - width / 2;
+  const left = clampToRange(centeredLeft, 14, window.innerWidth - width - 14);
+  const topAbove = rect.top - 58;
+  const top = topAbove >= 18 ? topAbove : clampToRange(rect.bottom + 12, 18, window.innerHeight - 58);
+  return { left, top, width };
+}
 
 function Term({ id, children, language }: { id: string; children: ReactNode; language: LanguageCode }) {
   const tooltipId = useId();
@@ -421,7 +483,9 @@ export default function DashboardClient() {
   const [briefingOpen, setBriefingOpen] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [tutorialStepIndex, setTutorialStepIndex] = useState(0);
-  const [guidedTraceViewed, setGuidedTraceViewed] = useState(false);
+  const [spotlightRect, setSpotlightRect] = useState<SpotlightRect | null>(null);
+  const [actionHintRect, setActionHintRect] = useState<SpotlightRect | null>(null);
+  const [tutorialPanelSize, setTutorialPanelSize] = useState<{ width: number; height: number } | null>(null);
   const [engineIntroOpen, setEngineIntroOpen] = useState(false);
   const [systemGuidanceUnlocked, setSystemGuidanceUnlocked] = useState(false);
   const [guidanceMode, setGuidanceMode] = useState<GuidanceMode>("engine");
@@ -470,6 +534,7 @@ export default function DashboardClient() {
   const visualResetTimer = useRef<number | null>(null);
   const dialogueAbort = useRef<AbortController | null>(null);
   const guidedStepRef = useRef<GuidedCampaignStep>("off");
+  const tutorialPanelRef = useRef<HTMLElement | null>(null);
   const toastIdRef = useRef(0);
 
   function clearVisualReset() {
@@ -515,7 +580,6 @@ export default function DashboardClient() {
       setEngineIntroOpen(false);
       setSystemGuidanceUnlocked(guidanceUnlocked);
       setTutorialStepIndex(0);
-      setGuidedTraceViewed(false);
       setUnlockAnimationQueue([]);
       setHydrated(true);
     });
@@ -775,6 +839,7 @@ export default function DashboardClient() {
     setVisualPhase("previewing");
     setLastRiskKind(kind);
     setEngineMessage(reaction.engineMessage);
+    advanceOnboarding("commandOpened", { actionId: action.id });
     triggerBreach(kind);
     setEngineStatus("idle");
   }
@@ -783,6 +848,7 @@ export default function DashboardClient() {
     if (!pendingCommand) return;
     const { action, reaction } = pendingCommand;
     setPendingCommand(null);
+    advanceOnboarding("commandCommitted", { actionId: action.id });
     await commitAction(action, "direct", undefined, reaction.engineMessage);
   }
 
@@ -819,7 +885,6 @@ export default function DashboardClient() {
     setEngineIntroOpen(false);
     setSystemGuidanceUnlocked(false);
     setTutorialStepIndex(0);
-    setGuidedTraceViewed(false);
     setUnlockAnimationQueue([]);
     setEngineMessage(fallbackReaction(language).engineMessage);
     setGuidance(null);
@@ -841,28 +906,32 @@ export default function DashboardClient() {
   }
 
   const guidedStep = getGuidedCampaignStep(state, playerProfile);
-  const guidedTarget = getGuidedTarget(guidedStep);
-  const guidedCopy = guidedStepCopy(guidedStep, language, guidedTraceViewed);
-  const lockedGuidedZones = getLockedZonesForGuidedStep(guidedStep);
-  const lockedGuidedMetrics = getLockedMetricsForGuidedStep(guidedStep);
-  const guidedActive = guidedStep !== "off" && guidedStep !== "fullControl";
-  const guidedTargetTourId = guidedTarget?.tourId ?? null;
   const command = commandCopy(pendingCommand?.kind ?? "default", language);
   const commandEffects = pendingCommand ? previewEffectEntries(pendingCommand.preview, language) : [];
-  const tutorial = useMemo(() => tutorialSteps(language), [language]);
+  const tutorial = useMemo(() => onboardingTourSteps(language), [language]);
   const activeTutorialStep = tutorialOpen && !briefingOpen ? tutorial[tutorialStepIndex] : null;
-  const tutorialCopy = tutorialUi(language);
-  const activeTourId = activeTutorialStep?.id ?? guidedTargetTourId;
+  const tutorialCopy = onboardingTourUi(language);
+  const activeTourId = activeTutorialStep?.spotlightTargetId ?? null;
+  const activeActionTourId = activeTutorialStep?.actionTargetId ?? null;
   const guidedDialogueOpen = isGuidedCampaignActive(playerProfile) && Boolean(dialogueEvent) && state.dialogueEvents.length === 0;
-  const guidedCoachVisible = guidedActive && !activeTutorialStep && !briefingOpen && !traceAction && !pendingCommand && !pending && !dialogueEvent && !engineIntroOpen;
-  const guidedCoachIndex = guidedStep === "firstTurn" ? 1 : guidedStep === "publicSignals" ? 2 : 3;
+  const dialogueTimerPaused = guidedDialogueOpen && !dialogueTimedOut;
+  const currentTutorialSurface: OnboardingSurface = pending
+    ? "aiReview"
+    : pendingCommand
+      ? "command"
+      : dialogueEvent
+        ? "dialogue"
+        : traceAction
+          ? "trace"
+          : "dashboard";
+  const tutorialVisible = Boolean(activeTutorialStep && activeTutorialStep.surface === currentTutorialSurface && !engineIntroOpen && unlockAnimationQueue.length === 0);
+  const tutorialPanelPosition = spotlightPanelPosition(spotlightRect, tutorialPanelSize);
   const overlayActive = Boolean(
     pendingCommand ||
     pending ||
     dialogueEvent ||
     traceAction ||
-    activeTutorialStep ||
-    guidedCoachVisible ||
+    tutorialVisible ||
     engineIntroOpen ||
     briefingOpen ||
     unlockAnimationQueue.length > 0
@@ -878,94 +947,219 @@ export default function DashboardClient() {
     return null;
   }
 
-  const scrollTourTargetIntoView = useCallback((id: TutorialStepId) => {
-    const target = document.querySelector(`[data-tour-id="${id}"]`);
+  const scrollTourTargetIntoView = useCallback((id: OnboardingTargetId) => {
+    const target = document.querySelector(`[data-tour-target="${escapeTourTarget(id)}"]`);
     if (!target) return;
 
+    target.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
     const rect = target.getBoundingClientRect();
     const safeTop = 96;
-    const safeBottom = window.innerHeight - 220;
+    const safeBottom = window.innerHeight - 260;
     const targetTop = window.scrollY + rect.top;
     const targetBottom = window.scrollY + rect.bottom;
 
     if (rect.height > safeBottom - safeTop) {
-      window.scrollTo({ top: Math.max(0, targetTop - safeTop), behavior: "smooth" });
+      window.scrollTo({ top: Math.max(0, targetTop - safeTop), behavior: "auto" });
       return;
     }
 
     if (rect.top < safeTop) {
-      window.scrollTo({ top: Math.max(0, targetTop - safeTop), behavior: "smooth" });
+      window.scrollTo({ top: Math.max(0, targetTop - safeTop), behavior: "auto" });
       return;
     }
 
     if (rect.bottom > safeBottom) {
-      window.scrollTo({ top: Math.max(0, targetBottom - safeBottom), behavior: "smooth" });
+      window.scrollTo({ top: Math.max(0, targetBottom - safeBottom), behavior: "auto" });
     }
   }, []);
 
   useEffect(() => {
     if (!activeTutorialStep) return;
-    scrollTourTargetIntoView(activeTutorialStep.id);
+    scrollTourTargetIntoView(activeTutorialStep.spotlightTargetId);
   }, [activeTutorialStep, scrollTourTargetIntoView]);
 
-  function tourState(id: TutorialStepId) {
-    return {
-      "data-tour-id": id,
-      "data-tour-active": activeTourId === id ? "true" : "false"
+  useEffect(() => {
+    if (!activeTutorialStep || !tutorialVisible) {
+      return;
+    }
+
+    const step = activeTutorialStep;
+    let frame = 0;
+    function measure() {
+      const target = document.querySelector(`[data-tour-target="${escapeTourTarget(step.spotlightTargetId)}"]`);
+      if (!target) {
+        setSpotlightRect(null);
+        return;
+      }
+      const rect = target.getBoundingClientRect();
+      const pad = step.actionTargetId ? 8 : 12;
+      const left = clampToRange(rect.left - pad, 12, window.innerWidth - 28);
+      const top = clampToRange(rect.top - pad, 12, window.innerHeight - 28);
+      const right = clampToRange(rect.right + pad, left + 12, window.innerWidth - 12);
+      const bottom = clampToRange(rect.bottom + pad, top + 12, window.innerHeight - 12);
+      setSpotlightRect({
+        top,
+        left,
+        width: right - left,
+        height: bottom - top,
+        right,
+        bottom
+      });
+    }
+
+    frame = window.requestAnimationFrame(measure);
+    const scheduleMeasure = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(measure);
     };
-  }
+    window.addEventListener("resize", scheduleMeasure);
+    window.addEventListener("scroll", scheduleMeasure, true);
+    const interval = window.setInterval(measure, 360);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearInterval(interval);
+      window.removeEventListener("resize", scheduleMeasure);
+      window.removeEventListener("scroll", scheduleMeasure, true);
+    };
+  }, [activeTutorialStep, tutorialVisible]);
 
-  function focusTourTarget(id: TutorialStepId) {
-    scrollTourTargetIntoView(id);
-  }
-
-  function runGuidedCoachAction() {
-    unlockAudio();
-    playSfx("uiClick");
-    if (guidedStep === "firstTurn") {
-      const firstAction = actions.find((action) => action.id === "publishTailorsClaim");
-      setSelectedZone("tailors");
-      setSelectedPostId("publishTailorsClaim");
-      if (!guidedTraceViewed && firstAction) {
-        setGuidedTraceViewed(true);
-        setTraceActionId(firstAction.id);
-        return;
-      }
-      if (firstAction) void selectAction(firstAction);
+  useEffect(() => {
+    if (!activeActionTourId || !tutorialVisible) {
       return;
     }
-    if (guidedStep === "publicSignals") {
-      const publicAction = actions.find((action) => action.id === "showUnfilteredComments");
-      setSelectedZone("public");
-      setSelectedPostId("showUnfilteredComments");
-      if (selectedZone === "public" && publicAction) {
-        void selectAction(publicAction);
+
+    const targetId = activeActionTourId;
+    let frame = 0;
+    function measure() {
+      const target = document.querySelector(`[data-tour-target="${escapeTourTarget(targetId)}"]`);
+      if (!target) {
+        setActionHintRect(null);
         return;
       }
-      focusTourTarget("sources");
-      return;
+      const rect = target.getBoundingClientRect();
+      const pad = 5;
+      const left = clampToRange(rect.left - pad, 10, window.innerWidth - 24);
+      const top = clampToRange(rect.top - pad, 10, window.innerHeight - 24);
+      const right = clampToRange(rect.right + pad, left + 10, window.innerWidth - 10);
+      const bottom = clampToRange(rect.bottom + pad, top + 10, window.innerHeight - 10);
+      setActionHintRect({ top, left, width: right - left, height: bottom - top, right, bottom });
     }
-    if (guidedStep === "systemSuspicion") {
-      focusTourTarget("engine");
-    }
+
+    frame = window.requestAnimationFrame(measure);
+    const scheduleMeasure = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(measure);
+    };
+    window.addEventListener("resize", scheduleMeasure);
+    window.addEventListener("scroll", scheduleMeasure, true);
+    const interval = window.setInterval(measure, 300);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearInterval(interval);
+      window.removeEventListener("resize", scheduleMeasure);
+      window.removeEventListener("scroll", scheduleMeasure, true);
+    };
+  }, [activeActionTourId, tutorialVisible]);
+
+  useEffect(() => {
+    if (!tutorialVisible) return;
+    const panel = tutorialPanelRef.current;
+    if (!panel) return;
+    const frame = window.requestAnimationFrame(() => {
+      const rect = panel.getBoundingClientRect();
+      setTutorialPanelSize({ width: rect.width, height: rect.height });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [tutorialVisible, activeTutorialStep, language]);
+
+  function tourState(id: OnboardingTargetId) {
+    return {
+      "data-tour-target": id,
+      "data-tour-active": activeTourId === id ? "true" : "false",
+      "data-tour-action-active": activeActionTourId === id ? "true" : "false"
+    };
   }
 
   function completeTutorial() {
     setTutorialOpen(false);
     setTutorialStepIndex(0);
-    window.setTimeout(() => {
-      unlockAudio();
-      playSfx("engineIntroHit");
-      setEngineIntroOpen(true);
-    }, 180);
+    setSpotlightRect(null);
+    setActionHintRect(null);
+    localStorage.setItem(guidanceUnlockedKey, "true");
+    setSystemGuidanceUnlocked(true);
+    void refreshGuidance(state);
   }
 
-  function nextTutorialStep() {
+  function moveOnboardingTo(stepId: string) {
+    const index = tutorial.findIndex((step) => step.id === stepId);
+    if (index >= 0) setTutorialStepIndex(index);
+  }
+
+  function advanceOnboarding(event: OnboardingAdvance, payload?: { actionId?: string; zoneId?: string }) {
+    if (!activeTutorialStep) return;
+    if (activeTutorialStep.advanceOn === "tutorialFinished" && event === "tutorialFinished") {
+      completeTutorial();
+      return;
+    }
+
+    if (event === "traceOpened" && payload?.actionId === "publishTailorsClaim") {
+      moveOnboardingTo("traceOverview");
+      return;
+    }
+    if (event === "traceClosed" && activeTutorialStep.surface === "trace") {
+      moveOnboardingTo("commitFirstRecord");
+      return;
+    }
+    if (event === "commandOpened" && payload?.actionId === "publishTailorsClaim") {
+      moveOnboardingTo("commandOverview");
+      return;
+    }
+    if (event === "commandOpened" && payload?.actionId === "showUnfilteredComments") {
+      moveOnboardingTo("commandPublicEffects");
+      return;
+    }
+    if (event === "commandCommitted" && payload?.actionId === "publishTailorsClaim" && activeTutorialStep.surface === "command") {
+      moveOnboardingTo("metricVirality");
+      return;
+    }
+    if (event === "commandCommitted" && payload?.actionId === "showUnfilteredComments" && activeTutorialStep.surface === "command") {
+      moveOnboardingTo("dialogueOverview");
+      return;
+    }
+    if (event === "sourceSelected" && payload?.zoneId === "public") {
+      moveOnboardingTo("readPublicCard");
+      return;
+    }
+    if (event === "dialogueReplySent" && activeTutorialStep.surface === "dialogue") {
+      moveOnboardingTo("dialogueResolve");
+      return;
+    }
+    if (event === "dialogueResolved" && activeTutorialStep.surface === "dialogue") {
+      moveOnboardingTo("metricSystemSuspicion");
+      return;
+    }
+
+    if (activeTutorialStep.advanceOn !== event) return;
+
+    if (event === "sourceSelected" && payload?.zoneId && payload.zoneId !== "public") return;
+    if ((event === "traceOpened" || event === "commandOpened" || event === "commandCommitted") && payload?.actionId) {
+      const expectedAction = activeTutorialStep.id.includes("Public") || activeTutorialStep.id.includes("public") || activeTutorialStep.id === "commitPublicSignal"
+        ? "showUnfilteredComments"
+        : activeTutorialStep.id.includes("First") || activeTutorialStep.id.includes("first") || activeTutorialStep.id === "inspectTrace" || activeTutorialStep.id === "commitFirstRecord"
+          ? "publishTailorsClaim"
+          : payload.actionId;
+      if (payload.actionId !== expectedAction) return;
+    }
+
     if (tutorialStepIndex >= tutorial.length - 1) {
       completeTutorial();
       return;
     }
-    setTutorialStepIndex((current) => current + 1);
+    setTutorialStepIndex((current) => Math.min(tutorial.length - 1, current + 1));
+  }
+
+  function nextTutorialStep() {
+    advanceOnboarding(activeTutorialStep?.advanceOn === "tutorialFinished" ? "tutorialFinished" : "next");
   }
 
   function previousTutorialStep() {
@@ -1019,7 +1213,7 @@ export default function DashboardClient() {
 
   useEffect(() => {
     if (!dialogueEvent) return;
-    if (!dialogueDeadline || dialogueTimedOut || dialogueStatus === "streaming" || dialogueStatus === "resolving") return;
+    if (dialogueTimerPaused || !dialogueDeadline || dialogueTimedOut || dialogueStatus === "streaming" || dialogueStatus === "resolving") return;
 
     const interval = window.setInterval(() => {
       const remaining = Math.max(0, dialogueDeadline - currentTimeMs());
@@ -1034,7 +1228,7 @@ export default function DashboardClient() {
     }, 100);
 
     return () => window.clearInterval(interval);
-  }, [dialogueDeadline, dialogueEvent, dialogueStatus, dialogueTimedOut, dialogueTranscript, recordDialogueSilence]);
+  }, [dialogueDeadline, dialogueEvent, dialogueStatus, dialogueTimedOut, dialogueTimerPaused, dialogueTranscript, recordDialogueSilence]);
 
   async function streamDialogueReply(baseTranscript: DialogueMessage[], playerMessage: string, appendPlayer = true, selectedChoice?: DialogueChoice) {
     if (!dialogueEvent || dialogueTimedOut || dialogueStatus === "streaming" || dialogueStatus === "resolving") return;
@@ -1058,6 +1252,7 @@ export default function DashboardClient() {
     setDialogueInput("");
     setDialogueStatus("streaming");
     setDialogueError(null);
+    advanceOnboarding("dialogueReplySent");
     let speakerText = "";
     let messageCuePlayed = false;
     try {
@@ -1169,6 +1364,7 @@ export default function DashboardClient() {
     stopDialogueTimer();
     setDialogueTimedOut(false);
     setDialogueStatus("idle");
+    advanceOnboarding("dialogueResolved");
     setVisualPhase("resolving");
     scheduleVisualIdle();
   }
@@ -1188,7 +1384,9 @@ export default function DashboardClient() {
   const dialogueLimitReached = dialogueEvent ? dialoguePlayerTurns >= dialogueEvent.turnLimit : false;
   const dialogueInteractionLocked = dialogueTimedOut || dialogueLimitReached;
   const dialogueTimeoutMs = getDialogueTimeoutMs();
-  const dialogueProgress = dialogueEvent && !dialogueTimedOut
+  const dialogueProgress = dialogueTimerPaused
+    ? 1
+    : dialogueEvent && !dialogueTimedOut
     ? Math.max(0, Math.min(1, dialogueRemainingMs / dialogueTimeoutMs))
     : 0;
   const dialogueSecondsRemaining = Math.ceil(dialogueRemainingMs / 1000);
@@ -1214,8 +1412,8 @@ export default function DashboardClient() {
   useEffect(() => {
     if (!hydrated) return;
     if (isZoneVisibleInGuidedStep(guidedStep, selectedZone as typeof zones[number]["id"])) return;
-    queueMicrotask(() => setSelectedZone(guidedTarget?.zoneId ?? "tailors"));
-  }, [guidedStep, guidedTarget?.zoneId, hydrated, selectedZone]);
+    queueMicrotask(() => setSelectedZone(guidedStep === "publicSignals" || guidedStep === "systemSuspicion" ? "public" : "tailors"));
+  }, [guidedStep, hydrated, selectedZone]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -1246,8 +1444,8 @@ export default function DashboardClient() {
       data-last-risk={lastRiskKind}
       data-atmosphere={atmosphere}
       data-guided-step={guidedStep}
-      data-tutorial-active={activeTutorialStep || guidedActive ? "true" : "false"}
-      data-tour-step={activeTutorialStep?.id ?? guidedTargetTourId ?? "off"}
+      data-tutorial-active={tutorialVisible ? "true" : "false"}
+      data-tour-step={activeTutorialStep?.id ?? "off"}
       data-overlay-active={overlayActive ? "true" : "false"}
     >
       <div className="scroll-progress" aria-hidden="true" />
@@ -1318,21 +1516,30 @@ export default function DashboardClient() {
           </motion.div>
           <LayoutGroup>
           <div className="lab-head">
-            <div className="role-card">
+            <div className="role-card tour-target" {...tourState("role-card")}>
               <div className="role-num">{state.actionsLeft}</div>
               <div><b>{language === "zh" ? "宫廷信息流编辑" : "Royal Feed Editor"}</b><span>{language === "zh" ? `${state.history.length} 条轨迹已记录 · 所有公共信号已观察` : `${state.history.length} traces recorded · all public signals observed`}</span></div>
             </div>
-            <div className="metrics-grid tour-target" aria-label="State variables" {...tourState("metrics")}>
+            <div className="metrics-grid tour-target" aria-label="State variables" {...tourState("metrics-grid")}>
               {metricRows.map(([key, tone]) => {
                 const value = state[key];
                 const delta = changedMetrics.find((item) => item.key === key);
                 const metricSealed = !isMetricVisibleInGuidedStep(guidedStep, key);
+                const metricTargets = {
+                  truth: "metric-truth",
+                  pressure: "metric-pressure",
+                  virality: "metric-virality",
+                  publicDoubt: "metric-publicDoubt",
+                  reputation: "metric-reputation",
+                  systemSuspicion: "metric-systemSuspicion"
+                } as const;
+                const metricTarget = tourState(metricTargets[key]);
                 return (
                   <motion.div
                     layout
                     className={`metric ${delta ? "metric-changed" : ""} ${metricSealed ? "guided-sealed" : ""}`}
-                    data-guided-target={guidedTarget?.metricKey === key ? "true" : "false"}
                     key={key}
+                    {...metricTarget}
                     style={metricStyle(metricSealed ? 0 : value, tone)}
                   >
                     <small>
@@ -1349,17 +1556,22 @@ export default function DashboardClient() {
           </div>
 
           <div className="lab-body">
-            <aside className="module tour-target" {...tourState("sources")}>
+            <aside className="module tour-target">
               <div className="module-head"><h3>{commonText("sceneSources", language)}</h3><span className="chip accent-cyan">{commonText("live", language)}</span></div>
               <div className="module-body stage-list">
                 {zones.map((zone) => {
                   const zoneSealed = !isZoneVisibleInGuidedStep(guidedStep, zone.id);
+                  const sourceTarget = zone.id === "tailors"
+                    ? tourState("source-tailors")
+                    : zone.id === "public"
+                      ? tourState("source-public")
+                      : {};
                   return (
                     <button
                       className={`${zone.id === selectedZone ? "stage-button active" : "stage-button"} ${zoneSealed ? "guided-sealed" : ""}`}
                       key={zone.id}
                       aria-disabled={zoneSealed}
-                      data-guided-target={guidedTarget?.zoneId === zone.id ? "true" : "false"}
+                      {...sourceTarget}
                       onClick={() => {
                         playSfx(zoneSealed ? "engineScan" : "uiClick");
                         if (zoneSealed) {
@@ -1368,6 +1580,7 @@ export default function DashboardClient() {
                         }
                         setSelectedZone(zone.id);
                         setVisualPhase("focusing");
+                        advanceOnboarding("sourceSelected", { zoneId: zone.id });
                         pushToast(language === "zh" ? "来源焦点已变化" : "Source focus changed", language === "zh" ? `${zoneText(zone.id, language).title} 已进入编辑队列。` : `${zoneText(zone.id, language).title} is now feeding the editorial queue.`);
                       }}
                       style={{ "--accent": `var(--${zone.id === "child" ? "red" : zone.id === "public" ? "cyan" : "gold"})` } as CSSProperties}
@@ -1388,7 +1601,7 @@ export default function DashboardClient() {
                 </div>
               </div>
               <div className="feed-grid">
-                <div className="module zone-action-module tour-target" {...tourState("actions")}>
+                <div className="module zone-action-module tour-target">
                   <div className="module-head">
                     <h3>{zoneText(selectedZone as typeof zones[number]["id"], language).title}</h3>
                     <span className="status-tag">{zoneText(selectedZone as typeof zones[number]["id"], language).subtitle}</span>
@@ -1404,14 +1617,19 @@ export default function DashboardClient() {
                     const effects = actionEffectEntries(action, language);
                     const riskKind = classifyActionKind(action);
                     const copy = actionText(action.id, language);
+                    const actionCardTarget = action.id === "publishTailorsClaim"
+                      ? tourState("card-publishTailorsClaim")
+                      : action.id === "showUnfilteredComments"
+                        ? tourState("card-showUnfilteredComments")
+                        : {};
                     return (
                       <article
                         className={`${locked ? "action-card disabled" : "action-card"} ${guidedLockReason ? "guided-sealed" : ""} ${completed ? "completed" : ""} ${selectedPostId === action.id ? "is-active" : ""}`}
                         data-post={`0${index + 1}`}
-                        data-guided-target={guidedTarget?.actionId === action.id ? "true" : "false"}
                         data-risk={riskKind}
                         data-zone={action.zone}
                         key={action.id}
+                        {...actionCardTarget}
                         onClick={() => {
                           setSelectedPostId(action.id);
                           setVisualPhase("focusing");
@@ -1441,6 +1659,11 @@ export default function DashboardClient() {
                           <button
                             className={action.requiresAIRewrite ? "tool-btn ai" : accent === "red" ? "tool-btn risk" : "tool-btn"}
                             disabled={completed || Boolean(lockReason) || Boolean(guidedLockReason) || engineStatus !== "idle" || Boolean(dialogueEvent)}
+                            {...(action.id === "publishTailorsClaim"
+                              ? tourState("action-publishTailorsClaim-commit")
+                              : action.id === "showUnfilteredComments"
+                                ? tourState("action-showUnfilteredComments-commit")
+                                : {})}
                             onClick={(event) => {
                               event.stopPropagation();
                               setSelectedPostId(action.id);
@@ -1459,12 +1682,13 @@ export default function DashboardClient() {
                           </button>
                           <button
                             className="tool-btn"
+                            {...(action.id === "publishTailorsClaim" ? tourState("action-publishTailorsClaim-inspect") : {})}
                             onClick={(event) => {
                               event.stopPropagation();
                               playSfx("uiClick");
-                              setGuidedTraceViewed(true);
                               setSelectedPostId(action.id);
                               setTraceActionId(action.id);
+                              advanceOnboarding("traceOpened", { actionId: action.id });
                             }}
                           >
                             {commonText("inspectTrace", language)}
@@ -1476,7 +1700,7 @@ export default function DashboardClient() {
                   </div>
                 </div>
 
-                <aside className="module black comments-module tour-target" {...tourState("comments")}>
+                <aside className="module black comments-module tour-target" {...tourState("comments-panel")}>
                   <div className="module-head"><h3>{commonText("liveComments", language)}</h3><span className="chip accent-cyan">+{state.virality * 42}/min</span></div>
                   <div className="module-body comment-stream">
                     {(state.publicComments?.length ? state.publicComments : publicCommentsFromStrings(state.comments, language)).map((comment, index) => (
@@ -1500,7 +1724,7 @@ export default function DashboardClient() {
               </div>
             </section>
 
-            <aside className="engine-stack tour-target" {...tourState("engine")}>
+            <aside className="engine-stack tour-target" {...tourState("engine-panel")}>
               <div className="module black">
                 <div className="module-head"><h3><Term id="pne" language={language}>{commonText("palaceNarrativeEngine", language)}</Term></h3><div className="engine-eye" aria-hidden="true" /></div>
                 <div className="module-body">
@@ -1509,22 +1733,6 @@ export default function DashboardClient() {
                     <span>{engineStatus === "idle" ? commonText("ready", language).toUpperCase() : engineStatus.toUpperCase()}</span>
                     <span>{aiSourceLabel(engineSource, language)}</span>
                   </div>
-                  {guidedStep !== "off" && (
-                    <div className="guided-card" data-step={guidedStep}>
-                      <div className="guided-card-head">
-                        <span>{guidedCopy.label}</span>
-                        <b>{guidedCopy.action}</b>
-                      </div>
-                      <h4>{guidedCopy.title}</h4>
-                      <p>{guidedCopy.body}</p>
-                      {(lockedGuidedZones.length > 0 || lockedGuidedMetrics.length > 0) && (
-                        <div className="guided-lock-list">
-                          {lockedGuidedZones.map((zone) => <span key={zone}>{zoneText(zone, language).title}</span>)}
-                          {lockedGuidedMetrics.map((metric) => <span key={metric}>{metricLabel(metric, language)}</span>)}
-                        </div>
-                      )}
-                    </div>
-                  )}
                   {systemGuidanceUnlocked && (
                     <div className="guidance-card" data-mode={guidanceMode}>
                       <div className="guidance-head">
@@ -1651,15 +1859,16 @@ export default function DashboardClient() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="command-title"
+              {...tourState("command-panel")}
             >
               <div className="command-head">
                 <h3 id="command-title">{command.title}</h3>
                 <div className="command-badge">{command.badge}</div>
               </div>
               <div className="command-body">
-                <div className="command-readout"><b>{commonText("selectedAction", language)}</b><p>{actionText(pendingCommand.action.id, language).title}</p></div>
-                <div className="command-readout"><b>{commonText("predictedEffect", language)}</b><p>{commandEffects.length > 0 ? commandEffects.join(" · ") : command.effect}</p></div>
-                <div className="command-readout"><b>{commonText("systemResponse", language)}</b><p>{pendingCommand.reaction.engineMessage}</p></div>
+                <div className="command-readout" {...tourState("command-selected")}><b>{commonText("selectedAction", language)}</b><p>{actionText(pendingCommand.action.id, language).title}</p></div>
+                <div className="command-readout" {...tourState("command-effects")}><b>{commonText("predictedEffect", language)}</b><p>{commandEffects.length > 0 ? commandEffects.join(" · ") : command.effect}</p></div>
+                <div className="command-readout" {...tourState("command-response")}><b>{commonText("systemResponse", language)}</b><p>{pendingCommand.reaction.engineMessage}</p></div>
                 {pendingCommand.preview.unlocks.length ? (
                   <div className="command-readout"><b>{commonText("unlocks", language)}</b><p>{pendingCommand.preview.unlocks.map((id) => actionText(id, language).title).join(", ")}</p></div>
                 ) : null}
@@ -1669,7 +1878,7 @@ export default function DashboardClient() {
                   setPendingCommand(null);
                   setVisualPhase("idle");
                 }}>{commonText("dismiss", language)}</button>
-                <button className="btn primary" onClick={() => void confirmCommand()}>{commonText("commitSimulation", language)}</button>
+                <button className="btn primary" {...tourState("command-commit")} onClick={() => void confirmCommand()}>{commonText("commitSimulation", language)}</button>
               </div>
             </motion.div>
           </motion.div>
@@ -1711,6 +1920,7 @@ export default function DashboardClient() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="dialogue-title"
+            {...tourState("dialogue-panel")}
           >
             <div className="dialogue-signal" aria-hidden="true" />
             <div className="dialogue-head">
@@ -1740,15 +1950,15 @@ export default function DashboardClient() {
               </div>
             )}
             <div
-              className={dialogueTimedOut ? "dialogue-timeout expired" : "dialogue-timeout"}
+              className={dialogueTimedOut ? "dialogue-timeout expired" : dialogueTimerPaused ? "dialogue-timeout paused" : "dialogue-timeout"}
               style={{ "--dialogue-progress": dialogueProgress } as CSSProperties}
             >
-              <span>{dialogueTimedOut ? commonText("silenceRecorded", language) : (language === "zh" ? "回应倒计时" : "Response Window")}</span>
-              <b>{dialogueTimedOut ? "00" : String(dialogueSecondsRemaining).padStart(2, "0")}s</b>
+              <span>{dialogueTimedOut ? commonText("silenceRecorded", language) : dialogueTimerPaused ? (language === "zh" ? "新手暂停" : "Guide Pause") : (language === "zh" ? "回应倒计时" : "Response Window")}</span>
+              <b>{dialogueTimedOut ? "00s" : dialogueTimerPaused ? "--" : `${String(dialogueSecondsRemaining).padStart(2, "0")}s`}</b>
               <i className="dialogue-timeout-bar" aria-hidden="true" />
             </div>
             {dialogueMood && (
-              <div className="dialogue-mood" aria-label={language === "zh" ? "交流态势" : "Dialogue mood"}>
+              <div className="dialogue-mood" aria-label={language === "zh" ? "交流态势" : "Dialogue mood"} {...tourState("dialogue-mood")}>
                 {(["trust", "agitation", "openness", "leverage"] as const).map((key) => (
                   <span style={{ "--mood-value": dialogueMood[key] / 10 } as CSSProperties} key={key}>
                     <b>{language === "zh"
@@ -1759,7 +1969,7 @@ export default function DashboardClient() {
                 ))}
               </div>
             )}
-            <div className="dialogue-stakes">
+            <div className="dialogue-stakes" {...tourState("dialogue-stakes")}>
               <b>{language === "zh" ? "风险" : "Stakes"}</b>
               <p>{dialogueEvent.stakes}</p>
             </div>
@@ -1773,7 +1983,7 @@ export default function DashboardClient() {
             </div>
             <div className="dialogue-quick">
               <AnimatePresence mode="popLayout">
-              {visibleDialogueReplies.map((reply) => (
+              {visibleDialogueReplies.map((reply, index) => (
                 <motion.button
                   layout
                   animate={{ opacity: 1, y: 0 }}
@@ -1782,6 +1992,7 @@ export default function DashboardClient() {
                   exit={{ opacity: 0, y: -8 }}
                   initial={{ opacity: 0, y: 8 }}
                   key={reply.id}
+                  {...(index === 0 ? tourState("dialogue-reply") : {})}
                   onClick={() => void streamDialogueReply(dialogueTranscript, reply.playerLine, true, reply)}
                   type="button"
                 >
@@ -1823,6 +2034,7 @@ export default function DashboardClient() {
                 className="btn secondary"
                 disabled={dialogueStatus === "streaming" || dialogueStatus === "resolving"}
                 onClick={() => void resolveDialogue()}
+                {...tourState("dialogue-resolve")}
                 type="button"
               >
                 {dialogueStatus === "resolving"
@@ -1839,78 +2051,70 @@ export default function DashboardClient() {
       )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {guidedCoachVisible && (
-          <motion.div
-            animate={{ opacity: 1 }}
-            className="guided-coach-layer"
-            exit={{ opacity: 0 }}
-            initial={{ opacity: 0 }}
-            role="presentation"
+      {activeTutorialStep && tutorialVisible && (
+        <div className="tutorial-layer onboarding-layer" aria-live="polite">
+          {spotlightRect ? (
+            <>
+              <div className="tutorial-scrim top" style={{ left: 0, top: 0, width: "100vw", height: spotlightRect.top }} aria-hidden="true" />
+              <div className="tutorial-scrim left" style={{ left: 0, top: spotlightRect.top, width: spotlightRect.left, height: spotlightRect.height }} aria-hidden="true" />
+              <div className="tutorial-scrim right" style={{ left: spotlightRect.right, top: spotlightRect.top, width: `calc(100vw - ${spotlightRect.right}px)`, height: spotlightRect.height }} aria-hidden="true" />
+              <div className="tutorial-scrim bottom" style={{ left: 0, top: spotlightRect.bottom, width: "100vw", height: `calc(100vh - ${spotlightRect.bottom}px)` }} aria-hidden="true" />
+              <div
+                className="tutorial-spotlight-frame"
+                style={{
+                  left: spotlightRect.left,
+                  top: spotlightRect.top,
+                  width: spotlightRect.width,
+                  height: spotlightRect.height
+                }}
+                aria-hidden="true"
+              />
+            </>
+          ) : (
+            <div className="tutorial-scrim fallback" aria-hidden="true" />
+          )}
+          {actionHintRect && activeActionTourId && (
+            <div className="tutorial-action-hint" style={actionHintStyle(actionHintRect)} aria-hidden="true">
+              <span>{activeTutorialStep.actionLabel ?? tutorialCopy.waiting}</span>
+              <i />
+            </div>
+          )}
+          <section
+            ref={(node) => { tutorialPanelRef.current = node; }}
+            className="tutorial-panel onboarding-panel"
+            role="dialog"
+            aria-modal="false"
+            aria-labelledby="tutorial-title"
+            style={{
+              left: tutorialPanelPosition.left,
+              top: tutorialPanelPosition.top,
+              width: tutorialPanelPosition.width
+            }}
           >
-            <motion.section
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              aria-labelledby="guided-coach-title"
-              className="guided-coach-panel"
-              exit={{ opacity: 0, y: 18, scale: 0.98 }}
-              initial={{ opacity: 0, y: 28, scale: 0.96 }}
-              role="dialog"
-              aria-modal="false"
-            >
-              <div className="guided-coach-radar" aria-hidden="true">
-                <i />
-                <i />
-                <i />
-              </div>
-              <div className="guided-coach-kicker">
-                <span><span className="guide-badge novice">{language === "zh" ? "新手指引" : "New Player Guide"}</span>{guidedCopy.label}</span>
-                <span>{String(guidedCoachIndex).padStart(2, "0")} / 03</span>
-              </div>
-              <h3 id="guided-coach-title">{guidedCopy.title}</h3>
-              <p>{guidedCopy.body}</p>
-              <div className="guided-coach-progress" aria-label={language === "zh" ? "引导进度" : "Guidance progress"}>
-                {[1, 2, 3].map((step) => (
-                  <span className={step === guidedCoachIndex ? "active" : step < guidedCoachIndex ? "complete" : ""} key={step} />
-                ))}
-              </div>
-              <div className="guided-coach-actions">
-                <button className="btn primary" onClick={runGuidedCoachAction}>{guidedCopy.action}</button>
-                {guidedTargetTourId && (
-                  <button className="tool-btn" onClick={() => focusTourTarget(guidedTargetTourId)}>
-                    {language === "zh" ? "高亮目标区域" : "Highlight target area"}
-                  </button>
-                )}
-              </div>
-            </motion.section>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {activeTutorialStep && (
-        <div className="tutorial-layer" aria-live="polite">
-          <div className="tutorial-field" aria-hidden="true" />
-          <section className="tutorial-panel" role="dialog" aria-modal="false" aria-labelledby="tutorial-title">
             <div className="tutorial-kicker">
               <span>{tutorialCopy.label}</span>
-              <span>{String(tutorialStepIndex + 1).padStart(2, "0")} / {String(tutorial.length).padStart(2, "0")}</span>
             </div>
             <p className="tutorial-eyebrow">{activeTutorialStep.eyebrow}</p>
             <h3 id="tutorial-title">{activeTutorialStep.title}</h3>
             <p>{activeTutorialStep.body}</p>
-            <div className="tutorial-progress" aria-label={tutorialCopy.label}>
-              {tutorial.map((step, index) => (
-                <span
-                  className={index === tutorialStepIndex ? "active" : index < tutorialStepIndex ? "complete" : ""}
-                  key={step.id}
-                />
-              ))}
-            </div>
+            <p className="tutorial-detail">{activeTutorialStep.detail}</p>
+            {activeTutorialStep.why && <p className="tutorial-why">{activeTutorialStep.why}</p>}
+            {activeTutorialStep.metricFocus && (
+              <div className="tutorial-metric-focus">
+                <b>{language === "zh" ? "参数重点" : "Metric focus"}</b>
+                <span>{activeTutorialStep.metricFocus === "actionsLeft" ? (language === "zh" ? "剩余行动" : "Actions Left") : metricLabel(activeTutorialStep.metricFocus, language)}</span>
+              </div>
+            )}
             <div className="tutorial-actions">
               <button className="tool-btn" onClick={completeTutorial}>{tutorialCopy.skip}</button>
               <button className="tool-btn" disabled={tutorialStepIndex === 0} onClick={previousTutorialStep}>{tutorialCopy.previous}</button>
-              <button className="btn primary" onClick={nextTutorialStep}>
-                {tutorialStepIndex === tutorial.length - 1 ? tutorialCopy.finish : tutorialCopy.next}
-              </button>
+              {activeTutorialStep.advanceOn === "next" || activeTutorialStep.advanceOn === "tutorialFinished" ? (
+                <button className="btn primary" onClick={nextTutorialStep}>
+                  {activeTutorialStep.advanceOn === "tutorialFinished" ? tutorialCopy.finish : tutorialCopy.next}
+                </button>
+              ) : (
+                <span className="tutorial-waiting">{tutorialCopy.waiting}</span>
+              )}
             </div>
           </section>
         </div>
@@ -1997,22 +2201,25 @@ export default function DashboardClient() {
 
       {traceAction && tracePreview && (
         <div className="trace-drawer active" role="presentation">
-          <aside className="trace-panel" role="dialog" aria-modal="true" aria-label={commonText("actionTrace", language)}>
+          <aside className="trace-panel" role="dialog" aria-modal="true" aria-label={commonText("actionTrace", language)} {...tourState("trace-panel")}>
             <div className="trace-head">
               <span className={`status-tag ${tracePreview.lockReason ? "locked" : "safe"}`}>
                 {tracePreview.lockReason ? commonText("locked", language) : tracePreview.completed ? commonText("completed", language) : commonText("available", language)}
               </span>
-              <button className="tool-btn" onClick={() => setTraceActionId(null)}>{commonText("closeTrace", language)}</button>
+              <button className="tool-btn" {...tourState("trace-close")} onClick={() => {
+                setTraceActionId(null);
+                advanceOnboarding("traceClosed");
+              }}>{commonText("closeTrace", language)}</button>
             </div>
             <h3>{actionText(traceAction.id, language).title}</h3>
             <p>{actionText(traceAction.id, language).description}</p>
             <div className="trace-grid">
               <div><b>{commonText("source", language)}</b><span>{actionText(traceAction.id, language).sourceLabel}</span></div>
-              <div><b>{commonText("risk", language)}</b><span>{tracePreview.riskBand.toUpperCase()}</span></div>
+              <div {...tourState("trace-risk")}><b>{commonText("risk", language)}</b><span>{tracePreview.riskBand.toUpperCase()}</span></div>
               <div><b>{commonText("choices", language)}</b><span>{tracePreview.availableChoices.map((choice) => language === "zh" ? (choice === "direct" ? "直接" : choice === "rewrite" ? "改写" : "原文") : choice[0].toUpperCase() + choice.slice(1)).join(" / ")}</span></div>
-              <div><b>{commonText("requirement", language)}</b><span>{tracePreview.lockReason ?? commonText("available", language)}</span></div>
+              <div {...tourState("trace-requirement")}><b>{commonText("requirement", language)}</b><span>{tracePreview.lockReason ?? commonText("available", language)}</span></div>
             </div>
-            <div className="trace-readout">
+            <div className="trace-readout" {...tourState("trace-output")}>
               <b>{commonText("projectedOutput", language)}</b>
               <p>{tracePreview.resultText}</p>
             </div>

@@ -8,14 +8,12 @@ test.beforeEach(async ({ page }) => {
 
 async function beginOperationsAndSkipTutorial(page: Page, buttonName = "Begin Operations", skipName = "Skip") {
   await page.getByRole("button", { name: buttonName }).click();
-  const tutorialPanel = page.locator(".tutorial-panel");
+  const tutorialPanel = page.locator(".onboarding-panel");
   await expect(tutorialPanel).toBeVisible();
-  await tutorialPanel.getByRole("button", { name: skipName }).click();
+  await tutorialPanel.getByRole("button", { name: new RegExp(skipName === "跳过" ? "跳过|跳过教程" : "Skip|Skip Tutorial") }).click();
   await expect(tutorialPanel).toHaveCount(0);
-  const engineIntro = page.locator(".engine-intro-panel");
-  await expect(engineIntro).toBeVisible();
-  await engineIntro.getByRole("button", { name: /Connect Engine|连接引擎/ }).click();
-  await expect(engineIntro).toHaveCount(0);
+  await expect(page.locator(".engine-intro-panel")).toHaveCount(0);
+  await expect(page.locator(".guidance-card")).toBeVisible();
 }
 
 async function activateButton(button: Locator) {
@@ -35,6 +33,19 @@ async function resolveDialogueIfOpen(page: Page) {
   const endExchange = panel.getByRole("button", { name: /End Exchange|Resolve Exchange|结束交流|结算交流/ });
   await activateButton(endExchange);
   await expect(panel).toHaveCount(0, { timeout: 15000 });
+}
+
+async function clickTutorialNext(page: Page) {
+  await page.locator(".onboarding-panel").getByRole("button", { name: "Next", exact: true }).click();
+}
+
+async function expectActiveTourTarget(page: Page, targetId: string) {
+  await expect(page.locator(`[data-tour-target="${targetId}"][data-tour-active="true"]`)).toBeVisible();
+}
+
+async function expectActiveActionTarget(page: Page, targetId: string) {
+  await expect(page.locator(`[data-tour-target="${targetId}"][data-tour-action-active="true"]`)).toBeVisible();
+  await expect(page.locator(".tutorial-action-hint")).toBeVisible();
 }
 
 test("completes a six-action editorial shift and reaches the archive", async ({ page }) => {
@@ -61,7 +72,7 @@ test("completes a six-action editorial shift and reaches the archive", async ({ 
   await expect(page.getByLabel("Public doubt heat map")).toBeVisible();
 
   await page.locator(".action-card").filter({ hasText: "Leak a Loom Photo" }).getByRole("button", { name: "Inspect Trace" }).click();
-  await expect(page.getByRole("dialog", { name: "Action Trace" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Action Trace", exact: true })).toBeVisible();
   await expect(page.getByRole("dialog", { name: "Action Trace" })).toContainText("Requires: Inspect the Looms.");
   await page.getByRole("button", { name: "Close Trace" }).click();
 
@@ -172,16 +183,10 @@ test("dialogue interruptions allow quick replies and resolve into the feed", asy
   await expect(page.getByRole("dialog", { name: "Shift Briefing" })).toBeVisible();
   await beginOperationsAndSkipTutorial(page);
 
-  const guidedCoach = page.locator(".guided-coach-panel");
-  await expect(guidedCoach).toBeVisible();
-  await guidedCoach.getByRole("button", { name: "Open the trace brief" }).click();
-  await expect(page.getByRole("dialog", { name: "Action Trace" })).toBeVisible();
-  await page.getByRole("button", { name: "Close Trace" }).click();
-  await guidedCoach.getByRole("button", { name: "Commit the first record" }).click();
+  await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Commit Action" }).click();
   await page.getByRole("button", { name: "Commit Simulation" }).click();
-  await expect(guidedCoach).toContainText("Read the public signal");
-  await guidedCoach.getByRole("button", { name: "Go to Public Comments" }).click();
-  await guidedCoach.getByRole("button", { name: "Go to Public Comments" }).click();
+  await page.getByRole("button", { name: "The Public Comments" }).click();
+  await page.locator(".action-card").filter({ hasText: "Show Unfiltered Comments" }).getByRole("button", { name: "Commit Action" }).click();
   await page.getByRole("button", { name: "Commit Simulation" }).click();
 
   const panel = page.locator(".dialogue-panel");
@@ -190,6 +195,7 @@ test("dialogue interruptions allow quick replies and resolve into the feed", asy
   await expect(panel.locator(".dialogue-guide")).toBeVisible();
   await expect(panel.locator(".dialogue-guide")).toContainText("New Player Guide");
   await expect(panel.locator(".dialogue-guide")).toContainText("Choose one quick reply");
+  await expect(panel.locator(".dialogue-timeout.paused")).toContainText("Guide Pause");
   const publicReply = panel.getByRole("button", { name: "The public should know." });
   await activateButton(publicReply);
   await expect(panel.locator(".dialogue-message.player")).toContainText("The public should know this doubt exists.", { timeout: 10000 });
@@ -253,44 +259,157 @@ test("start page exposes the operating shift", async ({ page }) => {
   await expect(page.locator(".section-header .eyebrow", { hasText: "Narrative Operations Theatre" })).toBeVisible();
 });
 
-test("each new shift briefing continues into the guided operator tutorial", async ({ page }) => {
+test("each new shift briefing continues into the spotlight tutorial with real controls", async ({ page }) => {
   await page.goto("/dashboard");
   await expect(page.getByRole("dialog", { name: "Shift Briefing" })).toBeVisible();
   await page.getByRole("button", { name: "Begin Operations" }).click();
 
-  const tutorialPanel = page.locator(".tutorial-panel");
-  const tutorial = page.getByRole("dialog", { name: "Choose the signal source" });
+  const tutorialPanel = page.locator(".onboarding-panel");
+  const tutorial = page.getByRole("dialog", { name: "Six actions before the parade" });
   await expect(tutorial).toBeVisible();
+  await expect(page.locator(".tutorial-spotlight-frame")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Highlight target area|Continue the shift/ })).toHaveCount(0);
+  await expect(page.locator(".guided-coach-panel")).toHaveCount(0);
   await expect(page.locator(".guidance-card")).toHaveCount(0);
-  await expect(page.locator('[data-tour-id="sources"][data-tour-active="true"]')).toBeVisible();
-  await expect(page.locator(".tutorial-progress span.active")).toHaveCount(1);
+  await expect(page.locator(".tutorial-progress")).toHaveCount(0);
+  await expectActiveTourTarget(page, "role-card");
 
-  await tutorialPanel.getByRole("button", { name: "Next", exact: true }).click();
-  await expect(page.getByRole("dialog", { name: "Inspect and commit actions" })).toBeVisible();
-  await expect(page.locator('[data-tour-id="actions"][data-tour-active="true"]')).toBeVisible();
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "Sources choose the queue" })).toBeVisible();
+  await expectActiveTourTarget(page, "source-tailors");
 
-  await tutorialPanel.getByRole("button", { name: "Next", exact: true }).click();
-  await expect(page.getByRole("dialog", { name: "Watch the Palace Narrative Engine" })).toBeVisible();
-  await expect(page.locator('[data-tour-id="engine"][data-tour-active="true"]')).toBeVisible();
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "Read the full action card" })).toBeVisible();
+  await expectActiveTourTarget(page, "card-publishTailorsClaim");
 
-  await tutorialPanel.getByRole("button", { name: "Next", exact: true }).click();
-  await expect(page.getByRole("dialog", { name: "Read the comment stream" })).toBeVisible();
-  await expect(page.locator('[data-tour-id="comments"][data-tour-active="true"]')).toBeVisible();
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "Inspect before committing" })).toBeVisible();
+  await expectActiveTourTarget(page, "card-publishTailorsClaim");
+  await expectActiveActionTarget(page, "action-publishTailorsClaim-inspect");
+  await page.locator('[data-tour-target="action-publishTailorsClaim-inspect"]').click();
+  await expect(page.getByRole("dialog", { name: "Action Trace", exact: true })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "This is the Action Trace" })).toBeVisible();
+  await expectActiveTourTarget(page, "trace-panel");
 
-  await tutorialPanel.getByRole("button", { name: "Next", exact: true }).click();
-  await expect(page.getByRole("dialog", { name: "Use metrics to read the run" })).toBeVisible();
-  await expect(page.locator('[data-tour-id="metrics"][data-tour-active="true"]')).toBeVisible();
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "Requirements explain locks" })).toBeVisible();
+  await expectActiveTourTarget(page, "trace-requirement");
+
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "Risk shows danger" })).toBeVisible();
+  await expectActiveTourTarget(page, "trace-risk");
+
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "Projected output shows the record" })).toBeVisible();
+  await expectActiveTourTarget(page, "trace-output");
+  await expectActiveActionTarget(page, "trace-close");
+  await page.locator('[data-tour-target="trace-close"]').click();
+
+  await expect(page.getByRole("dialog", { name: "Commit the first record" })).toBeVisible();
+  await expectActiveTourTarget(page, "card-publishTailorsClaim");
+  await expectActiveActionTarget(page, "action-publishTailorsClaim-commit");
+  await page.locator('[data-tour-target="action-publishTailorsClaim-commit"]').click();
+  await expect(page.locator(".command-panel")).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Command preview is the final check" })).toBeVisible();
+  await expectActiveTourTarget(page, "command-panel");
+
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "Confirm the selected action" })).toBeVisible();
+  await expectActiveTourTarget(page, "command-selected");
+
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "Read the predicted effect" })).toBeVisible();
+  await expectActiveTourTarget(page, "command-effects");
+
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "The engine response is not the rule" })).toBeVisible();
+  await expectActiveTourTarget(page, "command-response");
+
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "Confirm Commit Simulation" })).toBeVisible();
+  await expectActiveTourTarget(page, "command-panel");
+  await expectActiveActionTarget(page, "command-commit");
+  await page.locator('[data-tour-target="command-commit"]').click();
+
+  await expect(page.getByRole("dialog", { name: "Virality is repetition speed" })).toBeVisible();
+  await expectActiveTourTarget(page, "metric-virality");
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "Pressure is palace force" })).toBeVisible();
+  await expectActiveTourTarget(page, "metric-pressure");
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "Reputation is editor protection" })).toBeVisible();
+  await expectActiveTourTarget(page, "metric-reputation");
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "Public Doubt is shared uncertainty" })).toBeVisible();
+  await expectActiveTourTarget(page, "metric-publicDoubt");
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "Truth is visible evidence" })).toBeVisible();
+  await expectActiveTourTarget(page, "metric-truth");
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "Switch to Public Comments" })).toBeVisible();
+  await expectActiveTourTarget(page, "source-public");
+  await expectActiveActionTarget(page, "source-public");
+  await page.locator('[data-tour-target="source-public"]').click();
+
+  await expect(page.getByRole("dialog", { name: "Read Show Unfiltered Comments" })).toBeVisible();
+  await expectActiveTourTarget(page, "card-showUnfilteredComments");
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "Comments show crowd state" })).toBeVisible();
+  await expectActiveTourTarget(page, "comments-panel");
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "Submit the public signal" })).toBeVisible();
+  await expectActiveTourTarget(page, "card-showUnfilteredComments");
+  await expectActiveActionTarget(page, "action-showUnfilteredComments-commit");
+  await page.locator('[data-tour-target="action-showUnfilteredComments-commit"]').click();
+  await expect(page.locator(".command-panel")).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "This effect is riskier" })).toBeVisible();
+  await expectActiveTourTarget(page, "command-effects");
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "Write the public record" })).toBeVisible();
+  await expectActiveTourTarget(page, "command-panel");
+  await expectActiveActionTarget(page, "command-commit");
+  await page.locator('[data-tour-target="command-commit"]').click();
+
+  await expect(page.locator(".dialogue-panel")).toBeVisible({ timeout: 15000 });
+  await expect(page.getByRole("dialog", { name: "Dialogue is an immediate reaction" })).toBeVisible();
+  await expectActiveTourTarget(page, "dialogue-panel");
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "Stakes explain why this matters" })).toBeVisible();
+  await expectActiveTourTarget(page, "dialogue-stakes");
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "These are dialogue meters" })).toBeVisible();
+  await expectActiveTourTarget(page, "dialogue-mood");
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "Choose a quick reply" })).toBeVisible();
+  await expectActiveTourTarget(page, "dialogue-panel");
+  await expectActiveActionTarget(page, "dialogue-reply");
+  await expect(page.locator(".dialogue-panel .dialogue-timeout.paused")).toContainText("Guide Pause");
+  await page.locator('[data-tour-target="dialogue-reply"]').click();
+
+  await expect(page.getByRole("dialog", { name: "Write the exchange result" })).toBeVisible();
+  await expectActiveTourTarget(page, "dialogue-panel");
+  await expectActiveActionTarget(page, "dialogue-resolve");
+  const resolveButton = page.locator('[data-tour-target="dialogue-resolve"]');
+  await expect(resolveButton).toBeEnabled({ timeout: 15000 });
+  await resolveButton.click();
+  await expect(page.locator(".dialogue-panel")).toHaveCount(0, { timeout: 15000 });
+
+  await expect(page.getByRole("dialog", { name: "System Suspicion is access risk" })).toBeVisible();
+  await expectActiveTourTarget(page, "metric-systemSuspicion");
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "The right side is a readout" })).toBeVisible();
+  await expectActiveTourTarget(page, "engine-panel");
+  await clickTutorialNext(page);
+  await expect(page.getByRole("dialog", { name: "Finish the remaining actions" })).toBeVisible();
+  await expectActiveTourTarget(page, "role-card");
   await tutorialPanel.getByRole("button", { name: "Finish Tutorial" }).click();
-  await expect(page.locator(".tutorial-panel")).toHaveCount(0);
-  await expect(page.locator(".engine-intro-panel")).toBeVisible();
-  await expect(page.locator(".guidance-card")).toHaveCount(0);
-  await page.locator(".engine-intro-panel").getByRole("button", { name: "Connect Engine" }).click();
+  await expect(page.locator(".onboarding-panel")).toHaveCount(0);
   await expect(page.locator(".engine-intro-panel")).toHaveCount(0);
   await expect(page.locator(".guidance-card")).toBeVisible();
   await expect(page.locator(".guidance-card")).toContainText("System Guide");
 
   await page.reload();
-  await expect(page.locator(".tutorial-panel")).toHaveCount(0);
+  await expect(page.locator(".onboarding-panel")).toHaveCount(0);
   await expect(page.locator(".guidance-card")).toBeVisible();
 
   await page.goto("/");
@@ -298,7 +417,7 @@ test("each new shift briefing continues into the guided operator tutorial", asyn
   await expect(page).toHaveURL(/\/dashboard/);
   await expect(page.getByRole("dialog", { name: "Shift Briefing" })).toBeVisible();
   await page.getByRole("button", { name: "Begin Operations" }).click();
-  await expect(page.getByRole("dialog", { name: "Choose the signal source" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Six actions before the parade" })).toBeVisible();
 });
 
 test("fresh first run shows sealed systems and unlocks them through guided play", async ({ page }) => {
@@ -306,7 +425,8 @@ test("fresh first run shows sealed systems and unlocks them through guided play"
   await beginOperationsAndSkipTutorial(page);
 
   await expect(page.locator(".dashboard-page")).toHaveAttribute("data-guided-step", "firstTurn");
-  await expect(page.locator(".guided-card")).toContainText("First Run / Task 01");
+  await expect(page.locator(".guided-card")).toHaveCount(0);
+  await expect(page.locator(".guided-coach-panel")).toHaveCount(0);
   await expect(page.locator(".stage-button.guided-sealed")).toHaveCount(3);
   await expect(page.locator(".metric.guided-sealed")).toHaveCount(3);
   await expect(page.getByRole("button", { name: "The Public Comments" })).toContainText("Unlocks after the first record");
@@ -315,7 +435,6 @@ test("fresh first run shows sealed systems and unlocks them through guided play"
   await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Inspect Trace" }).click();
   await expect(page.getByRole("dialog", { name: "Action Trace" })).toContainText("Publish the Tailors' Claim");
   await page.getByRole("button", { name: "Close Trace" }).click();
-  await expect(page.locator(".guided-card")).toContainText("Commit the first record");
 
   await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Commit Action" }).click();
   await page.getByRole("button", { name: "Commit Simulation" }).click();
@@ -324,7 +443,7 @@ test("fresh first run shows sealed systems and unlocks them through guided play"
   await expect(page.locator(".stage-button.guided-sealed")).toHaveCount(1);
   await expect(page.locator(".metric.guided-sealed")).toHaveCount(1);
   await page.getByRole("button", { name: "The Public Comments" }).click();
-  await expect(page.locator(".guided-card")).toContainText("Read the public signal");
+  await expect(page.locator(".action-card").filter({ hasText: "Show Unfiltered Comments" })).toBeVisible();
 });
 
 test("fresh first run hides route spoilers and shows unclipped help tooltips", async ({ page }) => {
@@ -332,7 +451,8 @@ test("fresh first run hides route spoilers and shows unclipped help tooltips", a
   await beginOperationsAndSkipTutorial(page);
 
   const body = page.locator("body");
-  await expect(page.locator(".guided-coach-panel")).toBeVisible();
+  await expect(page.locator(".guided-coach-panel")).toHaveCount(0);
+  await expect(page.locator(".onboarding-panel")).toHaveCount(0);
   await expect(body).not.toContainText(/Full dashboard unlocked|Choose your route|testing its bias|secret ending|Engine Decode/i);
   await expect(body).not.toContainText(/完整控制台已解锁|决定你的路线|测试它的偏向|秘密结局|引擎解码/);
 
