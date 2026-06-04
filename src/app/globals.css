@@ -40,6 +40,7 @@
 
 html {
   background: var(--paper);
+  overflow-x: clip;
   scroll-behavior: smooth;
 }
 
@@ -933,6 +934,7 @@ h2 {
 
 .panel-shell {
   position: relative;
+  min-width: 0;
 }
 
 .panel-shell::before {
@@ -949,6 +951,7 @@ h2 {
   position: relative;
   display: grid;
   grid-template-rows: auto 1fr auto;
+  min-width: 0;
   min-height: 860px;
   border: 1px solid var(--line-2);
   background: rgba(255, 250, 240, 0.76);
@@ -957,13 +960,24 @@ h2 {
 }
 
 .lab-shell::before {
-  content: attr(data-label);
-  position: absolute;
-  left: 0;
-  top: -28px;
+  content: none;
+}
+
+.lab-shell-label {
+  min-width: 0;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+  margin: -2px 0 10px;
+  padding: 0 2px 9px;
   color: var(--muted);
   font: 950 var(--text-xs)/1 var(--mono);
-  letter-spacing: 0.15em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .phase-strip {
@@ -1260,8 +1274,9 @@ h2 {
 
 .lab-body {
   display: grid;
-  grid-template-columns: 250px minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(220px, 250px) minmax(0, 1fr) minmax(300px, 340px);
   gap: 10px;
+  min-width: 0;
   min-height: 0;
 }
 
@@ -1517,6 +1532,7 @@ h2 {
 
 .queue-area {
   min-height: 0;
+  min-width: 0;
   display: grid;
   grid-template-rows: auto 1fr;
   gap: 10px;
@@ -1527,6 +1543,7 @@ h2 {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
+  min-width: 0;
   overflow: hidden;
   border: 1px solid var(--line-2);
   background: var(--black);
@@ -1563,24 +1580,37 @@ h2 {
 }
 
 .wire-track {
+  position: relative;
+  inline-size: 100%;
+  height: 100%;
   min-width: 0;
   overflow: hidden;
+  contain: paint;
   padding-left: 24px;
 }
 
 .wire-track span {
-  display: inline-block;
+  position: absolute;
+  left: 24px;
+  top: 50%;
+  display: block;
+  width: calc(100% - 24px);
+  max-width: max-content;
+  overflow: visible;
   white-space: nowrap;
   color: rgba(255, 255, 255, 0.68);
   font: 850 var(--text-sm)/1 var(--mono);
   letter-spacing: 0.06em;
+  transform: translate3d(0, -50%, 0);
+  will-change: transform;
   animation: ticker 21s linear infinite;
 }
 
 .feed-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr) minmax(270px, 300px);
   gap: 10px;
+  min-width: 0;
   min-height: 0;
 }
 
@@ -4691,8 +4721,8 @@ body.breach .comments-module {
 }
 
 @keyframes ticker {
-  from { transform: translateX(0); }
-  to { transform: translateX(-52%); }
+  from { transform: translate3d(0, -50%, 0); }
+  to { transform: translate3d(-52%, -50%, 0); }
 }
 
 @keyframes eye {

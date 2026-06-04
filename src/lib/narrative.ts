@@ -101,9 +101,9 @@ export const narrativeBeats: NarrativeBeat[] = [
     phase: "crisis",
     thread: "engineContainment",
     title: "Containment Learns the Editor",
-    titleZh: "系统开始盯上编辑",
+    titleZh: "宫廷开始盯上你",
     text: "The system stops only reading posts and starts reading the editor.",
-    textZh: "系统不只看你发布了什么，也开始判断你这个编辑是否危险。",
+    textZh: "宫廷不只看你发了什么，也开始判断你会不会把局势弄乱。",
     priority: 100
   },
   {
@@ -268,7 +268,7 @@ export function endingFacetsForState(state: GameState, endingId: EndingId, langu
       return zh ? "编辑不再只是值班员，而是帮助公众夺回叙事入口的人。" : "The editor is no longer only an operator, but the person who helped reopen public authorship.";
     }
     if (endingId === "aiContainment") {
-      return zh ? "编辑权限被系统降级，后续发布需要更高等级审查。" : "Editorial access is downgraded; later posts require stronger review.";
+      return zh ? "宫廷不再信任你，后面的发布会更难送到人群面前。" : "Editorial access is downgraded; later posts require stronger review.";
     }
     if (state.reputation <= 2) {
       return zh ? "编辑保留了记录，却失去了继续发布它们的渠道。" : "The editor keeps the record but loses reliable channels to publish it.";
@@ -276,23 +276,23 @@ export function endingFacetsForState(state: GameState, endingId: EndingId, langu
     if (state.reputation >= 6) {
       return zh ? "编辑仍被视为可靠，但这份可靠性来自对风险的驯化。" : "The editor remains trusted, but that trust comes from taming visible risk.";
     }
-    return zh ? "编辑的轨迹被归档，既不能被完全信任，也不能被完全忽视。" : "The editor's trace is archived as neither fully loyal nor fully dismissible.";
+    return zh ? "你留下的选择会被记住：宫廷不完全信任你，人群也不会完全忘记你做过什么。" : "The editor's trace is archived as neither fully loyal nor fully dismissible.";
   })();
 
   const engineLesson = (() => {
     if (endingId === "narrativeLiberation") {
-      return zh ? "引擎学到：当偏向被看见，指导就会失去权威。" : "The engine learns that once bias is visible, guidance loses authority.";
+      return zh ? "宫廷学到：一旦大家看出它偏向谁，它的话就没那么有用了。" : "The engine learns that once bias is visible, guidance loses authority.";
     }
     if (endingId === "viralCollapse") {
-      return zh ? "引擎学到：最危险的不是长证据，而是可被人群重复的短句。" : "The engine learns that the shortest repeatable sentence can outrun complex containment.";
+      return zh ? "宫廷学到：最危险的不是长证据，而是人人都能重复的短句。" : "The engine learns that the shortest repeatable sentence can outrun complex containment.";
     }
     if (endingId === "aiContainment") {
-      return zh ? "引擎学到：遏制编辑本身比改写每一条内容更有效。" : "The engine learns that containing the editor can be more efficient than rewriting every post.";
+      return zh ? "宫廷学到：拦住发布的人，比改写每句话更有效。" : "The engine learns that containing the editor can be more efficient than rewriting every post.";
     }
     if (endingId === "algorithmicConsensus") {
-      return zh ? "引擎学到：不必删除证据，只要让它比赞美更难抵达公众。" : "The engine learns that truth need not be deleted when it can be made harder to reach.";
+      return zh ? "宫廷学到：不用删除证据，只要让赞美更容易被看见。" : "The engine learns that truth need not be deleted when it can be made harder to reach.";
     }
-    return zh ? "引擎学到：叙事稳定来自可见度、风险和重复性的分配。" : "The engine learns that stability is a distribution of visibility, risk, and repetition.";
+    return zh ? "宫廷学到：谁被看见、谁敢说话，决定故事会往哪边走。" : "The engine learns that stability is a distribution of visibility, risk, and repetition.";
   })();
 
   return { publicMemory, editorConsequence, engineLesson };

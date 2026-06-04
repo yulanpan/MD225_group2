@@ -110,7 +110,7 @@ export function guidedStepCopy(step: GuidedCampaignStep, language: LanguageCode,
         : (language === "zh"
           ? "先看左侧裁缝室，再检查中间第一张行动卡。预览后果不会消耗行动，它会说明风险和指标影响。"
           : "Start at the Tailors' Room and inspect the first action card. Inspect Trace does not spend an action; it previews risk and metric effects."),
-      action: traceViewed ? (language === "zh" ? "提交第一条记录" : "Commit the first record") : (language === "zh" ? "打开轨迹说明" : "Open the trace brief")
+      action: traceViewed ? (language === "zh" ? "提交第一条记录" : "Commit the first record") : (language === "zh" ? "打开后果预览" : "Open the trace brief")
     },
     publicSignals: {
       label: language === "zh" ? "第一周目 / 任务 02" : "First Run / Task 02",
@@ -124,9 +124,9 @@ export function guidedStepCopy(step: GuidedCampaignStep, language: LanguageCode,
       label: language === "zh" ? "第一周目 / 任务 03" : "First Run / Task 03",
       title: language === "zh" ? "注意系统监测" : "Watch system monitoring",
       body: language === "zh"
-        ? "现在右侧引擎面板会记录你的编辑历史。留意系统警戒指标，它代表操作被限制的风险。"
+        ? "现在右侧面板会记录你刚做过什么。留意“被盯上”，它表示宫廷有多注意你。"
         : "The right engine panel is now tracking your editorial trace. Watch System Suspicion; it measures the risk of restricted access.",
-      action: language === "zh" ? "查看系统警戒" : "Review System Suspicion"
+      action: language === "zh" ? "查看被盯上" : "Review System Suspicion"
     },
     fullControl: {
       label: language === "zh" ? "第一周目 / 自主值班" : "First Run / Open Shift",
@@ -149,9 +149,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "role-card",
         eyebrow: "本局目标",
         title: "游行前只有六次操作",
-        body: "你负责宫廷信息流。每次值班有 6 次机会，可以发布官方说法、公开证据、处理评论，或压住危险内容。",
-        detail: "只有确认发布才会扣次数；预览后果、阅读评论和查看右侧面板都不会扣。",
-        why: "次数有限，所以每次发布前都要先看清楚它会提高什么、降低什么、让谁更安全或更危险。",
+        body: "你只有 6 次发布机会。可以帮宫廷圆谎，也可以把证据放出去。",
+        detail: "只有点到最后的“确认发布”才会扣次数。",
+        why: "次数有限，每次发布前先想清楚：这会让大家更相信，还是更怀疑？",
         metricFocus: "actionsLeft",
         advanceOn: "next"
       },
@@ -161,9 +161,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "source-tailors",
         eyebrow: "来源",
         title: "来源决定你能处理什么",
-        body: "左侧来源决定中间出现哪些操作。新手阶段先从裁缝室开始，因为这里是谎言最先被包装出来的地方。",
-        detail: "之后会开放公众评论、大臣报告和孩子的声音。每个来源会带来不同风险。",
-        why: "官方来源通常更安全；公众和证据来源更可能让大家开始怀疑，也更容易触发系统警戒。",
+        body: "左边选来源，中间就会出现对应的发布选项。先从裁缝室开始。",
+        detail: "之后会开放大臣、公众评论和孩子的声音。",
+        why: "不同来源会带来不同后果：官方说法更安全，证据和人群声音更容易引起怀疑。",
         advanceOn: "next"
       },
       {
@@ -172,8 +172,8 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "card-publishTailorsClaim",
         eyebrow: "行动卡",
         title: "先读整张行动卡",
-        body: "行动卡会告诉你：这条内容来自哪里、你准备发布什么、会改哪些指标，以及风险大不大。",
-        detail: "先读描述和指标标签，再决定要不要预览后果或准备提交。",
+        body: "先看这张卡。它告诉你准备发什么、风险高不高。",
+        detail: "先读标题和描述，再决定要不要预览。",
         why: "你要先知道这条内容会让人群更相信宫廷，还是更接近证据。",
         advanceOn: "next"
       },
@@ -184,9 +184,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         actionTargetId: "action-publishTailorsClaim-inspect",
         eyebrow: "预览后果",
         title: "先预览，再发布",
-        body: "预览后果不会消耗行动。它会打开说明面板，让你提前看到解锁条件、风险等级和发布后记录。",
-        detail: "先选择“预览后果”。不要急着提交，先学会看代价。",
-        why: "检查不会改变参数；它只是让你理解提交后会发生什么。",
+        body: "预览不会扣次数。先看看发出去会怎样。",
+        detail: "点“预览后果”。不要急着提交。",
+        why: "这一步只是提前看代价，还不会改变局势。",
         actionLabel: "预览后果",
         advanceOn: "traceOpened"
       },
@@ -196,9 +196,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "trace-panel",
         eyebrow: "后果预览",
         title: "这是发布前检查单",
-        body: "这里不是新阶段，只是帮你在发布前确认后果。",
-        detail: "从上到下看：状态、来源、风险等级、可选处理、解锁条件、发布后记录和指标变化。",
-        why: "如果你能读懂这里，就能知道为什么发布后指标会变化。",
+        body: "这里是发布前的检查页。",
+        detail: "重点看三件事：能不能发、风险高不高、发出去会让大家怎么反应。",
+        why: "先看清后果，再决定要不要继续。",
         advanceOn: "next"
       },
       {
@@ -206,10 +206,10 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         surface: "trace",
         spotlightTargetId: "trace-requirement",
         eyebrow: "解锁条件",
-        title: "解锁条件说明前置要求",
-        body: "这里会告诉你这条操作为什么可用或不可用。可用时会显示可用；锁定时会说明缺少哪一步。",
-        detail: "这一步是可用的，所以你能继续提交。之后有些行动需要先调查、先公开评论，或让某些参数达到条件。",
-        why: "锁定条件不是惩罚，它是在提示你本局还缺少某条证据、评论或时机。",
+        title: "先看这张卡能不能用",
+        body: "这里会告诉你这张卡现在能不能发布。",
+        detail: "现在它可以用。以后灰掉的卡，说明你还缺前一步。",
+        why: "有些真话需要先找到证据，或等更多人开始怀疑。",
         advanceOn: "next"
       },
       {
@@ -217,10 +217,10 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         surface: "trace",
         spotlightTargetId: "trace-risk",
         eyebrow: "风险等级",
-        title: "风险等级说明危险程度",
-        body: "风险等级表示这条操作会不会伤害编辑声誉，或提高系统警戒。低风险更安全，高风险通常更接近证据和公开怀疑。",
-        detail: "裁缝声明风险较低，因为它顺着宫廷叙事走，不会立刻暴露问题。",
-        why: "风险越高，越可能让编辑声誉下降或让系统警戒上升；但高风险操作也常常能提高证据或公众怀疑。",
+        title: "风险越高，越容易被盯上",
+        body: "低风险更安全；高风险更容易把真相放到大家面前。",
+        detail: "裁缝声明风险较低，因为它顺着宫廷说法走。",
+        why: "越直接的证据，越可能让宫廷注意到你。",
         advanceOn: "next"
       },
       {
@@ -229,10 +229,10 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "trace-output",
         actionTargetId: "trace-close",
         eyebrow: "发布后记录",
-        title: "发布后记录说明会写入什么",
-        body: "这里预览确认发布后会进入本局记录的内容。它告诉你大家会看到什么结果。",
+        title: "这里写着大家会看到什么",
+        body: "这里预览发布后会出现的内容。",
         detail: "读完后关闭预览，回到行动卡。",
-        why: "指标变化来自这条记录如何影响公众：它让什么更容易被看见、重复、怀疑或压住。",
+        why: "看这里就知道这次发布是在帮宫廷稳住说法，还是让人群更接近真相。",
         actionLabel: "关闭预览",
         advanceOn: "traceClosed"
       },
@@ -243,8 +243,8 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         actionTargetId: "action-publishTailorsClaim-commit",
         eyebrow: "准备提交",
         title: "现在准备提交第一条记录",
-        body: "准备提交会打开发布确认。注意：这一步还不会立刻结算，真正结算要在确认窗口里完成。",
-        detail: "现在进入“准备提交”，做最后一次指标检查。",
+        body: "准备提交会打开最后确认。现在还不会扣次数。",
+        detail: "点“准备提交”，再看最后一遍。",
         why: "发布前还有一次确认机会，让你能最后检查影响。",
         actionLabel: "准备提交",
         advanceOn: "commandOpened"
@@ -255,9 +255,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "command-panel",
         eyebrow: "发布确认",
         title: "发布确认是最后检查",
-        body: "发布确认会在真正结算前集中展示：你选了什么、预计变化是什么、引擎如何建议。",
-        detail: "不要只点确认。先把每一行读一遍。",
-        why: "这是理解指标变化的核心位置；它把操作和后果放在同一屏。",
+        body: "这里是最后确认页。先确认你选的是不是这张卡。",
+        detail: "再看数字怎么变、宫廷怎么建议。",
+        why: "点确认后，局势才会真的改变。",
         advanceOn: "next"
       },
       {
@@ -265,10 +265,10 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         surface: "command",
         spotlightTargetId: "command-selected",
         eyebrow: "已选行动",
-        title: "确认你选中的行动",
-        body: "这里显示你即将提交的行动名称。以后卡片很多时，先确认这里能避免误点。",
+        title: "确认你要发什么",
+        body: "这里显示你马上要发布的内容。",
         detail: "现在显示的是“发布裁缝声明”。它是一条官方声明，不是证据。",
-        why: "不同行动的参数影响完全不同；确认行动名称是避免误操作的第一步。",
+        why: "卡片很多时，先确认标题可以避免点错。",
         advanceOn: "next"
       },
       {
@@ -277,9 +277,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "command-effects",
         eyebrow: "预计影响",
         title: "先读预计影响",
-        body: "这条行动会让传播 +2、宫廷压力 +1、编辑声誉 +1、公众怀疑 -1。它让官方说法更容易被重复，也让质疑变得更不安全。",
+        body: "这条发布会让官方说法传得更快，也让质疑的人更不敢开口。",
         detail: "正数不一定永远是好事，负数也不一定永远是坏事。关键是它把局势推向哪种结局。",
-        why: "裁缝声明把问题从“衣服是否存在”转移到“看不见的人是否愚蠢”，所以传播、宫廷压力和编辑声誉会上升，公众怀疑会下降。",
+        why: "裁缝声明把问题从“衣服是否存在”转移到“看不见的人是否愚蠢”，所以传播、宫廷压力和你的安全会上升，人群起疑会下降。",
         metricFocus: "virality",
         advanceOn: "next"
       },
@@ -288,10 +288,10 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         surface: "command",
         spotlightTargetId: "command-response",
         eyebrow: "引擎建议",
-        title: "引擎建议不是结算规则",
-        body: "引擎建议会解释局势并给出安全方向。它帮助你理解风险，但真正的指标变化由规则固定处理。",
-        detail: "你可以读它来判断安全方向，但不要把它当成唯一目标。",
-        why: "游戏重点不是盲目跟随建议，而是理解每个行动怎样改变公共记录。",
+        title: "宫廷会建议你保守一点",
+        body: "引擎通常希望场面稳定，所以它会劝你说得更安全。",
+        detail: "可以参考它，但不用完全听它的。",
+        why: "你真正要判断的是：这次发布会让真话更近，还是让谎言更稳。",
         advanceOn: "next"
       },
       {
@@ -301,9 +301,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         actionTargetId: "command-commit",
         eyebrow: "确认发布",
         title: "确认发布",
-        body: "确认发布后，行动才会写入记录，并消耗 1 次行动。",
+        body: "确认发布后，这次选择才会生效，并消耗 1 次行动。",
         detail: "确认“发布”。",
-        why: "这一步之后参数会变化，行动数会从 6 变成 5。",
+        why: "这一步之后，行动数会从 6 变成 5。",
         actionLabel: "确认发布",
         advanceOn: "commandCommitted"
       },
@@ -312,8 +312,8 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         surface: "dashboard",
         spotlightTargetId: "metric-virality",
         eyebrow: "传播",
-        title: "传播代表复读速度",
-        body: "传播越高，一句话越容易被评论、转述和模仿。刚才的官方声明很容易复述，所以传播上升。",
+        title: "传播就是一句话传得多快",
+        body: "传播越高，一句话越容易被转述。刚才的官方声明很短，很容易跟着说。",
         detail: "传播高会让局势扩散更快，但扩散的是官方话术还是怀疑，要看你发布了什么。",
         why: "“只有聪明人能看见”这种句子短、强、容易重复，所以它增加传播。",
         metricFocus: "virality",
@@ -324,8 +324,8 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         surface: "dashboard",
         spotlightTargetId: "metric-pressure",
         eyebrow: "宫廷压力",
-        title: "宫廷压力代表压制强度",
-        body: "宫廷压力越高，公共空间里越难说出相反意见。官方声明把怀疑者说成愚蠢，所以压力上升。",
+        title: "宫廷压力越高，越没人敢反对",
+        body: "宫廷压力越高，大家越不敢说自己看不见。官方声明把怀疑者说成愚蠢，所以压力上升。",
         detail: "高压力可以稳定表面秩序，但也可能让沉默变得更脆弱。",
         why: "这条声明不是证明衣服存在，而是让质疑衣服的人付出社交代价。",
         metricFocus: "pressure",
@@ -335,11 +335,11 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         id: "metricReputation",
         surface: "dashboard",
         spotlightTargetId: "metric-reputation",
-        eyebrow: "编辑声誉",
-        title: "编辑声誉代表你的保护",
-        body: "编辑声誉是你在系统里的安全余量。顺着宫廷说法发布，会暂时提高你的声誉。",
-        detail: "声誉低时，公开证据或危险内容会更容易让你失去发布权。",
-        why: "你刚才发布了稳定宫廷说法的内容，所以系统更信任你的编辑判断。",
+        eyebrow: "你的安全",
+        title: "你的安全代表宫廷还信不信你",
+        body: "顺着宫廷说法发布，会让你暂时更安全。",
+        detail: "如果安全太低，公开证据会更危险。",
+        why: "你刚才帮宫廷稳住了说法，所以暂时没那么容易被盯上。",
         metricFocus: "reputation",
         advanceOn: "next"
       },
@@ -347,11 +347,11 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         id: "metricPublicDoubt",
         surface: "dashboard",
         spotlightTargetId: "metric-publicDoubt",
-        eyebrow: "公众怀疑",
-        title: "公众怀疑代表大家是否一起怀疑",
-        body: "公众怀疑不是一个人私下怀疑，而是人们发现彼此也在怀疑。官方羞辱式声明会压低它。",
-        detail: "当公众怀疑上升时，人群更容易互相确认；下降时，人们更倾向于沉默或重复安全话术。",
-        why: "刚才的声明让看不见的人害怕被说成不聪明，所以公众怀疑下降。",
+        eyebrow: "人群起疑",
+        title: "人群起疑不是一个人偷偷怀疑",
+        body: "人群起疑，是大家发现彼此也在怀疑。官方羞辱式声明会压低它。",
+        detail: "它上升时，人们更容易互相确认；下降时，人们更倾向于沉默或跟着称赞。",
+        why: "刚才的声明让看不见的人害怕被说成不聪明，所以人群起疑下降。",
         metricFocus: "publicDoubt",
         advanceOn: "next"
       },
@@ -361,7 +361,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "metric-truth",
         eyebrow: "证据",
         title: "证据代表事实是否被看见",
-        body: "证据表示直接材料进入本局记录的程度。刚才只是官方声明，没有展示织布机、照片或目击者，所以证据没有上升。",
+        body: "证据表示大家能看到多少真相。刚才只是官方声明，没有展示织布机、照片或目击者，所以证据没有上升。",
         detail: "以后检查织布机、事实核查、公开孩子的声音，会更直接影响证据。",
         why: "说法强不等于证据强；理解这点才能判断行动真正的方向。",
         metricFocus: "truth",
@@ -374,7 +374,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         actionTargetId: "source-public",
         eyebrow: "公众来源",
         title: "现在切到公众评论",
-        body: "第一条记录后，公众来源开放。这里展示人群如何重复、害怕、嘲讽或开始一起怀疑。",
+        body: "第一条发布后，公众评论开放。这里能看到人群是在跟风、害怕，还是开始怀疑。",
         detail: "切换到“公众评论区”。",
         why: "你已经发布了官方说法，现在需要观察公众如何吸收它。",
         actionLabel: "切到公众评论",
@@ -386,8 +386,8 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "card-showUnfilteredComments",
         eyebrow: "公众行动卡",
         title: "读未过滤评论这张卡",
-        body: "“显示未过滤评论”会让隐藏的犹豫和质疑进入公共视野。它能提高公众怀疑，但会带来权限风险。",
-        detail: "先读整张卡，再看参数标签。不要只看提交选项。",
+        body: "“显示未过滤评论”会把犹豫和质疑放出来，让大家看到自己不是一个人在怀疑。",
+        detail: "先读整张卡，不要只看按钮。",
         why: "把私下怀疑公开出来，会让人们发现自己不是独自在怀疑。",
         advanceOn: "next"
       },
@@ -397,9 +397,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "comments-panel",
         eyebrow: "评论流",
         title: "评论流说明人群状态",
-        body: "评论流显示公众正在重复、害怕、怀疑还是讽刺。它不是装饰，它会帮助你判断下一步该稳定还是公开。",
-        detail: "当传播变高时，评论流会更活跃；当公众怀疑变高时，怀疑类评论会更明显。",
-        why: "参数是抽象读数，评论流是它们在叙事里的表现。",
+        body: "评论流能看出大家正在跟风、害怕、怀疑还是讽刺。",
+        detail: "当传播变高时，评论流会更活跃；当人群起疑变高时，怀疑类评论会更明显。",
+        why: "数字告诉你局势，评论告诉你人群正在怎么想。",
         advanceOn: "next"
       },
       {
@@ -409,9 +409,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         actionTargetId: "action-showUnfilteredComments-commit",
         eyebrow: "第二条记录",
         title: "提交公众信号",
-        body: "这一步会把公众的未过滤反应写入记录。它比官方声明更危险，但能让怀疑被更多人看见。",
+        body: "这一步会放出未过滤评论。它比官方声明更危险，但能让怀疑被更多人看见。",
         detail: "进入“准备提交”，查看这条公众信号的影响。",
-        why: "公开未过滤评论会提高公众怀疑和传播，同时降低编辑声誉并提高系统警戒。",
+        why: "公开未过滤评论会让更多人起疑，也会让你更容易被宫廷盯上。",
         actionLabel: "准备提交",
         advanceOn: "commandOpened"
       },
@@ -421,9 +421,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "command-effects",
         eyebrow: "第二次影响",
         title: "这次影响更危险",
-        body: "预计影响是：公众怀疑 +2、传播 +1、编辑声誉 -1、系统警戒 +1。它让怀疑互相可见，也让系统更注意你。",
-        detail: "这就是游戏里的核心取舍：公开真实反应会推进认知，但会损失保护。",
-        why: "未过滤评论让人群互相确认，所以公众怀疑上升；但公开这种信号会让系统更警觉。",
+        body: "这次会让人群更怀疑，也让评论传得更快；代价是你会更危险。",
+        detail: "这是核心取舍：公开真实反应，会失去一点保护。",
+        why: "未过滤评论让人群互相确认，所以怀疑会上升；宫廷也会更注意你。",
         metricFocus: "publicDoubt",
         advanceOn: "next"
       },
@@ -434,9 +434,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         actionTargetId: "command-commit",
         eyebrow: "确认第二条",
         title: "确认发布公众记录",
-        body: "点击确认发布后，第二条记录会写入，本局会进入更开放也更危险的阶段。",
+        body: "点击确认发布后，第二条内容会生效，局势会更开放也更危险。",
         detail: "确认发布。",
-        why: "确认后系统警戒会解封，你也会遇到第一场突发交流。",
+        why: "确认后，你会遇到第一场突发交流。",
         actionLabel: "确认发布",
         advanceOn: "commandCommitted"
       },
@@ -446,9 +446,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "dialogue-panel",
         eyebrow: "突发交流",
         title: "突发交流是即时反应",
-        body: "突发交流来自你刚才的行动。它让角色直接回应信息流变化，不是随机弹窗。",
+        body: "突发交流来自你刚才的发布。有人会立刻来质问、求证或求助。",
         detail: "先看完整弹窗：上方是角色身份，中间是态势和对话，底部是回复和结束交流。",
-        why: "公开公众怀疑后，系统需要展示有人正在被这条记录影响。",
+        why: "你刚刚公开了人群的怀疑，所以会有人被这件事影响。",
         advanceOn: "next"
       },
       {
@@ -457,7 +457,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "dialogue-stakes",
         eyebrow: "风险说明",
         title: "先看这场交流为什么重要",
-        body: "这里说明这场交流的风险和语境。读它能知道对方是在试探、求证、威胁，还是寻求帮助。",
+        body: "这里说明对方为什么来找你。读完再决定怎么回。",
         detail: "先理解对方为什么出现，再决定怎么回应。",
         why: "突发交流会写入本局记录，也会改变你对局势的理解。",
         advanceOn: "next"
@@ -467,10 +467,10 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         surface: "dialogue",
         spotlightTargetId: "dialogue-mood",
         eyebrow: "对话态势",
-        title: "这些不是结局参数",
-        body: "信任、激动、开放、筹码只描述这场对话的态势。它们不等同于证据、宫廷压力或编辑声誉。",
-        detail: "信任高代表对方更愿意继续说；激动高代表对话更不稳定；开放高代表信息更容易流出；筹码高代表对方更有谈判空间。",
-        why: "对话参数帮助你判断如何回应，而不是直接决定结局。",
+        title: "这里显示对方现在的态度",
+        body: "信任高，对方更愿意说；激动高，对话更容易翻脸。",
+        detail: "开放高，信息更容易流出；筹码高，对方更有谈判空间。",
+        why: "看懂态度，就更容易选出合适回复。",
         advanceOn: "next"
       },
       {
@@ -480,9 +480,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         actionTargetId: "dialogue-reply",
         eyebrow: "快捷回复",
         title: "先选一个快捷回复",
-        body: "快捷回复是安全入口。它会把你的态度写入对话，让对方继续回应。",
+        body: "快捷回复是最简单的回应方式。先选一个，看看对方怎么变。",
         detail: "先选择一个快捷回复，之后观察对方语气如何变化。",
-        why: "不同回复会改变信任、激动、开放或筹码；这会影响交流结果。",
+        why: "不同回复会改变对方态度，也会影响这场交流怎么结束。",
         actionLabel: "选择回复",
         advanceOn: "dialogueReplySent"
       },
@@ -493,9 +493,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         actionTargetId: "dialogue-resolve",
         eyebrow: "结束交流",
         title: "把交流结果写入本局",
-        body: "当你准备结束时，底部操作会把这场交流结算进本局记录。",
-        detail: "选择结束交流；若文字变成结算交流，也表示同一个处理结果。",
-        why: "结束交流后，信息流会记录这次互动的结果，主控制台会恢复操作。",
+        body: "回应后，就可以结束这场交流。",
+        detail: "点底部的结束按钮。",
+        why: "结束后，你会回到主界面继续发布。",
         actionLabel: "结束交流",
         advanceOn: "dialogueResolved"
       },
@@ -503,11 +503,11 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         id: "metricSystemSuspicion",
         surface: "dashboard",
         spotlightTargetId: "metric-systemSuspicion",
-        eyebrow: "系统警戒",
-        title: "系统警戒代表权限风险",
-        body: "系统警戒越高，你的编辑权限越容易被限制。公开证据、未过滤怀疑和危险爆料通常会提高它。",
-        detail: "刚才显示未过滤评论，所以系统警戒上升。它提醒你：公开怀疑有价值，但并不安全。",
-        why: "系统不只看你是否说真话，也看你是否让局势变得难以控制。",
+        eyebrow: "被盯上",
+        title: "被盯上越高，你越危险",
+        body: "公开证据、放出怀疑和危险爆料，都会让宫廷更注意你。",
+        detail: "刚才显示未过滤评论，所以这个数字上升了。",
+        why: "公开怀疑有价值，但并不安全。",
         metricFocus: "systemSuspicion",
         advanceOn: "next"
       },
@@ -517,9 +517,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "engine-panel",
         eyebrow: "引擎面板",
         title: "右侧是读数和建议",
-        body: "右侧引擎面板用于读取建议、历史记录和系统反馈。",
-        detail: "当你不知道下一步怎么选，可以看它的建议，但最终仍要根据参数和评论判断。",
-        why: "引擎会倾向于稳定风险，玩家需要理解它的建议和参数后果之间的关系。",
+        body: "右侧面板会给出建议，也会显示你刚刚做过什么。",
+        detail: "不知道怎么选时，可以先看建议，再看评论和数字。",
+        why: "引擎通常想稳住场面；你要判断自己是否要听它的。",
         advanceOn: "next"
       },
       {
@@ -528,9 +528,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "role-card",
         eyebrow: "自主值班",
         title: "继续完成剩余行动",
-        body: "你已经学会核心循环：选择来源，预览后果，准备提交，确认发布，观察指标、评论和突发交流。",
-        detail: "剩余行动由你决定。想要稳定，就压低怀疑；想要公开证据，就准备承受编辑声誉和系统警戒的代价。",
-        why: "这个游戏没有单一按钮答案，关键是理解每次操作把人群推向哪里。",
+        body: "接下来你自己决定：帮宫廷稳住谎言，还是把证据放出去。",
+        detail: "想安全，就少刺激怀疑；想让真话出现，就要承担被盯上的风险。",
+        why: "没有唯一正确按钮。关键是看每次发布把人群推向哪里。",
         metricFocus: "actionsLeft",
         advanceOn: "tutorialFinished"
       }
@@ -544,7 +544,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       spotlightTargetId: "role-card",
       eyebrow: "Run Goal",
       title: "Six actions before the parade",
-      body: "You are the Royal Feed Editor. Each shift gives you 6 actions: choose a source, read action risk, commit records, and let the metrics determine the ending.",
+      body: "This is a six-action run: choose a source, read action risk, commit records, and let the metrics determine the ending.",
       detail: "Only confirmed submissions spend actions. Inspecting traces, reading comments, and looking at panels costs nothing.",
       why: "Actions are the run's hard limit. Learn the effect before spending one.",
       metricFocus: "actionsLeft",
@@ -956,15 +956,15 @@ export function lockedFeatureText(kind: "zone" | "metric", id: string, language:
   const copy: Record<string, { en: string; zh: string }> = {
     ministers: {
       en: "Unlocks after the first record. Ministers show how authority protects uncertainty.",
-      zh: "第一条记录后开放。大臣报告展示权威如何保护不确定性。"
+      zh: "第一条发布后开放。大臣报告会显示宫廷怎样让大家不敢反对。"
     },
     public: {
       en: "Unlocks after the first record. Public comments show repetition, fear, and shared doubt.",
-      zh: "第一条记录后开放。公众评论展示重复、恐惧和共同怀疑。"
+      zh: "第一条发布后开放。这里能看到大家是在跟风、害怕，还是起疑。"
     },
     child: {
       en: "Unlocks later when direct evidence or public doubt becomes visible.",
-      zh: "当直接证据或公众怀疑变得可见后开放。"
+      zh: "当证据变多，或更多人开始怀疑后开放。"
     },
     virality: {
       en: "Shows how fast a line circulates.",
@@ -972,45 +972,45 @@ export function lockedFeatureText(kind: "zone" | "metric", id: string, language:
     },
     publicDoubt: {
       en: "Shows whether citizens realize they are not doubting alone.",
-      zh: "显示市民是否发现自己并不是独自在怀疑。"
+      zh: "显示大家是否发现自己不是一个人在怀疑。"
     },
     systemSuspicion: {
       en: "Shows the risk that your editorial access may be restricted.",
-      zh: "显示你的编辑权限被限制的风险。"
+      zh: "显示宫廷有多盯着你。"
     }
   };
-  return copy[id]?.[language] ?? (kind === "zone" ? (language === "zh" ? "该来源稍后开放。" : "This source opens later.") : (language === "zh" ? "该遥测稍后开放。" : "This telemetry opens later."));
+  return copy[id]?.[language] ?? (kind === "zone" ? (language === "zh" ? "这个来源稍后开放。" : "This source opens later.") : (language === "zh" ? "这个数字稍后开放。" : "This telemetry opens later."));
 }
 
 export function glossaryText(term: string, language: LanguageCode) {
   const copy: Record<string, { en: string; zh: string }> = {
     truth: {
       en: "How much direct evidence is visible in the public record.",
-      zh: "直接证据在公共记录中可见的程度。"
+      zh: "大家能看到多少直接证据。"
     },
     pressure: {
       en: "How strongly palace authority is pushing one acceptable story.",
-      zh: "宫廷权威推动单一可接受故事的强度。"
+      zh: "宫廷让大家不敢反对的程度。"
     },
     virality: {
       en: "How quickly posts, quotes, and reactions circulate.",
-      zh: "帖子、引语和反应被传播的速度。"
+      zh: "一句话被转述和模仿的速度。"
     },
     publicDoubt: {
       en: "How visible shared uncertainty has become among citizens.",
-      zh: "市民之间共同不确定性变得可见的程度。"
+      zh: "大家是否发现别人也在怀疑。"
     },
     reputation: {
       en: "Your remaining institutional trust and publishing protection.",
-      zh: "你的机构信任与发布保护还剩多少。"
+      zh: "宫廷现在还愿不愿意信任你。"
     },
     systemSuspicion: {
       en: "How likely your editorial access is to be restricted.",
-      zh: "你的编辑权限被限制的可能性。"
+      zh: "宫廷有多盯着你。"
     },
     pne: {
       en: "The palace AI that reads risk, reputation, and circulation stability before suggesting a next move.",
-      zh: "宫廷 AI，会根据风险、编辑声誉和传播情况给出下一步建议。"
+      zh: "宫廷 AI，会劝你用更安全的说法稳住场面。"
     },
     royalFeed: {
       en: "The public communication channel you are editing during the shift.",
@@ -1027,19 +1027,19 @@ export function tutorialSteps(language: LanguageCode): TutorialStep[] {
         id: "sources",
         eyebrow: "来源选择",
         title: "先选择信号来源",
-        body: "左侧来源决定你要处理哪类信号：裁缝室负责官方声明，大臣报告提供权威背书，公众评论显示人群反应，孩子的声音会在后续开放。"
+        body: "左侧来源决定你要处理什么：裁缝室负责官方声明，大臣代表宫廷，公众评论显示人群反应，孩子的声音后面会开放。"
       },
       {
         id: "actions",
         eyebrow: "行动队列",
         title: "预览并确认发布",
-        body: "中间行动卡展示来源、解锁条件、风险和数值影响。只有点击确认发布后，本局状态才会改变。"
+        body: "中间行动卡告诉你要发什么、风险高不高、发出去会怎样。只有确认发布后，局势才会改变。"
       },
       {
         id: "engine",
         eyebrow: "叙事引擎",
         title: "观察宫廷叙事引擎",
-        body: "右侧引擎会给出改写、风险提示和下一步建议。它会根据风险、编辑声誉和传播情况判断当前局势。"
+        body: "右侧引擎会给出建议，也会劝你说得更安全。可以参考，但不用完全听它的。"
       },
       {
         id: "comments",
@@ -1051,7 +1051,7 @@ export function tutorialSteps(language: LanguageCode): TutorialStep[] {
         id: "metrics",
         eyebrow: "结局指标",
         title: "用指标判断走向",
-        body: "证据代表事实是否进入记录；宫廷压力代表压制强度；传播代表扩散速度；公众怀疑代表大家是否一起怀疑；编辑声誉保护你；系统警戒代表权限风险。"
+        body: "证据看真话有多少；宫廷压力看大家敢不敢反对；传播看一句话传得多快；人群起疑看大家是否一起怀疑；你的安全看宫廷还信不信你；被盯上看你有多危险。"
       }
     ];
   }

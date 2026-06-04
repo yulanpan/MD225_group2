@@ -43,13 +43,13 @@ describe("i18n helpers", () => {
     expect(zoneText("child", "zh").title).toBe("孩子的声音");
     expect(metricLabel("truth", "zh")).toBe("证据");
     expect(metricLabel("pressure", "zh")).toBe("宫廷压力");
-    expect(metricLabel("publicDoubt", "zh")).toBe("公众怀疑");
-    expect(metricLabel("reputation", "zh")).toBe("编辑声誉");
-    expect(metricLabel("systemSuspicion", "zh")).toBe("系统警戒");
+    expect(metricLabel("publicDoubt", "zh")).toBe("人群起疑");
+    expect(metricLabel("reputation", "zh")).toBe("你的安全");
+    expect(metricLabel("systemSuspicion", "zh")).toBe("被盯上");
     expect(commonText("startShift", "zh")).toBe("开始值班");
     expect(commonText("aiFallback", "en")).toBe("RULE MODE");
-    expect(commonText("aiFallback", "zh")).toBe("规则回应");
-    expect(phaseCopy("scanning", "zh").label).toBe("风险预览");
+    expect(commonText("aiFallback", "zh")).toBe("离线回应");
+    expect(phaseCopy("scanning", "zh").label).toBe("先看后果");
     expect(choiceText("direct", "zh")).toBe("直接发布");
     expect(choiceText("rewrite", "zh")).toBe("接受改写");
     expect(choiceText("original", "zh")).toBe("发布原文");

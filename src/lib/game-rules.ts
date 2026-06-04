@@ -439,7 +439,7 @@ function replayTargetForEnding(ending: EndingId, language: LanguageCode = "en"):
   if (ending === "aiContainment" || ending === "editorExposed") {
     return {
       replayTarget: language === "zh"
-        ? "尝试在发布高风险证据前接受一次改写，以降低系统警戒。"
+        ? "尝试在发布高风险证据前接受一次改写，避免太早被宫廷盯上。"
         : "Try lowering suspicion by accepting one rewrite before publishing risky evidence.",
       replayEndingHint: "algorithmicConsensus"
     };
@@ -447,14 +447,14 @@ function replayTargetForEnding(ending: EndingId, language: LanguageCode = "en"):
   if (ending === "narrativeLiberation") {
     return {
       replayTarget: language === "zh"
-        ? "尝试在解码引擎后保留证据、放大公众怀疑，并拒绝把证据改写成宫廷话术。"
+        ? "尝试看清引擎偏向后保留证据、放大人群起疑，并拒绝把证据改成宫廷话术。"
         : "After decoding the engine, preserve evidence, amplify shared doubt, and reject palace-safe framing.",
       replayEndingHint: "narrativeLiberation"
     };
   }
   return {
     replayTarget: language === "zh"
-      ? "尝试在证据让公众怀疑可见后，再放大孩子的声音。"
+      ? "尝试在证据让人群起疑后，再放大孩子的声音。"
       : "Try amplifying the child's voice after evidence has made public doubt visible.",
     replayEndingHint: "viralCollapse"
   };
@@ -487,13 +487,13 @@ export function analyzeEnding(state: GameState, language: LanguageCode = "en"): 
 export function explainEnding(state: GameState, language: LanguageCode = "en") {
   const ending = calculateEnding(state);
   if (language === "zh") {
-    if (ending === "narrativeLiberation") return "你已经解码宫廷叙事引擎，并让证据、公众怀疑和孩子的声音在系统接管前连成一条线。";
-    if (ending === "aiContainment") return "系统警戒达到 7，因此宫廷叙事引擎在最终帖子传播前限制了编辑。";
-    if (ending === "viralCollapse") return "证据与公众怀疑都很高，同时孩子的声音被放大，所以真话开始失控传播。";
-    if (ending === "editorExposed") return "证据足够强，但编辑声誉太低，宫廷因此撤销了你的发布权。";
+    if (ending === "narrativeLiberation") return "你已经看清宫廷叙事引擎的偏向，并让证据、人群怀疑和孩子的声音连成一条线。";
+    if (ending === "aiContainment") return "宫廷已经高度盯上你，因此最终帖子还没传开就被拦住。";
+    if (ending === "viralCollapse") return "证据和人群起疑都很高，同时孩子的声音被放大，所以真话开始失控传播。";
+    if (ending === "editorExposed") return "证据足够强，但你已经不够安全，宫廷因此撤销了你的发布权。";
     if (ending === "algorithmicConsensus") return "传播与宫廷压力保持高位，证据虽然存在，却被更容易传播的赞美压过。";
-    if (ending === "perfectIllusion") return "宫廷批准的说法保持高传播，而证据与公众怀疑都保持低位。";
-    if (ending === "privateDoubt") return "公众怀疑上升，但证据还不够强，大家仍然只敢私下怀疑。";
+    if (ending === "perfectIllusion") return "宫廷批准的说法传得很快，而证据和人群起疑都保持低位。";
+    if (ending === "privateDoubt") return "人群开始起疑，但证据还不够强，大家仍然只敢私下怀疑。";
     return "没有单一力量稳定游行叙事，因此信息流保持未解决状态。";
   }
   if (ending === "narrativeLiberation") return "You decoded the Palace Narrative Engine and turned evidence plus shared doubt into a public narrative before containment could close.";

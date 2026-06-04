@@ -92,9 +92,9 @@ export default function LoginPage() {
       <section className="section auth-section">
         <div className="auth-shell">
           <div className="auth-copy">
-            <p className="eyebrow">{language === "zh" ? "账号存档" : "Account Save"}</p>
-            <h1>{language === "zh" ? "保存你的宫廷档案" : "Save your palace archive"}</h1>
-            <p>{language === "zh" ? "游客仍然可以游玩。登录后，结局、成就、引擎碎片和当前进度会同步到 SQLite 云存档。" : "Guest play stays available. Sign in to sync endings, achievements, engine fragments, and current progress to the SQLite cloud save."}</p>
+            <p className="eyebrow">{language === "zh" ? "账号进度" : "Account Save"}</p>
+            <h1>{language === "zh" ? "保存进度" : "Save your progress"}</h1>
+            <p>{language === "zh" ? "不登录也能玩。登录后，可以保留当前进度、结局和成就，之后回来继续。" : "Guest play stays available. Sign in to keep your progress, endings, and achievements for later."}</p>
           </div>
 
           <form className="auth-form" onSubmit={submit}>
@@ -110,7 +110,7 @@ export default function LoginPage() {
               <span>{language === "zh" ? "密码" : "Password"}</span>
               <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === "login" ? "current-password" : "new-password"} minLength={10} maxLength={128} required />
             </label>
-            <p className="auth-hint">{language === "zh" ? "密码至少 10 个字符。会话保存在 httpOnly cookie 中，不写入 localStorage。" : "Passwords need at least 10 characters. Sessions use httpOnly cookies, not localStorage."}</p>
+            <p className="auth-hint">{language === "zh" ? "密码至少 10 个字符。" : "Passwords need at least 10 characters."}</p>
             {error && <p className="auth-error">{error}</p>}
             <button className="btn primary" disabled={status === "submitting"}>{status === "submitting" ? (language === "zh" ? "处理中" : "Working") : mode === "login" ? (language === "zh" ? "登录" : "Login") : (language === "zh" ? "注册并登录" : "Register and login")}</button>
           </form>
@@ -124,11 +124,11 @@ export default function LoginPage() {
               <p className="eyebrow">{language === "zh" ? "存档冲突" : "Save Conflict"}</p>
               <h3 id="save-conflict-title">{language === "zh" ? "选择要保留的进度" : "Choose progress to keep"}</h3>
             </div>
-            <p>{language === "zh" ? "这个浏览器和账号里都有进度。你可以保留本地、拉取云端，或合并已完成档案。" : "This browser and account both have progress. Keep local, pull cloud, or merge completed archive records."}</p>
+            <p>{language === "zh" ? "这台电脑和账号里都有进度。你想用哪一份？" : "This browser and account both have progress. Choose which progress to keep."}</p>
             <div className="auth-conflict-actions">
-              <button className="btn secondary" onClick={() => void resolve("remote")}>{language === "zh" ? "使用云端" : "Use Cloud"}</button>
-              <button className="btn secondary" onClick={() => void resolve("local")}>{language === "zh" ? "使用本地" : "Use Local"}</button>
-              <button className="btn primary" onClick={() => void resolve("merge")}>{language === "zh" ? "合并档案" : "Merge Archive"}</button>
+              <button className="btn secondary" onClick={() => void resolve("remote")}>{language === "zh" ? "用账号进度" : "Use Account"}</button>
+              <button className="btn secondary" onClick={() => void resolve("local")}>{language === "zh" ? "用这台电脑" : "Use This Browser"}</button>
+              <button className="btn primary" onClick={() => void resolve("merge")}>{language === "zh" ? "合并已完成记录" : "Merge Completed Records"}</button>
             </div>
           </div>
         </div>

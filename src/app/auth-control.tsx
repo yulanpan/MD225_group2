@@ -104,7 +104,7 @@ function snapshotSignature(snapshot: CloudSaveSnapshot) {
 function statusLabel(status: "loading" | "guest" | "saved" | "saving" | "error", language: LanguageCode) {
   if (language === "zh") {
     if (status === "saving") return "保存中";
-    if (status === "saved") return "已云存档";
+    if (status === "saved") return "已保存";
     if (status === "error") return "保存失败";
     if (status === "loading") return "检查账号";
     return "游客";

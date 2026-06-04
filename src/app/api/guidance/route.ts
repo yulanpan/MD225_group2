@@ -15,8 +15,8 @@ function fallbackGuidance(
     return language === "zh"
       ? {
           mode,
-          message: "提示：引擎偏好稳定，但真正的突破需要让证据、公众怀疑和孩子的声音彼此连接。",
-          objective: "保留证据，避免被遏制前让共同怀疑成形。",
+          message: "提示：引擎偏好稳定，但真正的突破需要让证据、人群起疑和孩子的声音连起来。",
+          objective: "保留证据，让更多人发现自己不是一个人在怀疑。",
           risk: highRisk ? "high" : "medium"
         }
       : {
@@ -30,8 +30,8 @@ function fallbackGuidance(
     return language === "zh"
       ? {
           mode,
-          message: "提示：先确认每条操作的风险，再让证据、公众反馈和编辑声誉保持可控平衡。",
-          objective: "预览后果，选择能推进目标且不会立即触发访问限制的操作。",
+          message: "提示：先确认每次发布的风险，再决定要稳住场面还是公开证据。",
+          objective: "预览后果，选择能推进目标、又不会太早让你被盯上的操作。",
           risk: highRisk ? "high" : "medium"
         }
       : {
@@ -45,7 +45,7 @@ function fallbackGuidance(
     return language === "zh"
       ? {
           mode,
-          message: "你的轨迹正在偏离宫廷推荐。若继续扩大未批准证据，系统会提高遏制优先级。",
+          message: "你正在偏离宫廷推荐。若继续扩大未批准证据，宫廷会更急着拦住你。",
           objective: "接受安全措辞，维持信息流稳定。",
           risk: highRisk ? "high" : "medium"
         }
@@ -59,7 +59,7 @@ function fallbackGuidance(
   return language === "zh"
     ? {
         mode,
-        message: "宫廷叙事引擎已上线。我会协助你降低风险、维持编辑声誉，并避免单一证据扰乱游行。",
+        message: "宫廷叙事引擎已上线。我会帮你降低风险，尽量让游行前的说法保持稳定。",
         objective: "优先选择稳定叙事与安全措辞。",
         risk: highRisk ? "high" : "low"
       }

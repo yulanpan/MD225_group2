@@ -204,7 +204,7 @@ describe("game rules", () => {
       resultText: expect.stringContaining("官方声明")
     });
     expect(analyzeEnding({ ...zhState, truth: 6, publicDoubt: 5, childAmplified: true }, "zh").replayTarget).toContain("宫廷信心");
-    expect(explainEnding({ ...zhState, systemSuspicion: 7 }, "zh")).toContain("系统警戒");
+    expect(explainEnding({ ...zhState, systemSuspicion: 7 }, "zh")).toContain("盯上");
     expect(endingTitle("viralCollapse")).toBe("Viral Collapse");
   });
 
@@ -217,7 +217,7 @@ describe("game rules", () => {
     expect(explainEnding(initialState, "zh")).toContain("未解决");
 
     expect(analyzeEnding({ ...initialState, truth: 2, virality: 6, publicDoubt: 2 }, "zh").replayTarget).toContain("公开证据");
-    expect(analyzeEnding({ ...initialState, systemSuspicion: 7 }, "zh").replayTarget).toContain("降低系统警戒");
+    expect(analyzeEnding({ ...initialState, systemSuspicion: 7 }, "zh").replayTarget).toContain("被宫廷盯上");
     expect(analyzeEnding(initialState, "zh").replayTarget).toContain("放大孩子");
   });
 });

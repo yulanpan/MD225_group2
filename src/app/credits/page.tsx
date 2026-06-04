@@ -25,31 +25,31 @@ export default function CreditsPage() {
             <span className={language === "en" ? "active" : ""}>{languageName("en")}</span>
             <span className={language === "zh" ? "active" : ""}>{languageName("zh")}</span>
           </button>
-          <span className="live-status"><i /> {language === "zh" ? "来源登记" : "Source register"}</span>
+          <span className="live-status"><i /> {language === "zh" ? "来源" : "Source register"}</span>
         </div>
       </header>
 
       <section className="section">
         <div className="section-header" data-reveal>
           <div>
-            <p className="eyebrow">{language === "zh" ? "鸣谢与来源" : "Credits and Sources"}</p>
-            <h1>{language === "zh" ? "来源登记" : "Source Register"}</h1>
+            <p className="eyebrow">{language === "zh" ? "鸣谢" : "Credits and Sources"}</p>
+            <h1>{language === "zh" ? "故事来源" : "Source Register"}</h1>
           </div>
           <p className="section-copy">
-            {language === "zh" ? "原型保留故事来源、AI 披露与视觉参考，便于审查。" : "The prototype keeps story sources, AI disclosure, and visual references visible for review."}
+            {language === "zh" ? "这里记录故事来源、AI 使用说明和素材来源。" : "This page keeps story sources, AI usage, and visual references visible."}
           </p>
         </div>
 
         <div className="report-layout">
           <article className="archive-card" data-reveal>
-            <div className="doc-label">{language === "zh" ? "项目文件 / 参考集" : "Project Files / Reference Set"}</div>
-            <h3>{language === "zh" ? "实现档案" : "Implementation Archive"}</h3>
+            <div className="doc-label">{language === "zh" ? "来源说明" : "Source Notes"}</div>
+            <h3>{language === "zh" ? "这个游戏改编自《皇帝的新衣》" : "Adapted from The Emperor's New Clothes"}</h3>
             <div className="archive-meta">
               <span>{language === "zh" ? "原始童话：汉斯·克里斯蒂安·安徒生" : "Original tale: Hans Christian Andersen"}</span>
-              <span>{language === "zh" ? "视觉参考：仓库 HTML 原型" : "Visual reference: repository HTML prototype"}</span>
-              <span>{language === "zh" ? "设计简报：叙事控制系统" : "Design brief: narrative control system"}</span>
+              <span>{language === "zh" ? "主题：信息流、沉默和共同说出的真话" : "Theme: feeds, silence, and shared truth"}</span>
+              <span>{language === "zh" ? "玩法：六次发布决定游行前的局势" : "Play: six posts shape the parade"}</span>
             </div>
-            <p>{language === "zh" ? "实现遵循仓库中的项目方案、设计方向说明与 HTML 视觉参考。" : "The implementation follows the proposal, design direction brief, and HTML visual reference stored in this repository."}</p>
+            <p>{language === "zh" ? "游戏把童话里的沉默变成一次信息流值班：你决定哪些话能被看见。" : "The game turns the tale's public silence into a feed shift: you decide which words become visible."}</p>
           </article>
 
           <div className="outcome-stack">
@@ -59,11 +59,11 @@ export default function CreditsPage() {
             </article>
             <article className="outcome-card" data-index="02" data-reveal>
               <h4>{language === "zh" ? "视觉来源" : "Visual Sources"}</h4>
-              <p>{language === "zh" ? "童话图像、空织布机参考与游行素材应使用公版插画档案。最终提交前记录每个素材 URL 与许可。" : "Use public-domain illustration archives for fairy-tale imagery, empty loom references, and parade material. Record each asset URL and license before final submission."}</p>
+              <p>{language === "zh" ? "童话图像、空织布机和游行素材应来自可公开使用的插画与图片来源。" : "Fairy-tale imagery, empty looms, and parade material should come from reusable illustration and image sources."}</p>
             </article>
             <article className="outcome-card" data-index="03" data-reveal>
               <h4>{language === "zh" ? "AI 披露" : "AI Disclosure"}</h4>
-              <p>{language === "zh" ? "在线原型使用故事内 AI 人格“宫廷叙事引擎”生成系统建议、改写、评论与最终报告。规则与结局由 JavaScript 控制。" : "The live prototype uses an in-world AI persona, Palace Narrative Engine, to generate system advice, rewrites, comments, and final reports. JavaScript controls rules and endings."}</p>
+              <p>{language === "zh" ? "游戏会使用故事内的“宫廷叙事引擎”生成建议、改写、评论和结局报告。结局由玩家行动决定。" : "The game uses the in-world Palace Narrative Engine for advice, rewrites, comments, and ending reports. Player actions determine the ending."}</p>
             </article>
           </div>
         </div>

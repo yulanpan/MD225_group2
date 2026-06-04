@@ -164,12 +164,12 @@ export default function EndingClient() {
               <i />
               <i />
             </div>
-            <div className="doc-label">{language === "zh" ? "本局记录 / 已封存" : "Narrative Record / Closed Case"}</div>
+            <div className="doc-label">{language === "zh" ? "本局结局" : "Narrative Record / Closed Case"}</div>
             <h3>{copy.title}</h3>
             <div className="archive-meta">
               <span>{language === "zh" ? `结局：${copy.title}` : `Classification: ${copy.title}`}</span>
-              <span>{language === "zh" ? "编译：宫廷叙事引擎" : "Compiled by: Palace Narrative Engine"}</span>
-              <span>{language === "zh" ? "编辑轨迹：宫廷信息流编辑" : "Editor Trace: Royal Feed Editor"}</span>
+              <span>{language === "zh" ? "总结：宫廷叙事引擎" : "Compiled by: Palace Narrative Engine"}</span>
+              <span>{language === "zh" ? "操作记录：本局 6 次行动" : "Action Trace: 6-action run"}</span>
             </div>
             <p>{report}</p>
             <AnimatePresence>
@@ -238,8 +238,8 @@ export default function EndingClient() {
                 ))}
                 {state.history.length === 0 && (
                   <div className="history-item">
-                    <b>{language === "zh" ? "00 / 未记录值班" : "00 / No Shift Recorded"}</b>
-                    <span>{language === "zh" ? "从开始页开启新值班以生成完整行动路径。" : "Start a new shift from the opening page to generate a complete action path."}</span>
+                    <b>{language === "zh" ? "00 / 还没有行动" : "00 / No Shift Recorded"}</b>
+                    <span>{language === "zh" ? "从开始页开启新一局。" : "Start a new shift from the opening page to generate a complete action path."}</span>
                   </div>
                 )}
               </div>
@@ -257,7 +257,7 @@ export default function EndingClient() {
                 {state.history.length === 0 && (
                   <div className="path-node" data-tone="default">
                     <b>00</b>
-                    <span>{language === "zh" ? "未记录值班" : "No shift recorded"}</span>
+                    <span>{language === "zh" ? "还没有行动" : "No shift recorded"}</span>
                     <small>{language === "zh" ? "待定" : "pending"}</small>
                   </div>
                 )}
@@ -267,15 +267,15 @@ export default function EndingClient() {
               <h4>{commonText("runAnalysis", language)}</h4>
               <div className="history-list">
                 <div className="history-item">
-                  <b>{language === "zh" ? "主导指标" : "Dominant Metric"}</b>
+                  <b>{language === "zh" ? "最明显的变化" : "Dominant Metric"}</b>
                   <span>{language === "zh" ? `${analysis.dominantMetric.label} 最终为 ${analysis.dominantMetric.value}/10。` : `${analysis.dominantMetric.label} ended at ${analysis.dominantMetric.value}/10.`}</span>
                 </div>
                 <div className="history-item">
-                  <b>{language === "zh" ? "影响最强行动" : "Strongest Action"}</b>
+                  <b>{language === "zh" ? "影响最大的行动" : "Strongest Action"}</b>
                   <span>{analysis.strongestAction?.actionTitle ?? (language === "zh" ? "未记录行动。" : "No action recorded.")}</span>
                 </div>
                 <div className="history-item">
-                  <b>{language === "zh" ? "风险最高行动" : "Highest Risk Action"}</b>
+                  <b>{language === "zh" ? "最危险的行动" : "Highest Risk Action"}</b>
                   <span>{analysis.riskiestAction?.actionTitle ?? (language === "zh" ? "未记录风险。" : "No risk recorded.")}</span>
                 </div>
               </div>
@@ -294,15 +294,15 @@ export default function EndingClient() {
               <p>{copy.meaning}</p>
             </article>
             <article className="outcome-card narrative-facets-card" data-index="10" data-reveal>
-              <h4>{language === "zh" ? "叙事后果" : "Narrative Consequences"}</h4>
+              <h4>{language === "zh" ? "后果" : "Narrative Consequences"}</h4>
               <div className="facet-list">
-                <div><b>{language === "zh" ? "公众记忆" : "Public Memory"}</b><span>{endingFacets.publicMemory}</span></div>
-                <div><b>{language === "zh" ? "编辑后果" : "Editor Consequence"}</b><span>{endingFacets.editorConsequence}</span></div>
-                <div><b>{language === "zh" ? "引擎学习" : "Engine Lesson"}</b><span>{endingFacets.engineLesson}</span></div>
+                <div><b>{language === "zh" ? "大家记住了什么" : "Public Memory"}</b><span>{endingFacets.publicMemory}</span></div>
+                <div><b>{language === "zh" ? "你付出了什么" : "Editor Consequence"}</b><span>{endingFacets.editorConsequence}</span></div>
+                <div><b>{language === "zh" ? "宫廷学会了什么" : "Engine Lesson"}</b><span>{endingFacets.engineLesson}</span></div>
               </div>
             </article>
             <article className="outcome-card" data-index="11" data-reveal>
-              <h4>{language === "zh" ? "成就档案" : "Achievement Archive"}</h4>
+              <h4>{language === "zh" ? "成就" : "Achievement Archive"}</h4>
               <div className="history-list">
                 {profile.achievements.slice(-5).reverse().map((unlock) => {
                   const definition = achievementDefinition(unlock.id);
@@ -316,7 +316,7 @@ export default function EndingClient() {
                 {profile.achievements.length === 0 && (
                   <div className="history-item">
                     <b>{language === "zh" ? "暂无成就" : "No achievements yet"}</b>
-                    <span>{language === "zh" ? "完成更多值班来扩展档案。" : "Complete more shifts to expand the archive."}</span>
+                    <span>{language === "zh" ? "完成更多路线来解锁成就。" : "Complete more shifts to expand the archive."}</span>
                   </div>
                 )}
               </div>

@@ -38,7 +38,7 @@ function achievementArchiveCopy(
       : { title: achievement.title, description: achievement.description };
   }
   return language === "zh"
-    ? { title: "封存档案信号", description: "继续完成不同值班，更多信息会在档案中开放。" }
+    ? { title: "隐藏线索", description: "继续完成不同路线，更多信息会在这里开放。" }
     : { title: "Sealed Archive Signal", description: "Complete more shifts to open this archive record." };
 }
 
@@ -93,39 +93,39 @@ export default function ArchivePage() {
       <section className="section">
         <div className="section-header" data-reveal>
           <div>
-            <p className="eyebrow">{language === "zh" ? "跨局档案" : "Cross-Run Archive"}</p>
+            <p className="eyebrow">{language === "zh" ? "历史记录" : "Cross-Run Archive"}</p>
             <h1>{language === "zh" ? "档案室" : "Archive Room"}</h1>
           </div>
           <p className="section-copy">
             {language === "zh"
-              ? "这里保存多次值班的结局、成就与跨局档案信号。当前局的操作不在行动台展示，避免干扰值班判断。"
+              ? "这里保存你完成过的结局和成就。当前这一局的操作仍在行动台处理。"
               : "This room stores completed runs, achievements, and cross-run archive signals. Current-run controls stay out of the dashboard archive."}
           </p>
         </div>
 
         <div className="archive-dashboard">
           <article className="archive-summary-panel">
-            <span>{profile.decodedEngine ? commonText("decodeProgress", language) : (language === "zh" ? "档案信号" : "Archive Signal")}</span>
+            <span>{profile.decodedEngine ? commonText("decodeProgress", language) : (language === "zh" ? "隐藏线索" : "Archive Signal")}</span>
             <strong>{profile.biasAwareness}%</strong>
             <p>{profile.decodedEngine
-              ? (language === "zh" ? "引擎偏向已完全解码。秘密结局路径已开放。" : "Engine bias fully decoded. The secret ending route is open.")
-              : (language === "zh" ? "继续完成不同值班，收集更多档案信号。" : "Complete varied shifts to recover more archive signals.")}</p>
+              ? (language === "zh" ? "你已经看清引擎偏向。新的结局路线已经开放。" : "Engine bias fully decoded. The secret ending route is open.")
+              : (language === "zh" ? "完成不同路线，会看到更多隐藏线索。" : "Complete varied shifts to recover more archive signals.")}</p>
           </article>
           <article className="archive-summary-panel">
             <span>{language === "zh" ? "历史值班" : "Run History"}</span>
             <strong>{profile.runs.length}</strong>
-            <p>{language === "zh" ? "最近 30 局会保留在本机档案。" : "The latest 30 completed shifts are retained locally."}</p>
+            <p>{language === "zh" ? "最近 30 局会保留在这里。" : "The latest 30 completed shifts are retained locally."}</p>
           </article>
           <article className="archive-summary-panel">
             <span>{language === "zh" ? "成就" : "Achievements"}</span>
             <strong>{profile.achievements.length}/{achievementDefinitions.length}</strong>
-            <p>{language === "zh" ? "成就记录跨局保存。" : "Achievements persist across runs."}</p>
+            <p>{language === "zh" ? "完成特殊路线会解锁成就。" : "Achievements persist across runs."}</p>
           </article>
         </div>
 
         <div className="archive-room-grid">
           <section className="module archive-module">
-            <div className="module-head"><h3>{profile.decodedEngine ? (language === "zh" ? "引擎碎片" : "Engine Fragments") : (language === "zh" ? "档案信号" : "Archive Signals")}</h3></div>
+            <div className="module-head"><h3>{profile.decodedEngine ? (language === "zh" ? "引擎偏向" : "Engine Fragments") : (language === "zh" ? "隐藏线索" : "Archive Signals")}</h3></div>
             <div className="module-body fragment-grid">
               {engineFragmentDefinitions.map((fragment) => {
                 const unlocked = fragmentIds.has(fragment.id);
@@ -158,14 +158,14 @@ export default function ArchivePage() {
               {profile.runs.length === 0 && (
                 <div className="history-item">
                   <b>{language === "zh" ? "暂无历史值班" : "No completed shifts"}</b>
-                  <span>{language === "zh" ? "完成一局后，这里会显示详细档案。" : "Complete a shift to create the first archive record."}</span>
+                  <span>{language === "zh" ? "完成一局后，这里会显示结果。" : "Complete a shift to create the first archive record."}</span>
                 </div>
               )}
             </div>
           </section>
 
           <section className="module archive-module wide">
-            <div className="module-head"><h3>{language === "zh" ? "记录详情" : "Record Detail"}</h3></div>
+            <div className="module-head"><h3>{language === "zh" ? "这局详情" : "Record Detail"}</h3></div>
             <div className="module-body">
               {selectedRun ? (
                 <div className="archive-detail">
@@ -187,7 +187,7 @@ export default function ArchivePage() {
                     ))}
                     {selectedRun.engineFragmentsUnlocked?.map((id) => (
                       <div className="history-item" key={id}>
-                        <b>{language === "zh" ? "解锁碎片" : "Fragment unlocked"}</b>
+                        <b>{language === "zh" ? "发现线索" : "Fragment unlocked"}</b>
                         <span>{language === "zh" ? engineFragmentDefinition(id).titleZh : engineFragmentDefinition(id).title}</span>
                       </div>
                     ))}
@@ -196,14 +196,14 @@ export default function ArchivePage() {
               ) : (
                 <div className="history-item">
                   <b>{language === "zh" ? "未选择记录" : "No record selected"}</b>
-                  <span>{language === "zh" ? "完成值班后查看详情。" : "Complete a shift to inspect details."}</span>
+                  <span>{language === "zh" ? "完成一局后查看详情。" : "Complete a shift to inspect details."}</span>
                 </div>
               )}
             </div>
           </section>
 
           <section className="module archive-module wide">
-            <div className="module-head"><h3>{language === "zh" ? "成就档案" : "Achievement Archive"}</h3></div>
+            <div className="module-head"><h3>{language === "zh" ? "成就" : "Achievement Archive"}</h3></div>
             <div className="module-body achievement-archive-grid">
               {achievementDefinitions.map((achievement) => {
                 const unlocked = achievementIds.has(achievement.id);

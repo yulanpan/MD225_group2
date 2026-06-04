@@ -54,8 +54,8 @@ const unlockEvents: GuidedUnlockEvent[] = [
   { id: "ministers", label: "Ministers' Reports", labelZh: "大臣报告", kind: "zone" },
   { id: "public", label: "Public Comments", labelZh: "公众评论", kind: "zone" },
   { id: "virality", label: "Virality", labelZh: "传播", kind: "metric" },
-  { id: "publicDoubt", label: "Public Doubt", labelZh: "公众怀疑", kind: "metric" },
-  { id: "systemSuspicion", label: "System Suspicion", labelZh: "系统警戒", kind: "metric" },
+  { id: "publicDoubt", label: "Public Doubt", labelZh: "人群起疑", kind: "metric" },
+  { id: "systemSuspicion", label: "System Suspicion", labelZh: "被盯上", kind: "metric" },
   { id: "dialogue", label: "Incoming Transmissions", labelZh: "突发交流", kind: "system" },
   { id: "fullControl", label: "Open Shift", labelZh: "自主值班", kind: "system" }
 ];

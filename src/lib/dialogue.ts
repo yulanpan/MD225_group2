@@ -292,8 +292,8 @@ export function fallbackDialogueEvent(id: string, archetype: DialogueArchetype, 
       archetype,
       speakerName: zh ? "宫廷叙事引擎" : "Palace Narrative Engine",
       speakerRole: zh ? "平台审计程序" : "Platform audit process",
-      openingLine: zh ? "你的编辑轨迹接近遏制阈值。请说明你为何继续提升未批准证据。" : "Your editorial trace is nearing containment thresholds. Explain why you continue elevating unapproved evidence.",
-      stakes: zh ? "系统可能提高怀疑并限制后续发布权限。" : "The system may increase suspicion and restrict later publication access.",
+      openingLine: zh ? "你最近发的内容太危险。请说明：为什么还要继续放大未经宫廷认可的证据？" : "Your editorial trace is nearing containment thresholds. Explain why you continue elevating unapproved evidence.",
+      stakes: zh ? "宫廷可能更盯着你，后面发布会更困难。" : "The system may increase suspicion and restrict later publication access.",
       mood: { ...defaultDialogueMood.engineAudit },
       quickReplies: zh
         ? [
@@ -347,7 +347,7 @@ export function fallbackDialogueReply(event: DialogueEvent, language: LanguageCo
   }
   if (event.archetype === "engineAudit") {
     return language === "zh"
-      ? "记录已更新。继续放大未经批准的证据会提高系统警戒。建议接受更安全措辞。"
+      ? "记录已更新。继续放大未经批准的证据，会让宫廷更盯着你。建议说得更安全。"
       : "Record updated. Continued elevation of unapproved evidence will increase system suspicion. Safer framing is recommended.";
   }
   if (event.archetype === "archiveClerk") {
@@ -389,7 +389,7 @@ export function fallbackSilenceResult(event: DialogueEvent, language: LanguageCo
     },
     engineAudit: {
       en: "No response logged. Containment risk increases when the editor cannot justify circulation.",
-      zh: "未收到回应。编辑无法说明传播理由时，遏制风险会提高。"
+      zh: "未收到回应。你无法说明为什么要继续传播，宫廷会更注意你。"
     }
   };
   return {
@@ -473,7 +473,7 @@ export function dialogueQuickReplies(event: DialogueEvent, transcript: DialogueM
     return fallbackDialogueEvent(event.id, "childGuardian", language).quickReplies;
   }
   if (event.archetype === "engineAudit") {
-    if (latestSpeaker.includes("access") || latestSpeaker.includes("threshold") || latestSpeaker.includes("权限") || latestSpeaker.includes("阈值")) {
+    if (latestSpeaker.includes("access") || latestSpeaker.includes("threshold") || latestSpeaker.includes("权限")) {
       return zh
         ? [
             makeChoice("public-interest", "这是公共利益。", "这是公共利益。", "challenge", { trust: -1, agitation: 1, openness: 1 }),
@@ -627,10 +627,10 @@ export function fallbackDialogueResolution(event: DialogueEvent, transcript: Dia
   return {
     outcomeTag,
     summary: language === "zh"
-      ? `${event.speakerName} 的交流已写入编辑轨迹。`
+      ? `${event.speakerName} 的交流已影响当前局势。`
       : `${event.speakerName}'s interruption was written into the editorial trace.`,
     feedTitle: language === "zh" ? "突发交流" : "Incoming Transmission",
-    feedText: language === "zh" ? "对话改变了本轮信息流的局势。" : "The exchange shifted pressure inside the live feed."
+    feedText: language === "zh" ? "这次交流改变了当前局势。" : "The exchange shifted pressure inside the live feed."
   };
 }
 

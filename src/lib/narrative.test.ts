@@ -80,7 +80,7 @@ describe("narrative structure", () => {
 
     expect(endingFacetsForState(contained, "perfectIllusion", "en").publicMemory).toContain("learns the approved sentence");
     expect(endingFacetsForState(truthRun, "aiContainment", "en").publicMemory).toContain("empty looms");
-    expect(endingFacetsForState(truthRun, "aiContainment", "zh").engineLesson).toContain("遏制");
+    expect(endingFacetsForState(truthRun, "aiContainment", "zh").engineLesson).toContain("拦住发布");
   });
 
   it("loads old saves without narrative fields", () => {

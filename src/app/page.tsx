@@ -43,22 +43,22 @@ const briefingCards = {
       no: "01",
       tone: "black wide",
       source: "目标",
-      title: "在游行开始前控制公共故事。",
-      body: "你有六次编辑行动。每一次行动都会改变人群能看见、重复、怀疑或遗忘什么。"
+      title: "游行前，你只能发布六次。",
+      body: "每次发布都会改变大家看见什么、跟着说什么、还敢不敢怀疑。"
     },
     {
       no: "02",
       tone: "cyan",
-      source: "AI 同伴",
-      title: "宫廷叙事引擎会协助并监控你。",
-      body: "部分帖子会触发 AI 介入。接受更安全的语言以保住权限，或发布证据并提高怀疑值。"
+      source: "宫廷建议",
+      title: "引擎会劝你说得更安全。",
+      body: "你可以听它的，帮宫廷稳住场面；也可以把证据放出去，让更多人起疑。"
     },
     {
       no: "03",
       tone: "red",
       source: "失败条件",
-      title: "当大家发现彼此都在怀疑，局势会变得危险。",
-      body: "孩子、空织布机和公众评论都可能把私下怀疑变成公开问题。"
+      title: "最危险的不是一个人怀疑。",
+      body: "危险在于大家发现：原来别人也看不见那件新衣。"
     }
   ]
 };
@@ -146,10 +146,10 @@ export default function StartPage() {
           <div className="type-orbit" aria-hidden="true"><b>Truth</b><b>Power</b><b>AI</b></div>
           <div className="control-composition">
             <article className="system-card prime" data-id="01">
-              <div className="mini-label">{language === "zh" ? "公共现实路由" : "Public Reality Routing"}</div>
+              <div className="mini-label">{language === "zh" ? "大家会看到什么" : "Public Reality Routing"}</div>
               <h3>{language === "zh" ? "公众会看见什么？" : "What will the public see?"}</h3>
-              <p>{language === "zh" ? "证据不只是被发现。它还必须被发布、被看见、被传播，并避免被改写成安全说法。" : "Truth is not only discovered. It must be published, seen, circulated, and protected from being rewritten."}</p>
-              <div className="micro-data"><span>{language === "zh" ? "当前身份" : "Current Role"}</span><span>{language === "zh" ? "宫廷信息流编辑" : "Royal Feed Editor"}</span></div>
+              <p>{language === "zh" ? "真话被发现还不够。它必须被发出去，被大家看见。" : "Truth is not only discovered. It must be published, seen, circulated, and protected from being rewritten."}</p>
+              <div className="micro-data"><span>{language === "zh" ? "行动限制" : "Action Limit"}</span><span>{language === "zh" ? "游行前 6 次" : "6 before parade"}</span></div>
             </article>
             <article className="system-card alert" data-id="06">
               <div className="mini-label">{language === "zh" ? "游行计时" : "Parade Timer"}</div>
@@ -164,8 +164,8 @@ export default function StartPage() {
             <article className="system-card ai" data-id="PNE">
               <div className="mini-label">{language === "zh" ? "宫廷叙事引擎" : "Palace Narrative Engine"}</div>
               <h3>{language === "zh" ? "稳定优先。" : "Stability preferred."}</h3>
-              <p>{language === "zh" ? "该系统保护宫廷信心，推荐更安全措辞，生成评论，并监控高风险编辑行为。" : "This system protects palace confidence, recommends safer wording, generates comments, and monitors risky editorial behavior."}</p>
-              <div className="micro-data"><span>{language === "zh" ? "系统警戒" : "System Suspicion"}</span><span>0 / 10</span></div>
+              <p>{language === "zh" ? "它会建议你说得更稳，也会在你太直接时提醒宫廷。" : "This system protects palace confidence, recommends safer wording, generates comments, and monitors risky editorial behavior."}</p>
+              <div className="micro-data"><span>{language === "zh" ? "被盯上" : "System Suspicion"}</span><span>0 / 10</span></div>
             </article>
           </div>
         </div>
@@ -193,7 +193,7 @@ export default function StartPage() {
         </div>
       </section>
 
-      <footer className="footer-note">{language === "zh" ? "The Emperor's Feed · 六步叙事控制游戏 · 宫廷叙事引擎已激活。" : "The Emperor's Feed · six-action narrative control game · Palace Narrative Engine active."}</footer>
+      <footer className="footer-note">{language === "zh" ? "The Emperor's Feed · 六次发布 · 看见真话的人能不能一起开口。" : "The Emperor's Feed · six-action narrative control game · Palace Narrative Engine active."}</footer>
     </main>
   );
 }

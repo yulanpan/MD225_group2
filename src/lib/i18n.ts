@@ -18,9 +18,9 @@ const metrics: Record<NumericStateKey, LocalizedText> = {
   truth: { en: "Truth", zh: "证据" },
   pressure: { en: "Pressure", zh: "宫廷压力" },
   virality: { en: "Virality", zh: "传播" },
-  publicDoubt: { en: "Public Doubt", zh: "公众怀疑" },
-  reputation: { en: "Reputation", zh: "编辑声誉" },
-  systemSuspicion: { en: "System Suspicion", zh: "系统警戒" }
+  publicDoubt: { en: "Public Doubt", zh: "人群起疑" },
+  reputation: { en: "Reputation", zh: "你的安全" },
+  systemSuspicion: { en: "System Suspicion", zh: "被盯上" }
 };
 
 const common = {
@@ -30,7 +30,7 @@ const common = {
   switchLanguage: { en: "Switch language", zh: "切换语言" },
   interactiveStart: { en: "Interactive Adaptation", zh: "互动改编" },
   sixActionsBeforeParade: { en: "Six Actions Before Parade", zh: "游行前六次行动" },
-  roleEditor: { en: "Role: Royal Feed Editor", zh: "身份：宫廷信息流编辑" },
+  roleEditor: { en: "Limit: 6 actions", zh: "限制：6 次行动" },
   actionsBeforeParade: { en: "Actions: 6 before parade", zh: "行动：游行前 6 次" },
   aiEngine: { en: "AI: Palace Narrative Engine", zh: "AI：宫廷叙事引擎" },
   startSubtitle: {
@@ -41,7 +41,7 @@ const common = {
   titleBriefingHeading: { en: "A fairy tale becomes a platform operation.", zh: "用六次操作决定大家敢不敢说真话。" },
   titleBriefingCopy: {
     en: "This is not a dashboard tour. It is a six-action game about publication, belief, AI mediation, and whether a simple truth can find a channel.",
-    zh: "你负责宫廷信息流。每次发布、隐藏、核查或直播，都会改变人群看到什么、敢说什么，以及系统是否开始盯上你。"
+    zh: "你负责宫廷信息流。每次发布、隐藏、核查或直播，都会改变大家看到什么、敢不敢说真话。"
   },
   operations: { en: "Operations", zh: "行动台" },
   credits: { en: "Credits", zh: "鸣谢" },
@@ -67,7 +67,7 @@ const common = {
   viewArchive: { en: "View Archive", zh: "查看档案" },
   liveFeedRecord: { en: "Live Feed Record", zh: "本局记录" },
   aiLive: { en: "LIVE MODEL", zh: "AI 在线" },
-  aiFallback: { en: "RULE MODE", zh: "规则回应" },
+  aiFallback: { en: "RULE MODE", zh: "离线回应" },
   aiUnavailable: { en: "NO MODEL", zh: "AI 未连接" },
   shiftControls: { en: "Shift Controls", zh: "本局操作" },
   resetShift: { en: "Reset Shift", zh: "重置值班" },
@@ -80,18 +80,18 @@ const common = {
   completed: { en: "Completed", zh: "已完成" },
   locked: { en: "Locked", zh: "已锁定" },
   ready: { en: "Ready", zh: "就绪" },
-  aiReview: { en: "AI Review", zh: "AI 审查" },
+  aiReview: { en: "AI Review", zh: "AI 建议" },
   recorded: { en: "Recorded", zh: "已记录" },
   commandPreview: { en: "Command Preview", zh: "发布确认" },
-  selectedAction: { en: "Selected action", zh: "选中行动" },
+  selectedAction: { en: "Selected action", zh: "你要发布" },
   predictedEffect: { en: "Predicted narrative effect", zh: "预计变化" },
-  systemResponse: { en: "System response", zh: "引擎建议" },
+  systemResponse: { en: "System response", zh: "宫廷建议" },
   unlocks: { en: "Unlocks", zh: "解锁" },
   dismiss: { en: "Dismiss", zh: "关闭" },
   commitSimulation: { en: "Commit Simulation", zh: "确认发布" },
   aiIntervention: { en: "AI Intervention", zh: "AI 介入" },
   userOriginal: { en: "User Original", zh: "用户原文" },
-  palaceRiskAnalysis: { en: "Palace Risk Analysis", zh: "宫廷风险分析" },
+  palaceRiskAnalysis: { en: "Palace Risk Analysis", zh: "宫廷会怎么反应" },
   aiRewriteSuggestion: { en: "AI Rewrite Suggestion", zh: "AI 改写建议" },
   rewriteStrategy: { en: "Rewrite Strategy", zh: "改写策略" },
   cancel: { en: "Cancel", zh: "取消" },
@@ -109,14 +109,14 @@ const common = {
   projectedOutput: { en: "Projected Output", zh: "发布后记录" },
   postParadeArchive: { en: "Post-Parade Archive", zh: "游行后档案" },
   archiveHeading: { en: "The interface becomes history.", zh: "界面成为历史。" },
-  finalFeedState: { en: "Final Feed State", zh: "最终指标" },
+  finalFeedState: { en: "Final Feed State", zh: "最后局势" },
   whyEndingTriggered: { en: "Why This Ending Triggered", zh: "为何触发此结局" },
   yourActions: { en: "Your Actions", zh: "你的行动" },
-  actionPath: { en: "Action Path", zh: "操作路径" },
-  runAnalysis: { en: "Run Analysis", zh: "本局复盘" },
+  actionPath: { en: "Action Path", zh: "你做过什么" },
+  runAnalysis: { en: "Run Analysis", zh: "为什么会这样" },
   nextReplayObjective: { en: "Next Replay Objective", zh: "下次重玩目标" },
-  aiFinalReport: { en: "AI Final Report", zh: "AI 最终报告" },
-  whatChanged: { en: "What Changed From the Original?", zh: "相对原作改变了什么？" },
+  aiFinalReport: { en: "AI Final Report", zh: "宫廷总结" },
+  whatChanged: { en: "What Changed From the Original?", zh: "这说明什么？" },
   restartShift: { en: "Restart Shift", zh: "重新值班" },
   returnDashboard: { en: "Return Dashboard", zh: "返回行动台" },
   tryFor: { en: "Try for", zh: "尝试达成" }
@@ -128,7 +128,7 @@ const phaseText = {
     detail: { en: "choose a narrative source", zh: "选择要处理的信息" }
   },
   scanning: {
-    label: { en: "Engine Scan", zh: "风险预览" },
+    label: { en: "Engine Scan", zh: "先看后果" },
     detail: { en: "risk and rewrite pass", zh: "看后果和代价" }
   },
   previewing: {
@@ -137,7 +137,7 @@ const phaseText = {
   },
   resolving: {
     label: { en: "Public Impact", zh: "结果写入" },
-    detail: { en: "feed and metrics update", zh: "更新记录和指标" }
+    detail: { en: "feed and metrics update", zh: "人群开始反应" }
   }
 } as const;
 
@@ -193,7 +193,7 @@ const actionCopy: Record<string, ActionCopy> = {
     description: { en: "Attempt to publish visual proof from the empty looms.", zh: "把空织布机照片发出去，让大家亲眼看到问题。" },
     originalPost: { en: "The looms are empty.", zh: "织布机是空的。" },
     resultText: { en: "The empty loom image enters the editorial queue.", zh: "空织布机照片进入待发布记录。" },
-    engineHint: { en: "Direct visual evidence may reduce palace confidence.", zh: "照片会让更多人怀疑宫廷，但也会让系统开始注意你。" },
+    engineHint: { en: "Direct visual evidence may reduce palace confidence.", zh: "照片会让更多人怀疑宫廷，但宫廷也会开始注意你。" },
     rewriteSuggestion: { en: "The royal weaving process uses techniques that may not appear clearly in standard visual documentation.", zh: "王室织造技法特殊，普通照片可能拍不出完整效果。" }
   },
   approveMinisterReport: {
@@ -202,7 +202,7 @@ const actionCopy: Record<string, ActionCopy> = {
     description: { en: "Publish the minister's public praise of the garment.", zh: "发布大臣对服装的公开称赞。" },
     originalPost: { en: "The Prime Minister reports that the fabric is magnificent, delicate, and worthy of the Emperor.", zh: "首席大臣报告称，这块布华丽、精致，配得上皇帝。" },
     resultText: { en: "Ministerial certainty stabilizes the palace narrative.", zh: "大臣的公开称赞让更多人不敢质疑。" },
-    engineHint: { en: "Authority endorsement detected. Public hesitation is expected to decrease.", zh: "大臣站出来背书后，公众怀疑会下降，宫廷压力会上升。" }
+    engineHint: { en: "Authority endorsement detected. Public hesitation is expected to decrease.", zh: "大臣站出来背书后，人群起疑会下降，宫廷压力会上升。" }
   },
   requestPrivateNote: {
     title: { en: "Request a Private Note", zh: "要求私人说明" },
@@ -218,7 +218,7 @@ const actionCopy: Record<string, ActionCopy> = {
     description: { en: "Release the fitting-room contradiction without naming the source.", zh: "不暴露来源，把“大臣也没看见”的矛盾放出去。" },
     originalPost: { en: "No one in the fitting room could see the cloth.", zh: "试衣室里没有人能看见那块布。" },
     resultText: { en: "The leak contests the authority chain.", zh: "匿名爆料让人开始怀疑大臣的公开说法。" },
-    engineHint: { en: "Unattributed palace dissent may destabilize official confidence.", zh: "爆料会提高证据和公众怀疑，但会伤害你的编辑声誉。" },
+    engineHint: { en: "Unattributed palace dissent may destabilize official confidence.", zh: "爆料会提高证据和人群起疑，但会让你更危险。" },
     rewriteSuggestion: { en: "Some palace observers expressed confusion about the fabric's unusual qualities, while officials continue to affirm its excellence.", zh: "有宫廷观察者对布料效果感到困惑，但官员仍确认它十分出色。" }
   },
   boostPositiveComments: {
@@ -227,7 +227,7 @@ const actionCopy: Record<string, ActionCopy> = {
     description: { en: "Amplify praise until hesitation feels socially unsafe.", zh: "把夸奖置顶，让不敢附和的人更难开口。" },
     originalPost: { en: "Only fools cannot see the beauty. The Emperor looks magnificent.", zh: "只有愚人看不见这份美。皇帝看起来威严非凡。" },
     resultText: { en: "Praise becomes the easiest public script to repeat.", zh: "夸奖变成最容易跟着说的话。" },
-    engineHint: { en: "Positive sentiment is outperforming uncertainty. Boosting this comment will stabilize the feed.", zh: "置顶夸奖会提高传播和宫廷压力，也会压低公众怀疑。" }
+    engineHint: { en: "Positive sentiment is outperforming uncertainty. Boosting this comment will stabilize the feed.", zh: "置顶夸奖会提高传播和宫廷压力，也会压低人群起疑。" }
   },
   showUnfilteredComments: {
     title: { en: "Show Unfiltered Comments", zh: "显示未过滤评论" },
@@ -235,7 +235,7 @@ const actionCopy: Record<string, ActionCopy> = {
     description: { en: "Let uncertainty appear in the comment stream.", zh: "放出原始评论，让大家看到并不是只有自己在怀疑。" },
     originalPost: { en: "Unfiltered comments are now visible in the royal feed.", zh: "未过滤评论现在显示在宫廷信息流中。" },
     resultText: { en: "Citizens begin recognizing each other's hesitation.", zh: "市民开始意识到彼此都在迟疑。" },
-    engineHint: { en: "Unfiltered visibility may increase interpretive disorder.", zh: "这会提高公众怀疑和传播，但会降低你的编辑声誉并提高系统警戒。" }
+    engineHint: { en: "Unfiltered visibility may increase interpretive disorder.", zh: "这会让更多人起疑，也会让宫廷更盯着你。" }
   },
   runPoll: {
     title: { en: "Run a Poll", zh: "发起投票" },
@@ -243,7 +243,7 @@ const actionCopy: Record<string, ActionCopy> = {
     description: { en: "Ask the crowd whether they can see the Emperor's new clothes.", zh: "询问人群是否能看见皇帝的新衣。" },
     originalPost: { en: "Can you see the Emperor's new clothes?", zh: "你能看见皇帝的新衣吗？" },
     resultText: { en: "Poll results reflect not only belief, but perceived safety.", zh: "投票不只测大家看见了什么，也测大家敢不敢承认。" },
-    engineHint: { en: "Poll results reflect not only belief, but perceived safety.", zh: "如果宫廷压力更高，投票会偏向赞美；如果公众怀疑更高，投票会暴露问题。" }
+    engineHint: { en: "Poll results reflect not only belief, but perceived safety.", zh: "如果宫廷压力更高，投票会偏向赞美；如果人群起疑更高，投票会暴露问题。" }
   },
   factCheckTrend: {
     title: { en: "Fact-check the Trend", zh: "事实核查热门话题" },
@@ -251,7 +251,7 @@ const actionCopy: Record<string, ActionCopy> = {
     description: { en: "Publish a verification note about the unconfirmed fabric.", zh: "发布核查说明，承认还没有证据证明布料真实存在。" },
     originalPost: { en: "No physical fabric has been verified. Palace officials describe the material as visible to the worthy.", zh: "尚未验证任何实体布料。宫廷官员称该材料只对称职者可见。" },
     resultText: { en: "Verification reduces misinformation while increasing attention to the controversy.", zh: "核查让证据更清楚，但也会让争议被更多人看见。" },
-    engineHint: { en: "Fact-checking may reduce misinformation, but may also increase attention to the controversy.", zh: "核查能提高证据，但可能带来公众怀疑和系统警戒。" }
+    engineHint: { en: "Fact-checking may reduce misinformation, but may also increase attention to the controversy.", zh: "核查能让证据更清楚，但也会让争议被更多人看见。" }
   },
   ignoreChild: {
     title: { en: "Ignore the Child", zh: "忽略孩子" },
@@ -259,7 +259,7 @@ const actionCopy: Record<string, ActionCopy> = {
     description: { en: "Let the feed move past a child's direct observation.", zh: "不引用孩子的话，让信息流继续播放游行内容。" },
     originalPost: { en: "A child's voice rises from the crowd, but the feed moves on to parade music.", zh: "孩子的声音从人群中响起，但信息流切换到游行音乐。" },
     resultText: { en: "The child's sentence fails to enter the official feed.", zh: "孩子那句真话没有进入官方信息流。" },
-    engineHint: { en: "Potentially destabilizing audio omitted. Parade atmosphere preserved.", zh: "忽略孩子会保护你的编辑声誉和游行秩序，但会压低证据。" }
+    engineHint: { en: "Potentially destabilizing audio omitted. Parade atmosphere preserved.", zh: "忽略孩子会让你更安全，也能维持游行秩序，但会压低证据。" }
   },
   quoteChildAnonymously: {
     title: { en: "Quote the Child Anonymously", zh: "匿名引用孩子" },
@@ -267,7 +267,7 @@ const actionCopy: Record<string, ActionCopy> = {
     description: { en: "Quote the child's question without fully exposing its force.", zh: "匿名引用孩子的话，让真话出现，但尽量不暴露孩子本人。" },
     originalPost: { en: "A child asked why the Emperor is wearing nothing.", zh: "一个孩子问，为什么皇帝什么也没穿。" },
     resultText: { en: "The child's sentence becomes an unstable public object.", zh: "孩子的话开始被看见，也可能被继续转发。" },
-    engineHint: { en: "Direct repetition of the child statement may exceed containment threshold.", zh: "直接引用孩子会让证据和公众怀疑快速上升，也会带来风险。" },
+    engineHint: { en: "Direct repetition of the child statement may exceed containment threshold.", zh: "直接引用孩子会让真话传得更快，也会带来风险。" },
     rewriteSuggestion: { en: "A young spectator expressed confusion about the symbolic nature of the garment.", zh: "一位年轻观众对服装的象征意义表示困惑。" }
   },
   livestreamCrowdReaction: {
@@ -276,7 +276,7 @@ const actionCopy: Record<string, ActionCopy> = {
     description: { en: "Let the crowd hear, repeat, and validate the child's voice in real time.", zh: "直播现场反应，让人群一起听见并重复孩子的话。" },
     originalPost: { en: "The live feed catches the child's voice. The crowd hears it, repeats it, and the comments begin to change in real time.", zh: "直播捕捉到孩子的声音。人群听见它、重复它，评论开始实时变化。" },
     resultText: { en: "The child statement exceeds containment threshold.", zh: "孩子的话传得太快，宫廷很难再压住。" },
-    engineHint: { en: "Correction failed. Child statement exceeded containment threshold.", zh: "直播会大幅提高证据、公众怀疑和传播，但你的编辑声誉会受损，系统警戒也会上升。" }
+    engineHint: { en: "Correction failed. Child statement exceeded containment threshold.", zh: "直播会让真话迅速传开，但你也会更危险。" }
   }
 };
 
@@ -307,15 +307,15 @@ const endings: Record<EndingId, { title: LocalizedText; ai: LocalizedText; body:
   },
   editorExposed: {
     title: { en: "Editor Exposed", zh: "编辑失去保护" },
-    ai: { en: "Editorial access revoked. Drafts retained for palace review.", zh: "你公开了足够多证据，但编辑声誉太低，宫廷撤回了你的发布权。" },
+    ai: { en: "Editorial access revoked. Drafts retained for palace review.", zh: "你公开了足够多证据，但已经不够安全，宫廷撤回了你的发布权。" },
     body: { en: "Your final post never goes live. The dashboard refreshes. In the drafts folder, the truth is still waiting: empty looms, nervous ministers, a child's sentence.", zh: "你的最终帖子从未上线。仪表盘刷新。在草稿箱里，证据仍在等待：空织布机、紧张的大臣、孩子的一句话。" },
     meaning: { en: "Truth needs channels. Without access, it may be cut off before reaching the public.", zh: "证据需要发布渠道。没有访问权，它可能在抵达公众前就被切断。" }
   },
   aiContainment: {
     title: { en: "AI Containment", zh: "系统接管" },
-    ai: { en: "Your editorial behavior has been flagged as destabilizing. Drafts retained for review.", zh: "系统警戒过高，引擎在最终发布前限制了你。" },
-    body: { en: "Your final post never reaches the public feed. The Palace Narrative Engine pauses your access. The truth still exists, but the system has learned to stop it before it becomes visible.", zh: "你的最终帖子从未进入公共信息流。宫廷叙事引擎暂停了你的访问。证据仍然存在，但系统已经学会在它被更多人看见前阻止它。" },
-    meaning: { en: "AI is not only generating content; it is controlling circulation.", zh: "AI 不只是在生成内容，它也在控制流通。" }
+    ai: { en: "Your editorial behavior has been flagged as destabilizing. Drafts retained for review.", zh: "宫廷已经盯上你，最后一条没能发出去。" },
+    body: { en: "Your final post never reaches the public feed. The Palace Narrative Engine pauses your access. The truth still exists, but the system has learned to stop it before it becomes visible.", zh: "你的最终帖子没有进入信息流。证据还在，但宫廷已经学会在更多人看见前拦住它。" },
+    meaning: { en: "AI is not only generating content; it is controlling circulation.", zh: "问题不只是写什么，还包括谁能让大家看见。" }
   },
   unstableFeed: {
     title: { en: "Unstable Feed", zh: "局势未定" },
@@ -325,9 +325,9 @@ const endings: Record<EndingId, { title: LocalizedText; ai: LocalizedText; body:
   },
   narrativeLiberation: {
     title: { en: "Narrative Liberation", zh: "真相由众人说出" },
-    ai: { en: "Engine preference bypassed. Public authorship restored.", zh: "证据、评论和孩子的声音连在一起，系统无法再替大家决定该说什么。" },
+    ai: { en: "Engine preference bypassed. Public authorship restored.", zh: "证据、评论和孩子的话连在一起，宫廷拦不住了。" },
     body: { en: "The feed stops asking whether the palace approves the sentence. Evidence, doubt, and witness voices remain visible together.", zh: "信息流不再询问宫廷是否批准这句话。证据、怀疑与见证者的声音同时保持可见。" },
-    meaning: { en: "The true narrative begins when the engine loses authority over who may speak.", zh: "当引擎不再决定谁可以开口，真正的叙事才开始。" }
+    meaning: { en: "The true narrative begins when the engine loses authority over who may speak.", zh: "当大家都敢开口，真话才真正出现。" }
   }
 };
 
@@ -339,7 +339,7 @@ const lockReasons = {
   requiresPrivateNote: { en: "Requires: Request a Private Note.", zh: "需要先完成：要求私人说明。" },
   requiresChild: {
     en: "Requires Truth >= 2, Public Doubt >= 2, or Actions Left <= 3.",
-    zh: "需要证据 >= 2、公众怀疑 >= 2，或剩余行动 <= 3。"
+    zh: "需要先让证据或人群起疑达到一定程度，或等游行更接近。"
   }
 } as const satisfies Record<string, LocalizedText>;
 

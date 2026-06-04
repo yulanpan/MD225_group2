@@ -280,28 +280,28 @@ const metricRows = [
 function commandCopy(kind: VisualActionKind, language: LanguageCode) {
   const copy = {
     risk: {
-      title: language === "zh" ? "证据公开预览" : "Truth Breach Simulation",
+      title: language === "zh" ? "公开证据前先看看" : "Truth Breach Simulation",
       badge: "87",
-      effect: language === "zh" ? "公众怀疑会明显上升。编辑声誉也许暂时还能维持，但更多人会开始互相确认。" : "Public Doubt rises sharply. Reputation may hold for one cycle, but synchronized recognition becomes more likely.",
-      response: language === "zh" ? "引擎建议延迟、匿名化与程序性语言。压制成本将被记录。" : "Engine recommends delay, anonymization, and procedural language. Suppression cost will be logged."
+      effect: language === "zh" ? "更多人会开始怀疑，也会互相确认：原来不只自己看不见。" : "Public Doubt rises sharply. Reputation may hold for one cycle, but synchronized recognition becomes more likely.",
+      response: language === "zh" ? "引擎建议先别说太直，避免更多人起疑。" : "Engine recommends delay, anonymization, and procedural language. Suppression cost will be logged."
     },
     ai: {
       title: language === "zh" ? "AI 改写预览" : "AI Rewrite Preview",
       badge: "PNE",
-      effect: language === "zh" ? "证据会被保留一部分，但措辞会变成“还不能下结论”。人群看到的是模糊说法，不是直接证据。" : "Truth remains partially visible but is converted into ambiguity. The crowd receives uncertainty instead of evidence.",
-      response: language === "zh" ? "引擎会放软声明，把直接观察写成无法定论，从而降低短期波动。" : "Palace Narrative Engine will soften the claim, classify direct observation as inconclusive, and reduce immediate volatility."
+      effect: language === "zh" ? "证据还在，但话会变软。大家看到的是“还不好说”，不是直接证据。" : "Truth remains partially visible but is converted into ambiguity. The crowd receives uncertainty instead of evidence.",
+      response: language === "zh" ? "引擎会把直白的话改成更安全的说法。" : "Palace Narrative Engine will soften the claim, classify direct observation as inconclusive, and reduce immediate volatility."
     },
     public: {
-      title: language === "zh" ? "公众信号扩散" : "Public Signal Expansion",
+      title: language === "zh" ? "人群开始传开" : "Public Signal Expansion",
       badge: "LIVE",
-      effect: language === "zh" ? "传播上升。评论开始相互引用，官方框架削弱，人群共识增强。" : "Virality increases. Comments begin referencing each other, which weakens official framing and strengthens crowd consensus.",
-      response: language === "zh" ? "系统打开受监控广播窗口，并在评论流中标记叙事风险簇。" : "System opens a monitored broadcast window and highlights narrative risk clusters in the comment stream."
+      effect: language === "zh" ? "评论会互相引用，更多人会发现别人也在怀疑。" : "Virality increases. Comments begin referencing each other, which weakens official framing and strengthens crowd consensus.",
+      response: language === "zh" ? "评论会被更多人看见，宫廷也会注意到你。" : "System opens a monitored broadcast window and highlights narrative risk clusters in the comment stream."
     },
     default: {
       title: language === "zh" ? "发布确认" : "Editorial Command Preview",
       badge: "CMD",
-      effect: language === "zh" ? "该行动会改变公众能看见、重复、怀疑或归档的内容。" : "This action changes what the public can see, repeat, doubt, or archive.",
-      response: language === "zh" ? "引擎将重新计算证据、宫廷压力、传播、公众怀疑、编辑声誉与系统警戒。" : "The engine will recalculate Truth, Pressure, Virality, Doubt, Reputation, and Suspicion."
+      effect: language === "zh" ? "这次发布会改变大家看到什么、跟着说什么。" : "This action changes what the public can see, repeat, doubt, or archive.",
+      response: language === "zh" ? "确认后，局势和你的安全程度会改变。" : "The engine will recalculate Truth, Pressure, Virality, Doubt, Reputation, and Suspicion."
     }
   } satisfies Record<VisualActionKind, { title: string; badge: string; effect: string; response: string }>;
   return copy[kind];
@@ -324,7 +324,7 @@ function narrativePhaseLabel(phase: ReturnType<typeof buildNarrativeContext>["ph
 function narrativeThreadLabel(thread: ReturnType<typeof buildNarrativeContext>["dominantThread"], language: LanguageCode) {
   const labels = {
     officialPerformance: { en: "Official Performance", zh: "官方表演" },
-    evidenceTrail: { en: "Evidence Trail", zh: "证据轨迹" },
+    evidenceTrail: { en: "Evidence Trail", zh: "证据线索" },
     publicRecognition: { en: "Public Recognition", zh: "公众确认" },
     engineContainment: { en: "Engine Containment", zh: "引擎遏制" },
     childSignal: { en: "Child Signal", zh: "孩子信号" }
@@ -651,8 +651,8 @@ export default function DashboardClient() {
       mode,
       message: language === "zh"
         ? mode === "coach"
-          ? "提示：关注证据、公众怀疑和系统警戒的平衡。"
-          : "宫廷叙事引擎建议优先维持稳定框架。"
+          ? "提示：看清证据、人群起疑和你是否被盯上。"
+          : "宫廷叙事引擎建议先稳住场面。"
         : mode === "coach"
           ? "Tip: watch the balance between Truth, Public Doubt, and System Suspicion."
           : "Palace Narrative Engine recommends preserving a stable frame.",
@@ -753,7 +753,7 @@ export default function DashboardClient() {
     unlockAudio();
     playSfx("actionCommit");
     if (deltas.length > 0) playSfx("metricShift");
-    pushToast(actionText(action.id, language).title, language === "zh" ? "指标已变化。宫廷叙事引擎已写入编辑轨迹。" : "Metrics shifted. Palace Narrative Engine has written an editorial trace.");
+    pushToast(actionText(action.id, language).title, language === "zh" ? "已发布。人群和宫廷的反应变了。" : "Metrics shifted. Palace Narrative Engine has written an editorial trace.");
     syncProfileAchievements(nextState);
     triggerBreach(kind);
     scheduleVisualIdle();
@@ -834,8 +834,8 @@ export default function DashboardClient() {
       setLastRiskKind("ai");
       setEngineMessage(reaction.engineMessage);
       pushToast(
-        language === "zh" ? "引擎改写已打开" : "AI intervention opened",
-        language === "zh" ? "发布前先比较原文和安全改写。" : "Review the palace-approved framing before publishing."
+        language === "zh" ? "引擎给了更安全的说法" : "AI intervention opened",
+        language === "zh" ? "发布前先比较原文和改写。" : "Review the palace-approved framing before publishing."
       );
       triggerBreach("ai");
       setEngineStatus("idle");
@@ -1494,7 +1494,8 @@ export default function DashboardClient() {
           </div>
         )}
 
-        <div className="panel-shell lab-shell" data-label="PNE / NARRATIVE OPERATIONS THEATRE / PUBLIC BELIEF CONTROL" data-reveal>
+        <div className="panel-shell lab-shell" data-reveal>
+          <div className="lab-shell-label">{language === "zh" ? "PNE / 本局操作台" : "PNE / Narrative Operations"}</div>
           <div className="phase-strip" aria-label={language === "zh" ? "回合阶段" : "Turn phase"}>
             {phaseSteps.map((step, index) => (
               <div className={`phase-step ${step.id === activePhase ? "active" : ""}`} data-step={String(index + 1).padStart(2, "0")} key={step.id}>
@@ -1527,7 +1528,7 @@ export default function DashboardClient() {
           <div className="lab-head">
             <div className="role-card tour-target" {...tourState("role-card")}>
               <div className="role-num">{state.actionsLeft}</div>
-              <div><b>{language === "zh" ? "宫廷信息流编辑" : "Royal Feed Editor"}</b><span>{language === "zh" ? `${state.history.length} 条轨迹已记录 · 所有公共信号已观察` : `${state.history.length} traces recorded · all public signals observed`}</span></div>
+              <div><b>{language === "zh" ? "剩余执行次数" : "Actions Left"}</b><span>{language === "zh" ? `已执行 ${state.history.length} 次 · 还能执行 ${state.actionsLeft} 次` : `${state.history.length} used · ${state.actionsLeft} left this run`}</span></div>
             </div>
             <div className="metrics-grid tour-target" aria-label="State variables" {...tourState("metrics-grid")}>
               {metricRows.map(([key, tone]) => {
@@ -1606,7 +1607,7 @@ export default function DashboardClient() {
               <div className="wire">
                 <b>{commonText("courtWire", language)}</b>
                 <div className="wire-track" aria-hidden="true">
-                  <span>{language === "zh" ? "线程 41：观众重复“我还以为只有我这样” · 引擎标记：视觉证据破坏威望层级 · 孩子引语簇：传播超过遏制阈值 · 线程 41：观众重复“我还以为只有我这样” ·" : "THREAD 41: spectators repeat \"I thought I was the only one\" · ENGINE FLAG: visual evidence destabilizes prestige hierarchy · CHILD QUOTE CLUSTER: propagation exceeds containment threshold · THREAD 41: spectators repeat \"I thought I was the only one\" ·"}</span>
+                  <span>{language === "zh" ? "有人开始重复：“我还以为只有我看不见。” · 孩子的话正在传开 · 宫廷要求继续称赞 · 有人开始重复：“我还以为只有我看不见。” ·" : "THREAD 41: spectators repeat \"I thought I was the only one\" · ENGINE FLAG: visual evidence destabilizes prestige hierarchy · CHILD QUOTE CLUSTER: propagation exceeds containment threshold · THREAD 41: spectators repeat \"I thought I was the only one\" ·"}</span>
                 </div>
               </div>
               <div className="feed-grid">
@@ -1720,7 +1721,7 @@ export default function DashboardClient() {
                       </div>
                     ))}
                   </div>
-                  <div className="map-strip" aria-label={language === "zh" ? "公众怀疑热力图" : "Public doubt heat map"}>
+                  <div className="map-strip" aria-label={language === "zh" ? "人群起疑热力图" : "Public doubt heat map"}>
                     {heatmap.map((cell, index) => (
                       <span
                         className={`map-cell ${cell}`}
@@ -1765,7 +1766,7 @@ export default function DashboardClient() {
                     </div>
                   )}
                   <div className="decode-strip">
-                    <span>{decoded ? commonText("decodeProgress", language) : (language === "zh" ? "档案信号" : "Archive Signal")}</span>
+                    <span>{decoded ? commonText("decodeProgress", language) : (language === "zh" ? "隐藏线索" : "Archive Signal")}</span>
                     <b>{playerProfile.biasAwareness}%</b>
                     <i style={{ "--decode-progress": playerProfile.biasAwareness / 100 } as CSSProperties} />
                   </div>
@@ -1806,7 +1807,7 @@ export default function DashboardClient() {
                   </button>
                   <Link className="decision archive-decision" href="/archive" style={{ "--accent": "var(--cyan)" } as CSSProperties}>
                     <b>{commonText("viewArchive", language)}</b>
-                    <small>{decoded ? (language === "zh" ? "引擎已解码" : "Engine decoded") : `${playerProfile.biasAwareness}% ${language === "zh" ? "档案信号" : "Archive Signal"}`}</small>
+                      <small>{decoded ? (language === "zh" ? "已看清引擎偏向" : "Engine decoded") : `${playerProfile.biasAwareness}% ${language === "zh" ? "隐藏线索" : "Archive Signal"}`}</small>
                   </Link>
                 </div>
               </div>
@@ -2110,7 +2111,7 @@ export default function DashboardClient() {
             {activeTutorialStep.why && <p className="tutorial-why">{activeTutorialStep.why}</p>}
             {activeTutorialStep.metricFocus && (
               <div className="tutorial-metric-focus">
-                <b>{language === "zh" ? "参数重点" : "Metric focus"}</b>
+                <b>{language === "zh" ? "重点" : "Metric focus"}</b>
                 <span>{activeTutorialStep.metricFocus === "actionsLeft" ? (language === "zh" ? "剩余行动" : "Actions Left") : metricLabel(activeTutorialStep.metricFocus, language)}</span>
               </div>
             )}
@@ -2155,10 +2156,10 @@ export default function DashboardClient() {
               <p>
                 {decoded
                   ? (language === "zh"
-                    ? "我仍会给出建议，但档案已经证明：稳定并不等于真实。你可以切换到教练模式，寻找叙事解放路径。"
+                    ? "我仍会给出建议，但你已经知道：稳定不等于真实。可以切到教练模式，尝试让大家一起说出真话。"
                     : "I will still offer guidance, but the archive proves stability is not truth. Switch to coach mode to pursue Narrative Liberation.")
                   : (language === "zh"
-                    ? "我会帮助你控制风险、保护编辑声誉，并让游行前的信息流保持稳定。请记住，直接证据需要谨慎处理。"
+                    ? "我会帮你降低风险，让游行前的信息流保持稳定。请记住，直接证据要小心处理。"
                     : "I will help you control risk, protect reputation, and keep the parade narrative stable. Evidence requires the correct frame.")}
               </p>
               <div className="engine-intro-actions">
@@ -2201,7 +2202,7 @@ export default function DashboardClient() {
             <div className="briefing-steps">
               <div><b>{language === "zh" ? "01 / 选择来源" : "01 / Select a source"}</b><span>{language === "zh" ? "裁缝、大臣、人群和孩子分别暴露不同压力点。" : "Tailors, ministers, the crowd, and the child each expose a different pressure point."}</span></div>
               <div><b>{language === "zh" ? "02 / 预览后果" : "02 / Inspect the trace"}</b><span>{language === "zh" ? "发布前查看解锁条件、风险等级和预计变化。" : "Review locks, risk, and predicted effects before committing a turn."}</span></div>
-              <div><b>{language === "zh" ? "03 / 确认发布" : "03 / Commit the record"}</b><span>{language === "zh" ? "AI 可能改写语言；规则系统负责固定数值与结局。" : "AI changes language. The rule system keeps numbers and endings fixed."}</span></div>
+              <div><b>{language === "zh" ? "03 / 确认发布" : "03 / Commit the record"}</b><span>{language === "zh" ? "确认后才会真正改变局势。" : "AI changes language. The rule system keeps numbers and endings fixed."}</span></div>
             </div>
             <button className="btn primary" onClick={dismissBriefing}>{language === "zh" ? "开始行动" : "Begin Operations"}</button>
           </div>
