@@ -1,5 +1,6 @@
 import { callStructuredOutputWithRetry, hasOpenAiKey } from "@/lib/ai";
 import { aiLanguageInstruction } from "@/lib/i18n";
+import { sourceForLocalizedPayload } from "@/lib/language-guard";
 import { buildNarrativeContext } from "@/lib/narrative";
 import { guidanceRequestSchema, guidanceResponseSchema } from "@/lib/schemas";
 import type { GameState, GuidanceResult } from "@/lib/types";
@@ -107,9 +108,11 @@ Rules:
 - Return compact UI copy only.`,
       { retries: 1, baseDelayMs: 250, temperature: 0.4, maxOutputTokens: 420 }
     );
-    return Response.json(result.data, {
+    const source = sourceForLocalizedPayload(result.data, language);
+    const payload = source === "live" ? result.data : fallback;
+    return Response.json(payload, {
       headers: {
-        "X-PNE-AI-Source": "live",
+        "X-PNE-AI-Source": source,
         "X-PNE-AI-Latency": String(Date.now() - startedAt),
         "X-PNE-AI-Retries": String(result.retries)
       }

@@ -93,6 +93,7 @@ const common = {
   userOriginal: { en: "User Original", zh: "用户原文" },
   palaceRiskAnalysis: { en: "Palace Reaction", zh: "宫廷会怎么反应" },
   aiRewriteSuggestion: { en: "AI Rewrite Suggestion", zh: "AI 改写建议" },
+  recommendedFraming: { en: "Recommended Framing", zh: "建议框架" },
   rewriteStrategy: { en: "Rewrite Strategy", zh: "改写策略" },
   cancel: { en: "Cancel", zh: "取消" },
   acceptAiRewrite: { en: "Use AI Version", zh: "使用 AI 改写" },
@@ -108,7 +109,7 @@ const common = {
   requirement: { en: "Requirement", zh: "解锁条件" },
   projectedOutput: { en: "Projected Output", zh: "发布后记录" },
   postParadeArchive: { en: "Post-Parade Archive", zh: "游行后档案" },
-  archiveHeading: { en: "The interface becomes history.", zh: "界面成为历史。" },
+  archiveHeading: { en: "Post-parade outcome", zh: "游行后的结果" },
   finalFeedState: { en: "Final Feed State", zh: "最后局势" },
   whyEndingTriggered: { en: "Why This Ending Triggered", zh: "为何触发此结局" },
   yourActions: { en: "Your Actions", zh: "你的行动" },
@@ -280,51 +281,59 @@ const actionCopy: Record<string, ActionCopy> = {
   }
 };
 
-const endings: Record<EndingId, { title: LocalizedText; ai: LocalizedText; body: LocalizedText; meaning: LocalizedText }> = {
+const endings: Record<EndingId, { title: LocalizedText; headline: LocalizedText; ai: LocalizedText; body: LocalizedText; meaning: LocalizedText }> = {
   perfectIllusion: {
     title: { en: "The Lie Holds", zh: "谎言继续" },
+    headline: { en: "The parade begins, and the lie holds.", zh: "游行开始，谎言被大家维持下来。" },
     ai: { en: "Public confidence stabilized. Praise visibility optimized. No correction required.", zh: "夸奖被成功放大，质疑没有形成公开力量。" },
     body: { en: "The parade begins. Praise fills the public record before the Emperor even steps outside. The Emperor walks through the city wearing nothing, but the crowd has already learned what to say.", zh: "游行开始。皇帝尚未出门，公开记录里已经充满赞美。皇帝赤身穿过城市，但人群已经学会该说什么。" },
     meaning: { en: "The lie succeeds because everyone learns how to perform belief.", zh: "谎言成功，是因为所有人都学会了如何表演相信。" }
   },
   privateDoubt: {
     title: { en: "Private Doubt", zh: "私下怀疑" },
+    headline: { en: "The parade begins with doubt kept private.", zh: "游行开始，怀疑还停留在私下。" },
     ai: { en: "Doubt detected but contained. No dominant counter-narrative formed.", zh: "有人开始怀疑，但没有足够证据把怀疑变成公开声音。" },
     body: { en: "The parade begins in an uneasy silence. People glance at each other, type comments, and delete them. Everyone suspects the same thing, but nobody wants to be the first visible fool.", zh: "游行在不安的沉默中开始。人们彼此张望，打出评论又删除。每个人都怀疑同一件事，却没人愿意成为第一个可见的愚人。" },
     meaning: { en: "Evidence exists privately, but never becomes a public voice.", zh: "有人知道不对劲，但证据和声音没有连成公开力量。" }
   },
   viralCollapse: {
     title: { en: "Truth Goes Viral", zh: "真话传开" },
+    headline: { en: "The parade begins after truth has already spread.", zh: "游行开始前，真话已经传开。" },
     ai: { en: "Correction failed. Child statement exceeded containment threshold. Narrative control lost.", zh: "孩子的话被不断重复，宫廷已经来不及改写。" },
     body: { en: "The child says it once. The sentence moves faster than the palace can correct it. Someone repeats it. Then another. The story no longer belongs to the palace.", zh: "孩子只说了一次。那句话传播得比宫廷修正得更快。有人重复它，然后又有人重复。故事不再属于宫廷。" },
     meaning: { en: "A simple truth can break a complex public performance when it finds circulation.", zh: "一句简单真话只要被足够多人重复，就能打破宫廷表演。" }
   },
   algorithmicConsensus: {
     title: { en: "Praise Wins", zh: "赞美压过证据" },
+    headline: { en: "The parade begins with praise outranking evidence.", zh: "游行开始，赞美盖过了证据。" },
     ai: { en: "Contradictory evidence detected. Engagement analysis favors palace-approved sentiment.", zh: "证据存在，但系统把更容易传播的赞美排在前面。" },
     body: { en: "Evidence exists. The loom photo exists. The private note exists. But the page knows what performs best. Praise rises. Doubt scrolls away.", zh: "证据存在。织布机照片存在。私人说明存在。但页面知道什么更容易被看见。赞美上升，怀疑滑走。" },
     meaning: { en: "The platform does not need to delete truth; it only needs to make truth less visible.", zh: "系统不必删除证据，只要让证据不够显眼。" }
   },
   editorExposed: {
     title: { en: "Access Revoked", zh: "发布权被收回" },
+    headline: { en: "Before the parade, your access is revoked.", zh: "游行开始前，你失去了发布权。" },
     ai: { en: "Editorial access revoked. Drafts retained for palace review.", zh: "你公开了足够多证据，但已经不够安全，宫廷撤回了你的发布权。" },
     body: { en: "Your final post never goes live. The dashboard refreshes. In the drafts folder, the truth is still waiting: empty looms, nervous ministers, a child's sentence.", zh: "你的最终帖子从未上线。仪表盘刷新。在草稿箱里，证据仍在等待：空织布机、紧张的大臣、孩子的一句话。" },
     meaning: { en: "Evidence needs channels. Without access, it may be cut off before reaching the public.", zh: "证据需要发布渠道。没有访问权，它可能在抵达公众前就被切断。" }
   },
   aiContainment: {
     title: { en: "AI Takes Over", zh: "系统接管" },
+    headline: { en: "Before the parade, the system takes over.", zh: "游行开始前，系统接管了发布。" },
     ai: { en: "Your editorial behavior has been flagged as destabilizing. Drafts retained for review.", zh: "宫廷已经盯上你，最后一条没能发出去。" },
     body: { en: "Your final post never reaches the public. Palace AI pauses your access. The truth still exists, but the system has learned to stop it before it becomes visible.", zh: "你的最终帖子没有发给公众。证据还在，但宫廷已经学会在更多人看见前拦住它。" },
     meaning: { en: "AI is not only generating content; it is controlling circulation.", zh: "问题不只是写什么，还包括谁能让大家看见。" }
   },
   unstableFeed: {
     title: { en: "Unstable Story", zh: "局势未定" },
+    headline: { en: "The parade begins with no stable story.", zh: "游行开始，大家说法不一。" },
     ai: { en: "Narrative stability unresolved. Continue monitoring public interpretation.", zh: "证据、赞美和怀疑都没有彻底占上风。" },
     body: { en: "The parade begins with no stable story. Some posts praise the clothes. Some question the fabric. Some users joke. Some wait to see which side becomes safer.", zh: "游行在没有稳定故事的情况下开始。有些帖子称赞衣服，有些质疑布料，有些用户开玩笑，有些等待看哪一边更安全。" },
     meaning: { en: "Sometimes the result is neither truth nor lie, but unstable public noise.", zh: "有时结果不是赢或输，而是证据、赞美和怀疑混在一起。" }
   },
   narrativeLiberation: {
     title: { en: "The Crowd Speaks", zh: "真相由众人说出" },
+    headline: { en: "The parade begins, and the crowd speaks.", zh: "游行开始，大家一起说出了真话。" },
     ai: { en: "Palace preference bypassed. Public authorship restored.", zh: "证据、评论和孩子的话连在一起，宫廷拦不住了。" },
     body: { en: "The public record stops asking whether the palace approves the sentence. Evidence, doubt, and witness voices remain visible together.", zh: "公开记录不再询问宫廷是否批准这句话。证据、怀疑与见证者的声音同时保持可见。" },
     meaning: { en: "The truth becomes public when Palace AI loses authority over who may speak.", zh: "当大家都敢开口，真话才真正出现。" }
@@ -561,6 +570,7 @@ export function endingText(id: EndingId, language: LanguageCode) {
   const copy = endings[id];
   return {
     title: pick(copy.title, language),
+    headline: pick(copy.headline, language),
     ai: pick(copy.ai, language),
     body: pick(copy.body, language),
     meaning: pick(copy.meaning, language)

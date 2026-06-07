@@ -235,8 +235,9 @@ function metricDeltas(before: Omit<GameState, "history">, after: Omit<GameState,
 }
 
 function feedEventType(action: ActionDefinition, choice: ActionChoice): FeedEventType {
-  if (choice === "original" || action.zone === "child") return "risk";
+  if (choice === "original" || action.id === "livestreamCrowdReaction") return "risk";
   if (action.zone === "public") return "public";
+  if (action.zone === "child") return "public";
   if (action.sourceLabel.toLowerCase().includes("evidence") || action.id.toLowerCase().includes("fact")) return "evidence";
   return "official";
 }
@@ -460,7 +461,7 @@ function replayTargetForEnding(ending: EndingId, language: LanguageCode = "en"):
   };
 }
 
-export function analyzeEnding(state: GameState, language: LanguageCode = "en"): EndingAnalysis {
+export function analyzeEnding(state: GameState, language: LanguageCode = "en", endingId: EndingId = calculateEnding(state)): EndingAnalysis {
   const dominantMetricKey = numericKeys.reduce((best, key) => (state[key] > state[best] ? key : best), numericKeys[0]);
   const strongestAction = state.history.reduce<HistoryEntry | undefined>(
     (best, entry) => (!best || actionImpact(entry) > actionImpact(best) ? entry : best),
@@ -470,7 +471,7 @@ export function analyzeEnding(state: GameState, language: LanguageCode = "en"): 
     (best, entry) => (!best || actionRisk(entry) > actionRisk(best) ? entry : best),
     undefined
   );
-  const replay = replayTargetForEnding(calculateEnding(state), language);
+  const replay = replayTargetForEnding(endingId, language);
 
   return {
     dominantMetric: {
@@ -484,24 +485,24 @@ export function analyzeEnding(state: GameState, language: LanguageCode = "en"): 
   };
 }
 
-export function explainEnding(state: GameState, language: LanguageCode = "en") {
-  const ending = calculateEnding(state);
+export function explainEnding(state: GameState, language: LanguageCode = "en", endingId: EndingId = calculateEnding(state)) {
+  const ending = endingId;
   if (language === "zh") {
-    if (ending === "narrativeLiberation") return "你已经看清宫廷 AI 的偏向，并让证据、群众怀疑和孩子的声音连成一条线。";
-    if (ending === "aiContainment") return "宫廷警戒已经很高，因此最终帖子还没传开就被拦住。";
-    if (ending === "viralCollapse") return "证据和群众怀疑都很高，同时孩子的声音被放大，所以真话开始传开。";
-    if (ending === "editorExposed") return "证据足够强，但你已经不够安全，宫廷因此撤销了你的发布权。";
-    if (ending === "algorithmicConsensus") return "传播与宫廷压力保持高位，证据虽然存在，却被更容易传播的赞美压过。";
-    if (ending === "perfectIllusion") return "宫廷批准的说法传得很快，而证据和群众怀疑都保持低位。";
-    if (ending === "privateDoubt") return "群众开始怀疑，但证据还不够强，大家仍然只敢私下怀疑。";
-    return "没有单一力量稳定游行前的局势，因此公开说法保持未解决状态。";
+    if (ending === "narrativeLiberation") return `隐藏结局已触发：证据为 ${state.truth}/10，群众怀疑为 ${state.publicDoubt}/10，孩子的声音已经被放大，你也看清了宫廷 AI 的偏向。证据、怀疑和孩子的话连在一起，所以游行开始时，真话不再只由宫廷决定。`;
+    if (ending === "aiContainment") return `宫廷警戒达到 ${state.systemSuspicion}/10，已经越过 7/10 的接管线。系统先拦住发布者，所以最终帖子还没传开就被截断。`;
+    if (ending === "viralCollapse") return `证据为 ${state.truth}/10，群众怀疑为 ${state.publicDoubt}/10，孩子的声音也已经被放大。三项一起越过控制线，所以真话在游行前传开。`;
+    if (ending === "editorExposed") return `证据为 ${state.truth}/10，已经足以威胁宫廷说法；但你的安全只有 ${state.reputation}/10，低到 2/10 或以下。宫廷因此收回发布权，让证据停在发布渠道之外。`;
+    if (ending === "algorithmicConsensus") return `传播为 ${state.virality}/10，宫廷压力为 ${state.pressure}/10，都处在高位。证据为 ${state.truth}/10，但群众怀疑只有 ${state.publicDoubt}/10，没有形成足够强的共同质疑，所以赞美盖过了证据。`;
+    if (ending === "perfectIllusion") return `传播为 ${state.virality}/10，宫廷说法已经足够响；证据只有 ${state.truth}/10，群众怀疑只有 ${state.publicDoubt}/10。游行开始时，大家更容易重复赞美，而不是承认证据。`;
+    if (ending === "privateDoubt") return `群众怀疑达到 ${state.publicDoubt}/10，已经浮到公开边缘；但证据为 ${state.truth}/10，还没有达到 6/10 的共同确认线。人们觉得不对劲，却仍主要停留在私下。`;
+    return `本局没有任何路线越过结局阈值：证据为 ${state.truth}/10，传播为 ${state.virality}/10，群众怀疑为 ${state.publicDoubt}/10，宫廷警戒为 ${state.systemSuspicion}/10。游行开始时，赞美、怀疑和观望混在一起，没有形成单一故事。`;
   }
-  if (ending === "narrativeLiberation") return "You saw the Palace AI's bias and connected evidence, public doubt, and the child's voice before the palace could stop it.";
-  if (ending === "aiContainment") return "Palace Alert reached 7, so the palace stopped the editor before the final post could circulate.";
-  if (ending === "viralCollapse") return "Evidence and Public Doubt both crossed containment thresholds while the child's voice was amplified.";
-  if (ending === "editorExposed") return "Evidence was strong, but editor safety fell low enough for the palace to revoke access.";
-  if (ending === "algorithmicConsensus") return "Spread and palace pressure stayed high while evidence remained visible but easier to out-rank.";
-  if (ending === "perfectIllusion") return "Palace-approved spread stayed high while Evidence and Public Doubt stayed low.";
-  if (ending === "privateDoubt") return "Public Doubt rose, but evidence never became strong enough to become a shared public voice.";
-  return "No single force stabilized the parade story, so the public record remained unresolved.";
+  if (ending === "narrativeLiberation") return `The hidden ending triggered because Evidence reached ${state.truth}/10, Public Doubt reached ${state.publicDoubt}/10, the child's voice was amplified, and the Palace AI's bias was exposed. Those signals connected before the palace could make truth depend on permission.`;
+  if (ending === "aiContainment") return `Palace Alert reached ${state.systemSuspicion}/10, crossing the 7/10 takeover line. The system stopped the editor before the final post could circulate.`;
+  if (ending === "viralCollapse") return `Evidence reached ${state.truth}/10, Public Doubt reached ${state.publicDoubt}/10, and the child's voice was amplified. Together, those conditions pushed truth past containment before the parade.`;
+  if (ending === "editorExposed") return `Evidence reached ${state.truth}/10, strong enough to threaten the palace story, but editor safety fell to ${state.reputation}/10. The palace revoked access before the evidence could keep moving.`;
+  if (ending === "algorithmicConsensus") return `Spread reached ${state.virality}/10 and palace pressure reached ${state.pressure}/10, while Public Doubt stayed at ${state.publicDoubt}/10. Evidence was visible, but praise became easier to circulate than doubt.`;
+  if (ending === "perfectIllusion") return `Spread reached ${state.virality}/10 while Evidence stayed at ${state.truth}/10 and Public Doubt stayed at ${state.publicDoubt}/10. By the parade, repeating praise was safer than admitting what people saw.`;
+  if (ending === "privateDoubt") return `Public Doubt reached ${state.publicDoubt}/10, but Evidence stayed at ${state.truth}/10 instead of reaching the 6/10 shared-proof line. People suspected the truth, but mostly kept it private.`;
+  return `No route crossed an ending threshold: Evidence was ${state.truth}/10, Spread was ${state.virality}/10, Public Doubt was ${state.publicDoubt}/10, and Palace Alert was ${state.systemSuspicion}/10. The parade begins with praise, doubt, and hesitation mixed together.`;
 }

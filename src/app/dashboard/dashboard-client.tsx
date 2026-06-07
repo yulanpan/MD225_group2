@@ -71,6 +71,7 @@ import {
   zoneText,
   type LanguageCode
 } from "@/lib/i18n";
+import { hasWrongLanguageText } from "@/lib/language-guard";
 import { layerIntensitiesForState, type MusicLayer } from "@/lib/audio";
 import {
   glossaryText,
@@ -125,6 +126,11 @@ type SpotlightPanelPosition = {
   width: number;
 };
 
+type ActionHintLayout = {
+  placement: "top" | "bottom";
+  style: CSSProperties;
+};
+
 function clampToRange(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
@@ -164,14 +170,27 @@ function spotlightPanelPosition(rect: SpotlightRect | null, panelSize?: { width:
   return { top, left, width };
 }
 
-function actionHintStyle(rect: SpotlightRect | null): CSSProperties {
-  if (typeof window === "undefined" || !rect) return { left: 24, top: 96 };
+function actionHintLayout(rect: SpotlightRect | null): ActionHintLayout {
+  if (typeof window === "undefined" || !rect) return { placement: "bottom", style: { left: 24, top: 96 } };
   const width = Math.min(220, window.innerWidth - 28);
+  const targetCenterX = rect.left + rect.width / 2;
   const centeredLeft = rect.left + rect.width / 2 - width / 2;
   const left = clampToRange(centeredLeft, 14, window.innerWidth - width - 14);
-  const topAbove = rect.top - 58;
-  const top = topAbove >= 18 ? topAbove : clampToRange(rect.bottom + 12, 18, window.innerHeight - 58);
-  return { left, top, width };
+  const estimatedHeight = 44;
+  const hasComfortableTopRoom = rect.top >= estimatedHeight + 40;
+  const placement = hasComfortableTopRoom ? "top" : "bottom";
+  const preferredTop = placement === "top" ? rect.top - estimatedHeight - 12 : rect.bottom + 12;
+  const top = clampToRange(preferredTop, 14, window.innerHeight - estimatedHeight - 14);
+  const arrowX = clampToRange(targetCenterX - left, 18, width - 18);
+  return {
+    placement,
+    style: {
+      left,
+      top,
+      width,
+      "--tutorial-action-arrow-x": `${arrowX}px`
+    } as CSSProperties
+  };
 }
 
 function Term({ id, children, language }: { id: string; children: ReactNode; language: LanguageCode }) {
@@ -420,9 +439,16 @@ function metricStyle(value: number, tone: string): CSSProperties {
 }
 
 function actionAccent(action: ActionDefinition) {
-  if (action.zone === "child") return "red";
-  if (action.zone === "tailors" || action.zone === "ministers") return "gold";
+  void action;
   return "cyan";
+}
+
+function localizedDialogueError(language: LanguageCode, message?: string) {
+  const fallback = language === "zh"
+    ? "交流信号中断。可以使用快捷回复继续。"
+    : "Dialogue stream interrupted. Use a quick reply to continue.";
+  if (!message || hasWrongLanguageText(message, language)) return fallback;
+  return message;
 }
 
 function actionStatus(action: ActionDefinition, locked: boolean, completed: boolean, language: LanguageCode) {
@@ -625,7 +651,9 @@ export default function DashboardClient() {
     playSfx("achievementUnlock");
     for (const unlock of unlocks) {
       const definition = achievementDefinition(unlock.id);
-      pushToast(language === "zh" ? "成就解锁" : "Achievement unlocked", `${definition.title} / ${definition.description}`);
+      const title = language === "zh" ? definition.titleZh : definition.title;
+      const description = language === "zh" ? definition.descriptionZh : definition.description;
+      pushToast(language === "zh" ? "成就解锁" : "Achievement unlocked", `${title} / ${description}`);
     }
   }
 
@@ -865,7 +893,7 @@ export default function DashboardClient() {
     if (!pending) return;
     const publishedText = choice === "rewrite" ? pending.rewrite.rewrittenPost : actionText(pending.action.id, language).originalPost;
     const message = choice === "rewrite"
-      ? `${pending.reaction.engineMessage} Strategy: ${pending.rewrite.strategy}`
+      ? `${pending.reaction.engineMessage} ${commonText("rewriteStrategy", language)}${language === "zh" ? "：" : ": "}${pending.rewrite.strategy}`
       : language === "zh" ? "用户拒绝更安全框架。直接证据进入公开记录。" : "User rejected safer framing. Direct evidence entered the public record.";
     setPending(null);
     await commitAction(pending.action, choice, publishedText, message);
@@ -1128,7 +1156,7 @@ export default function DashboardClient() {
       return;
     }
     if (event === "commandCommitted" && payload?.actionId === "publishTailorsClaim" && activeTutorialStep.surface === "command") {
-      moveOnboardingTo("metricVirality");
+      moveOnboardingTo("metricSummary");
       return;
     }
     if (event === "commandCommitted" && payload?.actionId === "showUnfilteredComments" && activeTutorialStep.surface === "command") {
@@ -1144,7 +1172,7 @@ export default function DashboardClient() {
       return;
     }
     if (event === "dialogueResolved" && activeTutorialStep.surface === "dialogue") {
-      moveOnboardingTo("metricSystemSuspicion");
+      completeTutorial();
       return;
     }
 
@@ -1280,7 +1308,7 @@ export default function DashboardClient() {
         signal: controller.signal
       });
       setDialogueSource((response.headers.get("X-PNE-AI-Source") as AiSource | null) ?? "fallback");
-      if (!response.ok || !response.body) throw new Error("Dialogue signal failed.");
+      if (!response.ok || !response.body) throw new Error(localizedDialogueError(language));
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
@@ -1304,7 +1332,7 @@ export default function DashboardClient() {
             speakerText += data;
             await appendDialogueTokenNaturally(data, controller.signal);
           }
-          if (eventName === "error") throw new Error(typeof data === "object" && data.error ? data.error : "Dialogue signal failed.");
+          if (eventName === "error") throw new Error(localizedDialogueError(language, typeof data === "object" ? data.error : undefined));
         }
       }
       setDialogueStatus("idle");
@@ -1319,7 +1347,7 @@ export default function DashboardClient() {
     } catch (error) {
       if (controller.signal.aborted) return;
       setDialogueStatus("error");
-      setDialogueError(error instanceof Error ? error.message : "Dialogue signal failed.");
+      setDialogueError(localizedDialogueError(language, error instanceof Error ? error.message : undefined));
       setDialogueReplies(dialogueQuickReplies(dialogueEvent, baseTranscript, language));
       setDialogueRepliesStatus("idle");
       armDialogueTimer();
@@ -1445,6 +1473,8 @@ export default function DashboardClient() {
     state.systemSuspicion
   ]);
 
+  const activeActionHint = actionHintRect ? actionHintLayout(actionHintRect) : null;
+
   return (
     <main
       className="page dashboard-page ui-shift"
@@ -1521,8 +1551,8 @@ export default function DashboardClient() {
             </div>
             <div className="arc-beat">
               <small>{language === "zh" ? "激活事件" : "Active Beat"}</small>
-              <b>{narrativeContext.activeBeat?.title ?? (language === "zh" ? "等待下一条信号" : "Awaiting next signal")}</b>
-              <span>{narrativeContext.activeBeat?.text ?? (language === "zh" ? "下一次行动会决定本局往哪个方向发展。" : "The next action will decide where this run moves next.")}</span>
+              <b>{narrativeContext.activeBeat ? (language === "zh" ? narrativeContext.activeBeat.titleZh : narrativeContext.activeBeat.title) : (language === "zh" ? "等待下一条信号" : "Awaiting next signal")}</b>
+              <span>{narrativeContext.activeBeat ? (language === "zh" ? narrativeContext.activeBeat.textZh : narrativeContext.activeBeat.text) : (language === "zh" ? "下一次行动会决定本局往哪个方向发展。" : "The next action will decide where this run moves next.")}</span>
             </div>
           </motion.div>
           <LayoutGroup>
@@ -1582,6 +1612,7 @@ export default function DashboardClient() {
                       className={`${zone.id === selectedZone ? "stage-button active" : "stage-button"} ${zoneSealed ? "guided-sealed" : ""}`}
                       key={zone.id}
                       aria-disabled={zoneSealed}
+                      data-lock-label={commonText("locked", language)}
                       {...sourceTarget}
                       onClick={() => {
                         playSfx(zoneSealed ? "engineScan" : "uiClick");
@@ -1594,7 +1625,7 @@ export default function DashboardClient() {
                         advanceOnboarding("sourceSelected", { zoneId: zone.id });
                         pushToast(language === "zh" ? "来源焦点已变化" : "Source focus changed", language === "zh" ? `${zoneText(zone.id, language).title} 已进入编辑队列。` : `${zoneText(zone.id, language).title} is now feeding the editorial queue.`);
                       }}
-                      style={{ "--accent": `var(--${zone.id === "child" ? "red" : zone.id === "public" ? "cyan" : "gold"})` } as CSSProperties}
+                      style={{ "--accent": "var(--cyan)" } as CSSProperties}
                     >
                       <b>{zoneText(zone.id, language).title}</b>
                       <small>{zoneSealed ? lockedFeatureText("zone", zone.id, language) : zoneText(zone.id, language).subtitle}</small>
@@ -1668,7 +1699,7 @@ export default function DashboardClient() {
                         </div>
                         <div className="tool-row">
                           <button
-                            className={action.requiresAIRewrite ? "tool-btn ai" : accent === "red" ? "tool-btn risk" : "tool-btn"}
+                            className={action.requiresAIRewrite ? "tool-btn ai" : "tool-btn"}
                             disabled={completed || Boolean(lockReason) || Boolean(guidedLockReason) || engineStatus !== "idle" || Boolean(dialogueEvent)}
                             {...(action.id === "publishTailorsClaim"
                               ? tourState("action-publishTailorsClaim-commit")
@@ -1739,7 +1770,7 @@ export default function DashboardClient() {
               <div className="module black">
                 <div className="module-head"><h3><Term id="pne" language={language}>{commonText("palaceNarrativeEngine", language)}</Term></h3><div className="engine-eye" aria-hidden="true" /></div>
                 <div className="module-body">
-                  <div className="ai-message">{engineMessage}</div>
+                  <div className="ai-message" data-framing-label={commonText("recommendedFraming", language)}>{engineMessage}</div>
                   <div className="engine-status-line">
                     <span>{engineStatusText(engineStatus, language)}</span>
                     <span>{aiSourceLabel(engineSource, language)}</span>
@@ -2084,8 +2115,8 @@ export default function DashboardClient() {
           ) : (
             <div className="tutorial-scrim fallback" aria-hidden="true" />
           )}
-          {actionHintRect && activeActionTourId && (
-            <div className="tutorial-action-hint" style={actionHintStyle(actionHintRect)} aria-hidden="true">
+          {activeActionHint && activeActionTourId && (
+            <div className="tutorial-action-hint" data-placement={activeActionHint.placement} style={activeActionHint.style} aria-hidden="true">
               <span>{activeTutorialStep.actionLabel ?? tutorialCopy.waiting}</span>
               <i />
             </div>

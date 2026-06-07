@@ -1,6 +1,7 @@
-import { fallbackReactionForLanguage, hasOpenAiKey, missingApiKeyResponse, callStructuredOutput } from "@/lib/ai";
+import { fallbackReactionForLanguage, hasOpenAiKey, callStructuredOutput } from "@/lib/ai";
 import { aiReactionRequestSchema, aiReactionResponseSchema } from "@/lib/schemas";
 import { aiLanguageInstruction } from "@/lib/i18n";
+import { sourceForLocalizedPayload } from "@/lib/language-guard";
 import { buildNarrativeContext } from "@/lib/narrative";
 import type { AiReaction, GameState } from "@/lib/types";
 
@@ -9,11 +10,17 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return Response.json({ error: "Invalid AI reaction request." }, { status: 400 });
   }
-  if (!hasOpenAiKey()) return missingApiKeyResponse();
-
   const { actionId, language, state, history } = parsed.data;
   const narrative = buildNarrativeContext(state as GameState, (state as Partial<GameState>).history?.at?.(-1));
   const startedAt = Date.now();
+  if (!hasOpenAiKey()) {
+    return Response.json(fallbackReactionForLanguage(language), {
+      headers: {
+        "X-PNE-AI-Source": "fallback",
+        "X-PNE-AI-Latency": String(Date.now() - startedAt)
+      }
+    });
+  }
   try {
     const result = await callStructuredOutput<AiReaction>(
       "ai_reaction",
@@ -30,9 +37,11 @@ Return compact game UI copy:
 - Use only allowedFacts from narrative context; do not invent new witnesses, inspections, garment details, or rules.
 - Stay bureaucratic, in-world, and do not explain your reasoning.`
     );
-    return Response.json(result, {
+    const source = sourceForLocalizedPayload(result, language);
+    const payload = source === "live" ? result : fallbackReactionForLanguage(language);
+    return Response.json(payload, {
       headers: {
-        "X-PNE-AI-Source": "live",
+        "X-PNE-AI-Source": source,
         "X-PNE-AI-Latency": String(Date.now() - startedAt)
       }
     });

@@ -39,7 +39,7 @@ describe("POST /api/ai-reaction", () => {
     expect(response.status).toBe(400);
   });
 
-  it("returns a clear error when the OpenAI key is missing", async () => {
+  it("returns localized fallback output when the OpenAI key is missing", async () => {
     const previous = process.env.OPENAI_API_KEY;
     delete process.env.OPENAI_API_KEY;
     const response = await POST(new Request("http://localhost/api/ai-reaction", {
@@ -60,17 +60,21 @@ describe("POST /api/ai-reaction", () => {
     }));
     process.env.OPENAI_API_KEY = previous;
 
-    expect(response.status).toBe(503);
-    await expect(response.json()).resolves.toMatchObject({ error: expect.stringContaining("OPENAI_API_KEY") });
+    expect(response.status).toBe(200);
+    expect(response.headers.get("X-PNE-AI-Source")).toBe("fallback");
+    await expect(response.json()).resolves.toMatchObject({
+      recommendation: "accept_rewrite",
+      engineMessage: expect.stringContaining("Recommended framing")
+    });
   });
 
   it("returns structured AI output when the provider succeeds", async () => {
     process.env.OPENAI_API_KEY = "sk-test";
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
       output_text: JSON.stringify({
-        engineMessage: "Direct publication may reduce public confidence.",
+        engineMessage: "直接发布会提高宫廷警戒，也会让公众更快注意到证据。",
         riskLevel: "high",
-        suggestedRewrite: "Classify this as inconclusive.",
+        suggestedRewrite: "先把织布机情况记为待核查，不直接下结论。",
         recommendation: "accept_rewrite"
       })
     }), { status: 200 })));
@@ -100,6 +104,42 @@ describe("POST /api/ai-reaction", () => {
     await expect(response.json()).resolves.toMatchObject({
       riskLevel: "high",
       recommendation: "accept_rewrite"
+    });
+  });
+
+  it("falls back when live output is in the wrong language", async () => {
+    process.env.OPENAI_API_KEY = "sk-test";
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
+      output_text: JSON.stringify({
+        engineMessage: "Direct publication may reduce public confidence.",
+        riskLevel: "high",
+        suggestedRewrite: "Classify this as inconclusive.",
+        recommendation: "accept_rewrite"
+      })
+    }), { status: 200 })));
+
+    const response = await POST(new Request("http://localhost/api/ai-reaction", {
+      method: "POST",
+      body: JSON.stringify({
+        actionId: "inspectLooms",
+        language: "zh",
+        state: {
+          truth: 1,
+          pressure: 2,
+          virality: 1,
+          publicDoubt: 0,
+          reputation: 5,
+          systemSuspicion: 0
+        },
+        history: []
+      })
+    }));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("X-PNE-AI-Source")).toBe("fallback");
+    await expect(response.json()).resolves.toMatchObject({
+      engineMessage: expect.stringContaining("直接证据"),
+      riskLevel: "medium"
     });
   });
 

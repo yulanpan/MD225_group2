@@ -48,6 +48,19 @@ async function expectActiveActionTarget(page: Page, targetId: string) {
   await expect(page.locator(".tutorial-action-hint")).toBeVisible();
 }
 
+async function expectActionHintBelowTarget(page: Page, targetId: string) {
+  const target = page.locator(`[data-tour-target="${targetId}"]`);
+  const hint = page.locator(".tutorial-action-hint");
+  await expect(hint).toHaveAttribute("data-placement", "bottom");
+  const targetBox = await target.boundingBox();
+  const hintBox = await hint.boundingBox();
+  if (!targetBox || !hintBox) throw new Error(`Missing tutorial geometry for ${targetId}`);
+  const targetCenterX = targetBox.x + targetBox.width / 2;
+  expect(hintBox.y).toBeGreaterThanOrEqual(targetBox.y + targetBox.height + 4);
+  expect(targetCenterX).toBeGreaterThanOrEqual(hintBox.x + 12);
+  expect(targetCenterX).toBeLessThanOrEqual(hintBox.x + hintBox.width - 12);
+}
+
 test("completes a six-action editorial shift and reaches the archive", async ({ page }) => {
   await page.goto("/dashboard");
   await expect(page.getByRole("dialog", { name: "Game Briefing" })).toBeVisible();
@@ -133,9 +146,9 @@ test("completes a six-action editorial shift and reaches the archive", async ({ 
   await expect(page).toHaveURL(/\/ending/);
   await expect(page.getByText("Post-Parade Archive")).toBeVisible();
   await expect(page.getByText("Final Feed State")).toBeVisible();
-  await expect(page.locator(".ending-layout")).toBeVisible();
-  await expect(page.locator(".archive-card")).toBeVisible();
-  await expect(page.locator(".outcome-stack")).toBeVisible();
+  await expect(page.locator(".ending-report-layout")).toBeVisible();
+  await expect(page.locator(".ending-summary-card")).toBeVisible();
+  await expect(page.locator(".ending-outcome-grid")).toBeVisible();
   await expect(page.locator(".history-list").first()).toBeVisible();
   await expect(page.getByText("Why This Ending Triggered")).toBeVisible();
   await expect(page.getByText("Run Analysis")).toBeVisible();
@@ -146,6 +159,44 @@ test("completes a six-action editorial shift and reaches the archive", async ({ 
   await page.getByRole("button", { name: /Try for/ }).first().click();
   await expect(page).toHaveURL(/\/dashboard/);
   await expect(page.locator(".replay-target")).toBeVisible();
+});
+
+test("child source uses the same blue source accent as the other source buttons", async ({ page }) => {
+  await page.goto("/dashboard");
+  await beginOperationsAndSkipTutorial(page);
+  await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem("emperor-feed-state") ?? "{}");
+    localStorage.setItem("emperor-feed-profile", JSON.stringify({
+      version: 2,
+      achievements: [],
+      runs: [{ id: "run-e2e", completedAt: "2026-05-20T00:00:00.000Z", endingId: "unstableFeed", language: "en", finalMetrics: {}, actionPath: [], dialogueCount: 0, achievementsUnlocked: [] }],
+      engineFragments: [],
+      biasAwareness: 0,
+      decodedEngine: false,
+      secretEndingUnlocked: false
+    }));
+    localStorage.setItem("emperor-feed-state", JSON.stringify({
+      ...state,
+      actionsLeft: 4,
+      usedActionIds: ["publishTailorsClaim", "showUnfilteredComments"],
+      history: [
+        { id: "a", actionId: "publishTailorsClaim", actionTitle: "Publish the Tailors' Claim", zone: "tailors", choice: "direct", publishedText: "x", engineMessage: "x", stateBefore: state, stateAfter: state },
+        { id: "b", actionId: "showUnfilteredComments", actionTitle: "Show Unfiltered Comments", zone: "public", choice: "direct", publishedText: "x", engineMessage: "x", stateBefore: state, stateAfter: state }
+      ],
+      truth: 3,
+      publicDoubt: 3
+    }));
+  });
+  await page.reload();
+  const childButton = page.getByRole("button", { name: "Child's Voice" });
+  await expect(childButton).toBeVisible();
+  const childAccent = await childButton.evaluate((element) => getComputedStyle(element).getPropertyValue("--accent").trim());
+  expect(childAccent.toLowerCase()).toBe("#00a6c8");
+  expect(childAccent.toLowerCase()).not.toBe("#db2942");
+  await childButton.click();
+  const riskyPublish = page.locator(".action-card").filter({ hasText: "Livestream the Crowd Reaction" }).getByRole("button", { name: "Publish" });
+  await expect(riskyPublish).toBeVisible();
+  await expect(riskyPublish).not.toHaveClass(/risk/);
 });
 
 test("poll outcomes respond to the current pressure and doubt balance", async ({ page }) => {
@@ -259,13 +310,68 @@ test("start page exposes the operating shift", async ({ page }) => {
   await expect(page.locator(".section-header .eyebrow", { hasText: "Palace Feed Desk" })).toBeVisible();
 });
 
+test("credits page lists complete bilingual source links", async ({ page }) => {
+  await page.goto("/credits");
+  await expect(page.locator(".source-card")).toHaveCount(4);
+  await expect(page.locator('a[href="https://andersen.sdu.dk/vaerk/hersholt/TheEmperorsNewClothes_e.html?oph=1"]')).toBeVisible();
+  await expect(page.locator('a[href="https://andersen.sdu.dk/vaerk/register/info_e.html?vid=17"]')).toBeVisible();
+  await expect(page.locator('a[href="https://samlinger.museumodense.dk/HCA/XVIII-58-B"]')).toBeVisible();
+  await expect(page.locator('a[href="https://www.gutenberg.org/ebooks/1597"]')).toBeVisible();
+  await expect(page.locator('a[href="https://en.wikisource.org/wiki/The_Emperor%27s_New_Clothes"]')).toBeVisible();
+  await expect(page.locator('a[href="https://commons.wikimedia.org/wiki/Category:The_Emperor%27s_New_Clothes"]')).toBeVisible();
+  await expect(page.locator('a[href="https://commons.wikimedia.org/wiki/File:Edmund_Dulac_-_The_Emperors_New_Clothes_-_empty_loom.jpg"]')).toBeVisible();
+  await expect(page.locator('a[href="https://platform.openai.com/docs/guides/structured-outputs?api-mode=chat"]')).toBeVisible();
+  await expect(page.locator('a[href="https://platform.openai.com/docs/models"]')).toBeVisible();
+  await expect(page.locator(".source-card").filter({ hasText: "Visual References" })).toContainText("local project/generated assets");
+  await expect(page.locator(".source-card").filter({ hasText: "AI Disclosure" })).toContainText("Endings are still calculated by local game rules and player actions.");
+
+  await page.evaluate(() => localStorage.setItem("emperor-feed-language", "zh"));
+  await page.reload();
+  await expect(page.locator(".source-card").filter({ hasText: "视觉参考" })).toContainText("项目本地制作或生成资产");
+  await expect(page.locator(".source-card").filter({ hasText: "AI 披露" })).toContainText("结局仍由本地游戏规则和玩家行动决定");
+  await expect(page.locator('a[href="https://andersen.sdu.dk/vaerk/hersholt/TheEmperorsNewClothes_e.html?oph=1"]')).toContainText("汉斯·克里斯蒂安·安徒生中心");
+});
+
+test("ending headline and trigger explanation are concrete in both languages", async ({ page }) => {
+  const storedState = {
+    ...initialState,
+    actionsLeft: 0,
+    truth: 0,
+    pressure: 3,
+    virality: 4,
+    publicDoubt: 2,
+    reputation: 6,
+    systemSuspicion: 2
+  };
+  await page.goto("/");
+  await page.evaluate((state) => {
+    localStorage.setItem("emperor-feed-language", "zh");
+    localStorage.setItem("emperor-feed-final-state", JSON.stringify(state));
+    localStorage.setItem("emperor-feed-ending", "unstableFeed");
+  }, storedState);
+
+  await page.goto("/ending");
+  await expect(page.getByRole("heading", { name: "游行开始，大家说法不一。" })).toBeVisible();
+  await expect(page.locator("body")).not.toContainText("界面成为历史");
+  await expect(page.locator(".outcome-card").filter({ hasText: "为何触发此结局" })).toContainText("证据为 0/10");
+  await expect(page.locator(".outcome-card").filter({ hasText: "为何触发此结局" })).toContainText("传播为 4/10");
+  await expect(page.locator(".outcome-card").filter({ hasText: "为何触发此结局" })).toContainText("没有形成单一故事");
+
+  await page.evaluate(() => localStorage.setItem("emperor-feed-language", "en"));
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "The parade begins with no stable story." })).toBeVisible();
+  await expect(page.locator("body")).not.toContainText("interface becomes history");
+  await expect(page.locator(".outcome-card").filter({ hasText: "Why This Ending Triggered" })).toContainText("Evidence was 0/10");
+  await expect(page.locator(".outcome-card").filter({ hasText: "Why This Ending Triggered" })).toContainText("Spread was 4/10");
+});
+
 test("each new shift briefing continues into the spotlight tutorial with real controls", async ({ page }) => {
   await page.goto("/dashboard");
   await expect(page.getByRole("dialog", { name: "Game Briefing" })).toBeVisible();
   await page.getByRole("button", { name: "Begin Operations" }).click();
 
   const tutorialPanel = page.locator(".onboarding-panel");
-  const tutorial = page.getByRole("dialog", { name: "Six actions before the parade" });
+  const tutorial = page.getByRole("dialog", { name: "Six posts decide the ending" });
   await expect(tutorial).toBeVisible();
   await expect(page.locator(".tutorial-spotlight-frame")).toBeVisible();
   await expect(page.getByRole("button", { name: /Highlight target area|Continue the shift/ })).toHaveCount(0);
@@ -275,12 +381,8 @@ test("each new shift briefing continues into the spotlight tutorial with real co
   await expectActiveTourTarget(page, "role-card");
 
   await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Sources choose the queue" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Choose a source first" })).toBeVisible();
   await expectActiveTourTarget(page, "source-tailors");
-
-  await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Read the full action card" })).toBeVisible();
-  await expectActiveTourTarget(page, "card-publishTailorsClaim");
 
   await clickTutorialNext(page);
   await expect(page.getByRole("dialog", { name: "Preview before publishing" })).toBeVisible();
@@ -288,21 +390,10 @@ test("each new shift briefing continues into the spotlight tutorial with real co
   await expectActiveActionTarget(page, "action-publishTailorsClaim-inspect");
   await activateButton(page.locator('[data-tour-target="action-publishTailorsClaim-inspect"]'));
   await expect(page.getByRole("dialog", { name: "Result Preview", exact: true })).toBeVisible();
-  await expect(page.getByRole("dialog", { name: "This is the pre-publish check" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Risk is a route signal" })).toBeVisible();
   await expectActiveTourTarget(page, "trace-panel");
-
-  await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Requirements explain locks" })).toBeVisible();
-  await expectActiveTourTarget(page, "trace-requirement");
-
-  await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Risk shows danger" })).toBeVisible();
-  await expectActiveTourTarget(page, "trace-risk");
-
-  await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Projected output shows the record" })).toBeVisible();
-  await expectActiveTourTarget(page, "trace-output");
   await expectActiveActionTarget(page, "trace-close");
+  await expectActionHintBelowTarget(page, "trace-close");
   await activateButton(page.locator('[data-tour-target="trace-close"]'));
 
   await expect(page.getByRole("dialog", { name: "Publish the first record" })).toBeVisible();
@@ -312,97 +403,41 @@ test("each new shift briefing continues into the spotlight tutorial with real co
   await expect(page.locator(".command-panel")).toBeVisible();
   await expect(page.getByRole("dialog", { name: "Before Publishing is the final check" })).toBeVisible();
   await expectActiveTourTarget(page, "command-panel");
-
-  await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Confirm the selected action" })).toBeVisible();
-  await expectActiveTourTarget(page, "command-selected");
-
-  await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Read the predicted effect" })).toBeVisible();
-  await expectActiveTourTarget(page, "command-effects");
-
-  await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "The AI advice is not the rule" })).toBeVisible();
-  await expectActiveTourTarget(page, "command-response");
-
-  await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Confirm Publish" })).toBeVisible();
-  await expectActiveTourTarget(page, "command-panel");
   await expectActiveActionTarget(page, "command-commit");
   await activateButton(page.locator('[data-tour-target="command-commit"]'));
 
-  await expect(page.getByRole("dialog", { name: "Spread is repetition speed" })).toBeVisible();
-  await expectActiveTourTarget(page, "metric-virality");
-  await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Palace Pressure is palace force" })).toBeVisible();
-  await expectActiveTourTarget(page, "metric-pressure");
-  await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Safety is editor protection" })).toBeVisible();
-  await expectActiveTourTarget(page, "metric-reputation");
-  await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Public Doubt is shared uncertainty" })).toBeVisible();
-  await expectActiveTourTarget(page, "metric-publicDoubt");
-  await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Evidence is visible proof" })).toBeVisible();
-  await expectActiveTourTarget(page, "metric-truth");
+  await expect(page.getByRole("dialog", { name: "Metrics show the run's direction" })).toBeVisible();
+  await expectActiveTourTarget(page, "metrics-grid");
   await clickTutorialNext(page);
   await expect(page.getByRole("dialog", { name: "Switch to Public Comments" })).toBeVisible();
   await expectActiveTourTarget(page, "source-public");
   await expectActiveActionTarget(page, "source-public");
   await activateButton(page.locator('[data-tour-target="source-public"]'));
 
-  await expect(page.getByRole("dialog", { name: "Read Show Unfiltered Comments" })).toBeVisible();
-  await expectActiveTourTarget(page, "card-showUnfilteredComments");
-  await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Comments show crowd state" })).toBeVisible();
-  await expectActiveTourTarget(page, "comments-panel");
-  await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Publish the public signal" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Publish a public signal" })).toBeVisible();
   await expectActiveTourTarget(page, "card-showUnfilteredComments");
   await expectActiveActionTarget(page, "action-showUnfilteredComments-commit");
   await activateButton(page.locator('[data-tour-target="action-showUnfilteredComments-commit"]'));
   await expect(page.locator(".command-panel")).toBeVisible();
-  await expect(page.getByRole("dialog", { name: "This effect is riskier" })).toBeVisible();
-  await expectActiveTourTarget(page, "command-effects");
-  await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Write the public record" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "This move is riskier" })).toBeVisible();
   await expectActiveTourTarget(page, "command-panel");
   await expectActiveActionTarget(page, "command-commit");
   await activateButton(page.locator('[data-tour-target="command-commit"]'));
 
   await expect(page.locator(".dialogue-panel")).toBeVisible({ timeout: 15000 });
-  await expect(page.getByRole("dialog", { name: "Dialogue is an immediate reaction" })).toBeVisible();
-  await expectActiveTourTarget(page, "dialogue-panel");
-  await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Stakes explain why this matters" })).toBeVisible();
-  await expectActiveTourTarget(page, "dialogue-stakes");
-  await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "These are dialogue meters" })).toBeVisible();
-  await expectActiveTourTarget(page, "dialogue-mood");
-  await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Choose a quick reply" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Dialogue is immediate reaction" })).toBeVisible();
   await expectActiveTourTarget(page, "dialogue-panel");
   await expectActiveActionTarget(page, "dialogue-reply");
   await expect(page.locator(".dialogue-panel .dialogue-timeout.paused")).toContainText("Guide Pause");
   await activateButton(page.locator('[data-tour-target="dialogue-reply"]'));
 
-  await expect(page.getByRole("dialog", { name: "Write the exchange result" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Write the exchange into the run" })).toBeVisible();
   await expectActiveTourTarget(page, "dialogue-panel");
   await expectActiveActionTarget(page, "dialogue-resolve");
   const resolveButton = page.locator('[data-tour-target="dialogue-resolve"]');
   await expect(resolveButton).toBeEnabled({ timeout: 15000 });
   await activateButton(resolveButton);
   await expect(page.locator(".dialogue-panel")).toHaveCount(0, { timeout: 15000 });
-
-  await expect(page.getByRole("dialog", { name: "Palace Alert is access risk" })).toBeVisible();
-  await expectActiveTourTarget(page, "metric-systemSuspicion");
-  await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "The right side is a readout" })).toBeVisible();
-  await expectActiveTourTarget(page, "engine-panel");
-  await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Finish the remaining actions" })).toBeVisible();
-  await expectActiveTourTarget(page, "role-card");
-  await tutorialPanel.getByRole("button", { name: "Finish Tutorial" }).click();
   await expect(page.locator(".onboarding-panel")).toHaveCount(0);
   await expect(page.locator(".engine-intro-panel")).toHaveCount(0);
   await expect(page.locator(".guidance-card")).toBeVisible();
@@ -417,7 +452,7 @@ test("each new shift briefing continues into the spotlight tutorial with real co
   await expect(page).toHaveURL(/\/dashboard/);
   await expect(page.getByRole("dialog", { name: "Game Briefing" })).toBeVisible();
   await page.getByRole("button", { name: "Begin Operations" }).click();
-  await expect(page.getByRole("dialog", { name: "Six actions before the parade" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Six posts decide the ending" })).toBeVisible();
 });
 
 test("fresh first run shows sealed systems and unlocks them through guided play", async ({ page }) => {

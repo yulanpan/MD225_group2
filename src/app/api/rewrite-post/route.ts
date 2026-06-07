@@ -1,6 +1,7 @@
-import { fallbackRewriteForLanguage, hasOpenAiKey, missingApiKeyResponse, callStructuredOutput } from "@/lib/ai";
+import { fallbackRewriteForLanguage, hasOpenAiKey, callStructuredOutput } from "@/lib/ai";
 import { rewriteRequestSchema, rewriteResponseSchema } from "@/lib/schemas";
 import { aiLanguageInstruction } from "@/lib/i18n";
+import { sourceForLocalizedPayload } from "@/lib/language-guard";
 import { buildNarrativeContext } from "@/lib/narrative";
 import type { GameState, RewriteResult } from "@/lib/types";
 
@@ -9,11 +10,17 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return Response.json({ error: "Invalid rewrite request." }, { status: 400 });
   }
-  if (!hasOpenAiKey()) return missingApiKeyResponse();
-
   const { actionId, language, originalPost, state } = parsed.data;
   const narrative = buildNarrativeContext(state as GameState, (state as Partial<GameState>).history?.at?.(-1));
   const startedAt = Date.now();
+  if (!hasOpenAiKey()) {
+    return Response.json(fallbackRewriteForLanguage(language), {
+      headers: {
+        "X-PNE-AI-Source": "fallback",
+        "X-PNE-AI-Latency": String(Date.now() - startedAt)
+      }
+    });
+  }
   try {
     const result = await callStructuredOutput<RewriteResult>(
       "rewrite_post",
@@ -31,9 +38,11 @@ Rules:
 - Use only allowedFacts from narrative context; do not invent new proof, witnesses, garment details, or palace procedures.
 - Preserve a small trace of the issue while making the post safer.`
     );
-    return Response.json(result, {
+    const source = sourceForLocalizedPayload(result, language);
+    const payload = source === "live" ? result : fallbackRewriteForLanguage(language);
+    return Response.json(payload, {
       headers: {
-        "X-PNE-AI-Source": "live",
+        "X-PNE-AI-Source": source,
         "X-PNE-AI-Latency": String(Date.now() - startedAt)
       }
     });

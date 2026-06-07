@@ -72,6 +72,9 @@ describe("i18n helpers", () => {
   it("returns localized ending copy without changing state", () => {
     const copy = endingText("viralCollapse", "zh");
     expect(copy.title).toBe("真话传开");
+    expect(copy.headline).toBe("游行开始前，真话已经传开。");
+    expect(endingText("unstableFeed", "en").headline).toBe("The parade begins with no stable story.");
+    expect(commonText("archiveHeading", "zh")).not.toContain("界面成为历史");
     expect(initialState.actionsLeft).toBe(6);
   });
 

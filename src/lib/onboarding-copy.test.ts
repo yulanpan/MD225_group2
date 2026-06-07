@@ -55,18 +55,21 @@ describe("onboarding copy", () => {
 
     for (const language of ["en", "zh"] as const) {
       const steps = onboardingTourSteps(language);
-      expect(steps.length).toBeGreaterThanOrEqual(30);
+      expect(steps).toHaveLength(12);
       expect(new Set(steps.map((step) => step.surface))).toEqual(new Set(["dashboard", "trace", "command", "dialogue"]));
-      expect(steps.map((step) => step.spotlightTargetId).slice(0, 9)).toEqual([
+      expect(steps.map((step) => step.spotlightTargetId)).toEqual([
         "role-card",
         "source-tailors",
         "card-publishTailorsClaim",
-        "card-publishTailorsClaim",
         "trace-panel",
-        "trace-requirement",
-        "trace-risk",
-        "trace-output",
-        "card-publishTailorsClaim"
+        "card-publishTailorsClaim",
+        "command-panel",
+        "metrics-grid",
+        "source-public",
+        "card-showUnfilteredComments",
+        "command-panel",
+        "dialogue-panel",
+        "dialogue-panel"
       ]);
       expect(steps.find((step) => step.id === "inspectTrace")).toMatchObject({
         spotlightTargetId: "card-publishTailorsClaim",
@@ -78,10 +81,14 @@ describe("onboarding copy", () => {
         actionTargetId: "action-publishTailorsClaim-commit",
         advanceOn: "commandOpened"
       });
-      expect(steps.find((step) => step.id === "dialogueReply")).toMatchObject({
+      expect(steps.find((step) => step.id === "dialogueOverview")).toMatchObject({
         surface: "dialogue",
         actionTargetId: "dialogue-reply",
         advanceOn: "dialogueReplySent"
+      });
+      expect(steps.find((step) => step.id === "metricSummary")).toMatchObject({
+        spotlightTargetId: "metrics-grid",
+        advanceOn: "next"
       });
       for (const step of steps) {
         const fullCopy = `${step.eyebrow} ${step.title} ${step.body} ${step.detail} ${step.why ?? ""} ${step.actionLabel ?? ""}`;

@@ -273,7 +273,7 @@ test.describe("desktop visual audit", () => {
 
     await setEndingState(page, "unstableFeed");
     await page.goto("/ending");
-    await expect(page.locator(".ending-layout")).toBeVisible();
+    await expect(page.locator(".ending-report-layout")).toBeVisible();
     await captureAudit(page, testInfo, "10-ending-report");
   });
 });

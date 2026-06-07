@@ -1,6 +1,7 @@
-import { fallbackCommentsForLanguage, hasOpenAiKey, missingApiKeyResponse, callStructuredOutputWithRetry } from "@/lib/ai";
+import { fallbackCommentsForLanguage, hasOpenAiKey, callStructuredOutputWithRetry } from "@/lib/ai";
 import { commentsRequestSchema, commentsResponseSchema } from "@/lib/schemas";
 import { aiLanguageInstruction } from "@/lib/i18n";
+import { sourceForLocalizedPayload } from "@/lib/language-guard";
 import { buildNarrativeContext } from "@/lib/narrative";
 import type { GameState, GeneratedComments, PublicComment } from "@/lib/types";
 
@@ -49,11 +50,17 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return Response.json({ error: "Invalid comments request." }, { status: 400 });
   }
-  if (!hasOpenAiKey()) return missingApiKeyResponse();
-
   const { language, state, latestPost } = parsed.data;
   const narrative = buildNarrativeContext(state as GameState, (state as Partial<GameState>).history?.at?.(-1));
   const startedAt = Date.now();
+  if (!hasOpenAiKey()) {
+    return Response.json(fallbackCommentsForLanguage(language), {
+      headers: {
+        "X-PNE-AI-Source": "fallback",
+        "X-PNE-AI-Latency": String(Date.now() - startedAt)
+      }
+    });
+  }
   try {
     const result = await callStructuredOutputWithRetry<GeneratedComments>(
       "generated_comments",
@@ -75,9 +82,14 @@ Rules:
       ,
       { retries: 1, baseDelayMs: 300, temperature: 0.75, maxOutputTokens: 900 }
     );
-    return Response.json(safeGeneratedComments(result.data, fallbackCommentsForLanguage(language), language), {
+    const fallback = fallbackCommentsForLanguage(language);
+    const payload = safeGeneratedComments(result.data, fallback, language);
+    const source = payload === fallback || sourceForLocalizedPayload(payload, language) === "fallback"
+      ? "fallback"
+      : "live";
+    return Response.json(payload, {
       headers: {
-        "X-PNE-AI-Source": "live",
+        "X-PNE-AI-Source": source,
         "X-PNE-AI-Latency": String(Date.now() - startedAt)
       }
     });

@@ -6,7 +6,8 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { analyzeEnding, calculateEnding, createInitialState, explainEnding, loadStateFromStorage, localizedEndingTitle } from "@/lib/game-rules";
 import { endingSceneForEnding } from "@/lib/audio";
-import { choiceText, commonText, endingText, fallbackFinalReportText, languageName, metricLabel, type LanguageCode } from "@/lib/i18n";
+import { actionText, choiceText, commonText, endingText, fallbackFinalReportText, languageName, metricLabel, type LanguageCode } from "@/lib/i18n";
+import { hasWrongLanguageText } from "@/lib/language-guard";
 import { endingFacetsForState } from "@/lib/narrative";
 import { useLanguage } from "@/hooks/use-language";
 import { useGameAudio } from "@/app/audio-provider";
@@ -21,7 +22,7 @@ import {
   saveProfile
 } from "@/lib/profile";
 import { endingPressureProfile } from "@/lib/visual-state";
-import type { AchievementUnlock, EndingId, FinalReport, GameState, PlayerProfile, RunRecord } from "@/lib/types";
+import type { AchievementUnlock, EndingId, FeedEvent, FinalReport, GameState, HistoryEntry, PlayerProfile, RunRecord } from "@/lib/types";
 
 const replayTargetKey = "emperor-feed-replay-target";
 const briefingKey = "emperor-feed-briefing-dismissed";
@@ -46,10 +47,44 @@ async function requestFinalReport(endingId: EndingId, state: GameState, language
     });
     if (!response.ok) return fallbackFinalReportText(language);
     const data = (await response.json()) as FinalReport;
-    return data.report;
+    return hasWrongLanguageText(data.report, language) ? fallbackFinalReportText(language) : data.report;
   } catch {
     return fallbackFinalReportText(language);
   }
+}
+
+function safeStoredText(text: string | undefined, language: LanguageCode, fallback: string) {
+  if (!text || hasWrongLanguageText(text, language)) return fallback;
+  return text;
+}
+
+function localizedActionTitle(entry: Pick<HistoryEntry, "actionId" | "actionTitle">, language: LanguageCode) {
+  try {
+    return actionText(entry.actionId, language).title;
+  } catch {
+    return safeStoredText(entry.actionTitle, language, language === "zh" ? "旧行动记录" : "Saved action");
+  }
+}
+
+function localizedPublishedText(entry: HistoryEntry, language: LanguageCode) {
+  try {
+    const copy = actionText(entry.actionId, language);
+    const fallback = entry.choice === "rewrite" ? copy.rewriteSuggestion ?? copy.originalPost : copy.originalPost;
+    return safeStoredText(entry.publishedText, language, fallback);
+  } catch {
+    return safeStoredText(entry.publishedText, language, language === "zh" ? "这条旧记录已按当前语言隐藏原文。" : "This saved record is hidden because it was written in another language.");
+  }
+}
+
+function localizedFeedEvent(entry: FeedEvent, language: LanguageCode) {
+  if (!hasWrongLanguageText(`${entry.title} ${entry.text}`, language)) return entry;
+  return {
+    ...entry,
+    title: language === "zh" ? "旧发布记录" : "Saved feed record",
+    text: language === "zh"
+      ? "这条旧信息流记录来自另一种语言，已在当前语言下隐藏原文。"
+      : "This saved feed item was written in another language and is hidden in the current view."
+  };
 }
 
 export default function EndingClient() {
@@ -101,8 +136,8 @@ export default function EndingClient() {
   }, [fragmentUnlockKey, newUnlockKey, newUnlocks.length, playSfx]);
 
   const copy = endingText(endingId, language);
-  const triggerExplanation = explainEnding(state, language);
-  const analysis = analyzeEnding(state, language);
+  const triggerExplanation = explainEnding(state, language, endingId);
+  const analysis = analyzeEnding(state, language, endingId);
   const endingFacets = endingFacetsForState(state, endingId, language);
   const pressureProfile = endingPressureProfile(endingId);
 
@@ -127,7 +162,7 @@ export default function EndingClient() {
   }
 
   return (
-    <main className="page report-page ui-shift" data-ending={pressureProfile}>
+    <main className="page report-page ending-report-page ui-shift" data-ending={pressureProfile}>
       <div className="scroll-progress" aria-hidden="true" />
       <div className="cursor-light" aria-hidden="true" />
       <header className="topbar" aria-label="Navigation">
@@ -152,13 +187,13 @@ export default function EndingClient() {
         <div className="section-header" data-reveal>
           <div>
             <p className="eyebrow">{commonText("postParadeArchive", language)}</p>
-            <h2>{commonText("archiveHeading", language)}</h2>
+            <h2>{copy.headline}</h2>
           </div>
           <p className="section-copy">{copy.body}</p>
         </div>
 
-        <div className="ending-layout">
-          <article className="archive-card" data-reveal>
+        <div className="ending-report-layout">
+          <article className="ending-summary-card" data-archive-label={language === "zh" ? "已归档" : "Archived"} data-reveal>
             <div className="ending-animation" data-ending={pressureProfile} aria-hidden="true">
               <i />
               <i />
@@ -200,8 +235,8 @@ export default function EndingClient() {
             </div>
           </article>
 
-          <div className="outcome-stack">
-            <article className="outcome-card" data-index="01" data-reveal>
+          <div className="ending-outcome-grid">
+            <article className="outcome-card compact-metrics-card" data-index="01" data-reveal>
               <h4>{commonText("finalFeedState", language)}</h4>
               <dl className="state-list">
                 <div><dt>{metricLabel("truth", language)}</dt><dd>{state.truth}</dd></div>
@@ -216,24 +251,27 @@ export default function EndingClient() {
               <h4>{commonText("whyEndingTriggered", language)}</h4>
               <p>{triggerExplanation}</p>
             </article>
-            <article className="outcome-card" data-index="03" data-reveal>
+            <article className="outcome-card wide" data-index="03" data-reveal>
               <h4>{commonText("liveFeedRecord", language)}</h4>
               <div className="history-list">
-                {state.feedEvents.slice(0, 6).map((entry, index) => (
-                  <div className="history-item" key={entry.id}>
-                    <b>{String(index + 1).padStart(2, "0")} / {entry.title}</b>
-                    <span>{entry.text}</span>
-                  </div>
-                ))}
+                {state.feedEvents.slice(0, 6).map((rawEntry, index) => {
+                  const entry = localizedFeedEvent(rawEntry, language);
+                  return (
+                    <div className="history-item" key={entry.id}>
+                      <b>{String(index + 1).padStart(2, "0")} / {entry.title}</b>
+                      <span>{entry.text}</span>
+                    </div>
+                  );
+                })}
               </div>
             </article>
-            <article className="outcome-card" data-index="04" data-reveal>
+            <article className="outcome-card wide" data-index="04" data-reveal>
               <h4>{commonText("yourActions", language)}</h4>
               <div className="history-list">
                 {state.history.map((entry, index) => (
                   <div className="history-item" key={entry.id}>
-                    <b>{String(index + 1).padStart(2, "0")} / {entry.actionTitle}</b>
-                    <span>{choiceText(entry.choice, language)} · {entry.publishedText}</span>
+                    <b>{String(index + 1).padStart(2, "0")} / {localizedActionTitle(entry, language)}</b>
+                    <span>{choiceText(entry.choice, language)} · {localizedPublishedText(entry, language)}</span>
                   </div>
                 ))}
                 {state.history.length === 0 && (
@@ -250,7 +288,7 @@ export default function EndingClient() {
                 {state.history.map((entry, index) => (
                   <div className="path-node" data-tone={actionPathTone(entry.choice)} key={entry.id}>
                     <b>{String(index + 1).padStart(2, "0")}</b>
-                    <span>{entry.actionTitle}</span>
+                    <span>{localizedActionTitle(entry, language)}</span>
                     <small>{choiceText(entry.choice, language)}</small>
                   </div>
                 ))}
@@ -272,11 +310,11 @@ export default function EndingClient() {
                 </div>
                 <div className="history-item">
                   <b>{language === "zh" ? "影响最大的行动" : "Strongest Action"}</b>
-                  <span>{analysis.strongestAction?.actionTitle ?? (language === "zh" ? "未记录行动。" : "No action recorded.")}</span>
+                  <span>{analysis.strongestAction ? localizedActionTitle(analysis.strongestAction, language) : (language === "zh" ? "未记录行动。" : "No action recorded.")}</span>
                 </div>
                 <div className="history-item">
                   <b>{language === "zh" ? "最危险的行动" : "Highest Risk Action"}</b>
-                  <span>{analysis.riskiestAction?.actionTitle ?? (language === "zh" ? "未记录风险。" : "No risk recorded.")}</span>
+                  <span>{analysis.riskiestAction ? localizedActionTitle(analysis.riskiestAction, language) : (language === "zh" ? "未记录风险。" : "No risk recorded.")}</span>
                 </div>
               </div>
             </article>
@@ -321,7 +359,7 @@ export default function EndingClient() {
                 )}
               </div>
             </article>
-            <article className="outcome-card" data-index="11" data-reveal>
+            <article className="outcome-card" data-index="12" data-reveal>
               <h4>{language === "zh" ? "历史记录" : "Run History"}</h4>
               <div className="history-list">
                 {profile.runs.slice(0, 5).map((run, index) => (
