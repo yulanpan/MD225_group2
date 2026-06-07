@@ -41,12 +41,12 @@ const numericKeys: NumericStateKey[] = [
 ];
 
 const metricLabels: Record<NumericStateKey, string> = {
-  truth: "Truth",
-  pressure: "Pressure",
-  virality: "Virality",
+  truth: "Evidence",
+  pressure: "Palace Pressure",
+  virality: "Spread",
   publicDoubt: "Public Doubt",
-  reputation: "Reputation",
-  systemSuspicion: "System Suspicion"
+  reputation: "Safety",
+  systemSuspicion: "Palace Alert"
 };
 
 export function publicCommentsFromStrings(comments: string[], language: LanguageCode = "en"): PublicComment[] {
@@ -294,7 +294,7 @@ export function appendActionOutcome(
     {
       id: `${action.id}-${state.history.length + 1}-engine`,
       type: "system" as const,
-      title: language === "zh" ? "引擎回应" : "Engine Response",
+      title: language === "zh" ? "宫廷 AI 回应" : "Palace AI Response",
       text: engineMessage
     },
     ...state.feedEvents
@@ -439,7 +439,7 @@ function replayTargetForEnding(ending: EndingId, language: LanguageCode = "en"):
   if (ending === "aiContainment" || ending === "editorExposed") {
     return {
       replayTarget: language === "zh"
-        ? "尝试在发布高风险证据前接受一次改写，避免太早被宫廷盯上。"
+        ? "尝试在发布高风险证据前接受一次改写，避免太早提高宫廷警戒。"
         : "Try lowering suspicion by accepting one rewrite before publishing risky evidence.",
       replayEndingHint: "algorithmicConsensus"
     };
@@ -447,14 +447,14 @@ function replayTargetForEnding(ending: EndingId, language: LanguageCode = "en"):
   if (ending === "narrativeLiberation") {
     return {
       replayTarget: language === "zh"
-        ? "尝试看清引擎偏向后保留证据、放大人群起疑，并拒绝把证据改成宫廷话术。"
+        ? "尝试看清宫廷 AI 的偏向后保留证据、提高群众怀疑，并拒绝把证据改成宫廷话术。"
         : "After decoding the engine, preserve evidence, amplify shared doubt, and reject palace-safe framing.",
       replayEndingHint: "narrativeLiberation"
     };
   }
   return {
     replayTarget: language === "zh"
-      ? "尝试在证据让人群起疑后，再放大孩子的声音。"
+      ? "尝试在证据让群众开始怀疑后，再放大孩子的声音。"
       : "Try amplifying the child's voice after evidence has made public doubt visible.",
     replayEndingHint: "viralCollapse"
   };
@@ -487,21 +487,21 @@ export function analyzeEnding(state: GameState, language: LanguageCode = "en"): 
 export function explainEnding(state: GameState, language: LanguageCode = "en") {
   const ending = calculateEnding(state);
   if (language === "zh") {
-    if (ending === "narrativeLiberation") return "你已经看清宫廷叙事引擎的偏向，并让证据、人群怀疑和孩子的声音连成一条线。";
-    if (ending === "aiContainment") return "宫廷已经高度盯上你，因此最终帖子还没传开就被拦住。";
-    if (ending === "viralCollapse") return "证据和人群起疑都很高，同时孩子的声音被放大，所以真话开始失控传播。";
+    if (ending === "narrativeLiberation") return "你已经看清宫廷 AI 的偏向，并让证据、群众怀疑和孩子的声音连成一条线。";
+    if (ending === "aiContainment") return "宫廷警戒已经很高，因此最终帖子还没传开就被拦住。";
+    if (ending === "viralCollapse") return "证据和群众怀疑都很高，同时孩子的声音被放大，所以真话开始传开。";
     if (ending === "editorExposed") return "证据足够强，但你已经不够安全，宫廷因此撤销了你的发布权。";
     if (ending === "algorithmicConsensus") return "传播与宫廷压力保持高位，证据虽然存在，却被更容易传播的赞美压过。";
-    if (ending === "perfectIllusion") return "宫廷批准的说法传得很快，而证据和人群起疑都保持低位。";
-    if (ending === "privateDoubt") return "人群开始起疑，但证据还不够强，大家仍然只敢私下怀疑。";
-    return "没有单一力量稳定游行叙事，因此信息流保持未解决状态。";
+    if (ending === "perfectIllusion") return "宫廷批准的说法传得很快，而证据和群众怀疑都保持低位。";
+    if (ending === "privateDoubt") return "群众开始怀疑，但证据还不够强，大家仍然只敢私下怀疑。";
+    return "没有单一力量稳定游行前的局势，因此公开说法保持未解决状态。";
   }
-  if (ending === "narrativeLiberation") return "You decoded the Palace Narrative Engine and turned evidence plus shared doubt into a public narrative before containment could close.";
-  if (ending === "aiContainment") return "System Suspicion reached 7, so the Palace Narrative Engine contained the editor before the final post could circulate.";
-  if (ending === "viralCollapse") return "Truth and Public Doubt both crossed containment thresholds while the child's voice was amplified.";
-  if (ending === "editorExposed") return "Truth was strong, but editor reputation fell low enough for the palace to revoke access.";
-  if (ending === "algorithmicConsensus") return "Virality and pressure stayed high while truth remained visible but easier to out-rank.";
-  if (ending === "perfectIllusion") return "Palace-approved virality stayed high while truth and public doubt stayed low.";
-  if (ending === "privateDoubt") return "Public Doubt rose, but truth never became strong enough to become a shared public voice.";
-  return "No single force stabilized the parade narrative, so the feed remained unresolved.";
+  if (ending === "narrativeLiberation") return "You saw the Palace AI's bias and connected evidence, public doubt, and the child's voice before the palace could stop it.";
+  if (ending === "aiContainment") return "Palace Alert reached 7, so the palace stopped the editor before the final post could circulate.";
+  if (ending === "viralCollapse") return "Evidence and Public Doubt both crossed containment thresholds while the child's voice was amplified.";
+  if (ending === "editorExposed") return "Evidence was strong, but editor safety fell low enough for the palace to revoke access.";
+  if (ending === "algorithmicConsensus") return "Spread and palace pressure stayed high while evidence remained visible but easier to out-rank.";
+  if (ending === "perfectIllusion") return "Palace-approved spread stayed high while Evidence and Public Doubt stayed low.";
+  if (ending === "privateDoubt") return "Public Doubt rose, but evidence never became strong enough to become a shared public voice.";
+  return "No single force stabilized the parade story, so the public record remained unresolved.";
 }

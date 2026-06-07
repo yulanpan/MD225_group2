@@ -199,21 +199,21 @@ test.describe("desktop visual audit", () => {
     await expect(page.locator(".guidance-card")).toBeVisible();
     await captureAudit(page, testInfo, "03-guidance");
 
-    await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Inspect Trace" }).click();
+    await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Preview Result" }).click();
     await expect(page.locator(".trace-panel")).toBeVisible();
     await captureAudit(page, testInfo, "04-trace-panel");
-    await page.getByRole("button", { name: "Close Trace" }).click();
+    await page.getByRole("button", { name: "Close Preview" }).click();
 
-    await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Commit Action" }).click();
+    await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Publish" }).click();
     await expect(page.locator(".command-panel")).toBeVisible();
     await captureAudit(page, testInfo, "05-command-preview");
-    await page.getByRole("button", { name: "Commit Simulation" }).click();
+    await page.locator("[data-tour-target=\"command-commit\"]").click();
 
-    await page.getByRole("button", { name: "The Public Comments" }).click();
+    await page.getByRole("button", { name: "Public Comments" }).click();
     await captureAudit(page, testInfo, "06-public-guidance");
-    await page.locator(".action-card").filter({ hasText: "Show Unfiltered Comments" }).getByRole("button", { name: "Commit Action" }).click();
+    await page.locator(".action-card").filter({ hasText: "Show Unfiltered Comments" }).getByRole("button", { name: "Publish" }).click();
     await expect(page.locator(".command-panel")).toBeVisible();
-    await page.getByRole("button", { name: "Commit Simulation" }).click();
+    await page.locator("[data-tour-target=\"command-commit\"]").click();
 
     const dialoguePanel = page.locator(".dialogue-panel");
     await expect(dialoguePanel).toBeVisible();
@@ -244,20 +244,20 @@ test.describe("desktop visual audit", () => {
       await page.locator(".onboarding-panel").getByRole("button", { name: "Skip Tutorial" }).click();
       await expect(page.locator(".onboarding-panel")).toHaveCount(0);
 
-      await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Inspect Trace" }).click();
+      await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Preview Result" }).click();
       await expect(page.locator(".trace-panel")).toBeVisible();
       await captureAudit(page, testInfo, `${viewport.name}-trace`);
-      await page.getByRole("button", { name: "Close Trace" }).click();
+      await page.getByRole("button", { name: "Close Preview" }).click();
 
-      await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Commit Action" }).click();
+      await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Publish" }).click();
       await expect(page.locator(".command-panel")).toBeVisible();
       await captureAudit(page, testInfo, `${viewport.name}-command`);
-      await page.getByRole("button", { name: "Commit Simulation" }).click();
+      await page.locator("[data-tour-target=\"command-commit\"]").click();
 
-      await page.getByRole("button", { name: "The Public Comments" }).click();
-      await page.locator(".action-card").filter({ hasText: "Show Unfiltered Comments" }).getByRole("button", { name: "Commit Action" }).click();
+      await page.getByRole("button", { name: "Public Comments" }).click();
+      await page.locator(".action-card").filter({ hasText: "Show Unfiltered Comments" }).getByRole("button", { name: "Publish" }).click();
       await expect(page.locator(".command-panel")).toBeVisible();
-      await page.getByRole("button", { name: "Commit Simulation" }).click();
+      await page.locator("[data-tour-target=\"command-commit\"]").click();
       await expect(page.locator(".dialogue-panel")).toBeVisible({ timeout: 15000 });
       await captureAudit(page, testInfo, `${viewport.name}-dialogue`);
     }

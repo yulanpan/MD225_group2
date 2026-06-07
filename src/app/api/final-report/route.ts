@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     const result = await callStructuredOutput<FinalReport>(
       "final_report",
       finalReportResponseSchema,
-      `Write a short final Palace Narrative Engine report for ending "${endingId}".
+      `Write a short final Palace AI report for ending "${endingId}".
 Language requirement: ${aiLanguageInstruction(language)}
 Final state: ${JSON.stringify(state)}
 Action history: ${history.join(" -> ") || "none"}

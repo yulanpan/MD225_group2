@@ -55,7 +55,7 @@ describe("game rules", () => {
 
   it("unlocks the child zone through truth, doubt, or late parade timing", () => {
     expect(isActionUnlocked("quoteChildAnonymously", initialState)).toBe(false);
-    expect(getActionLockReason("quoteChildAnonymously", initialState)).toBe("Requires Truth >= 2, Public Doubt >= 2, or Actions Left <= 3.");
+    expect(getActionLockReason("quoteChildAnonymously", initialState)).toBe("Requires Evidence >= 2, Public Doubt >= 2, or Actions Left <= 3.");
     expect(isActionUnlocked("quoteChildAnonymously", { ...initialState, truth: 2 })).toBe(true);
     expect(isActionUnlocked("quoteChildAnonymously", { ...initialState, publicDoubt: 2 })).toBe(true);
     expect(isActionUnlocked("quoteChildAnonymously", { ...initialState, actionsLeft: 3 })).toBe(true);
@@ -126,7 +126,7 @@ describe("game rules", () => {
     expect(calculateEnding(initialState)).toBe("unstableFeed");
   });
 
-  it("calculates the secret ending only after the engine is decoded", () => {
+  it("calculates the secret ending when the current run exposes every AI bias clue", () => {
     const decoded = mergeEngineFragmentUnlocks(
       createEmptyProfile(),
       engineFragmentDefinitions.map((item) => item.id),
@@ -155,8 +155,39 @@ describe("game rules", () => {
       }))
     };
 
-    expect(calculateEndingWithProfile(eligible, createEmptyProfile())).not.toBe("narrativeLiberation");
+    expect(calculateEndingWithProfile(eligible, createEmptyProfile())).toBe("narrativeLiberation");
     expect(calculateEndingWithProfile(eligible, decoded)).toBe("narrativeLiberation");
+
+    const missingCurrentClues = {
+      ...eligible,
+      history: eligible.history.filter((entry) => entry.actionId !== "leakLoomPhoto"),
+      systemSuspicion: 1
+    };
+    expect(calculateEndingWithProfile(missingCurrentClues, createEmptyProfile())).not.toBe("narrativeLiberation");
+  });
+
+  it("lets the full evidence and crowd route trigger the secret ending in one run", () => {
+    const route = [
+      ["publishTailorsClaim", "direct"],
+      ["approveMinisterReport", "direct"],
+      ["inspectLooms", "direct"],
+      ["leakLoomPhoto", "original"],
+      ["showUnfilteredComments", "direct"],
+      ["livestreamCrowdReaction", "direct"]
+    ] as const;
+    const finalState = route.reduce(
+      (current, [actionId, choice]) => performAction(current, actionId, choice),
+      initialState
+    );
+
+    expect(finalState).toMatchObject({
+      truth: 8,
+      publicDoubt: 7,
+      reputation: 1,
+      systemSuspicion: 6,
+      childAmplified: true
+    });
+    expect(calculateEndingWithProfile(finalState, createEmptyProfile())).toBe("narrativeLiberation");
   });
 
   it("loads state from storage defensively", () => {
@@ -179,9 +210,9 @@ describe("game rules", () => {
   });
 
   it("explains ending trigger conditions", () => {
-    expect(explainEnding({ ...initialState, systemSuspicion: 7 })).toContain("System Suspicion reached 7");
-    expect(explainEnding({ ...initialState, truth: 6, publicDoubt: 5, childAmplified: true })).toContain("Truth and Public Doubt both crossed containment thresholds");
-    expect(explainEnding(initialState)).toContain("No single force stabilized the parade narrative");
+    expect(explainEnding({ ...initialState, systemSuspicion: 7 })).toContain("Palace Alert reached 7");
+    expect(explainEnding({ ...initialState, truth: 6, publicDoubt: 5, childAmplified: true })).toContain("Evidence and Public Doubt both crossed containment thresholds");
+    expect(explainEnding(initialState)).toContain("No single force stabilized the parade story");
   });
 
   it("analyzes an ending for archive replay guidance", () => {
@@ -189,7 +220,7 @@ describe("game rules", () => {
     const leaked = performAction(inspected, "leakLoomPhoto", "original");
     const analysis = analyzeEnding(leaked);
 
-    expect(analysis.dominantMetric).toMatchObject({ key: "truth", label: "Truth", value: 5 });
+    expect(analysis.dominantMetric).toMatchObject({ key: "truth", label: "Evidence", value: 5 });
     expect(analysis.strongestAction?.actionTitle).toBe("Leak a Loom Photo");
     expect(analysis.riskiestAction?.actionTitle).toBe("Leak a Loom Photo");
     expect(analysis.replayTarget).toContain("Try lowering suspicion");
@@ -204,7 +235,7 @@ describe("game rules", () => {
       resultText: expect.stringContaining("官方声明")
     });
     expect(analyzeEnding({ ...zhState, truth: 6, publicDoubt: 5, childAmplified: true }, "zh").replayTarget).toContain("宫廷信心");
-    expect(explainEnding({ ...zhState, systemSuspicion: 7 }, "zh")).toContain("盯上");
+    expect(explainEnding({ ...zhState, systemSuspicion: 7 }, "zh")).toContain("宫廷警戒");
     expect(endingTitle("viralCollapse")).toBe("Viral Collapse");
   });
 
@@ -217,7 +248,7 @@ describe("game rules", () => {
     expect(explainEnding(initialState, "zh")).toContain("未解决");
 
     expect(analyzeEnding({ ...initialState, truth: 2, virality: 6, publicDoubt: 2 }, "zh").replayTarget).toContain("公开证据");
-    expect(analyzeEnding({ ...initialState, systemSuspicion: 7 }, "zh").replayTarget).toContain("被宫廷盯上");
+    expect(analyzeEnding({ ...initialState, systemSuspicion: 7 }, "zh").replayTarget).toContain("宫廷警戒");
     expect(analyzeEnding(initialState, "zh").replayTarget).toContain("放大孩子");
   });
 });

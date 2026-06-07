@@ -4,6 +4,7 @@ import { performAction } from "./game-rules";
 import {
   createEmptyProfile,
   engineFragmentDefinitions,
+  engineFragmentsForState,
   evaluateAchievements,
   evaluateEngineFragments,
   loadProfileFromStorage,
@@ -87,6 +88,8 @@ describe("player profile and achievements", () => {
     const ids = evaluateEngineFragments(createEmptyProfile(), publicDoubt, "editorExposed");
 
     expect(ids).toEqual(expect.arrayContaining(["stabilityBias", "evidenceRecoding", "crowdSuppression", "containmentProtocol"]));
+    expect(engineFragmentsForState(publicDoubt)).toEqual(expect.arrayContaining(["stabilityBias", "evidenceRecoding", "crowdSuppression", "containmentProtocol"]));
+    expect(secretEndingEligible({ ...publicDoubt, truth: 5, publicDoubt: 5, systemSuspicion: 3 }, createEmptyProfile())).toBe(true);
     const merged = mergeEngineFragmentUnlocks(createEmptyProfile(), engineFragmentDefinitions.map((item) => item.id), "run-a", "2026-05-20T00:00:00.000Z");
     expect(merged.profile.decodedEngine).toBe(true);
     expect(merged.profile.biasAwareness).toBe(100);

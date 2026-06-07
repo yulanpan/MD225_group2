@@ -2,6 +2,8 @@
 
 Last generated: 2026-06-04
 
+Status note, 2026-06-05: this inventory predates the naming pass that standardized the runtime and defense materials around `Palace Feed Editor / 宫廷发布编辑`, `Palace AI / 宫廷 AI`, `Evidence`, `Spread`, `Safety`, and `Palace Alert / 宫廷警戒`. Treat rows below as historical review notes until this inventory is regenerated from the current source.
+
 This document collects current user-facing Chinese and English copy candidates from the game source. It is meant for editing and translation review, not as the runtime source of truth. After changing copy here, apply the final wording back into the referenced source files.
 
 Notes:
@@ -1770,4 +1772,3 @@ Notes:
 ## Raw Candidate Count
 
 Total candidate rows: 1680
-

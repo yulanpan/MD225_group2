@@ -50,7 +50,7 @@ async function expectActiveActionTarget(page: Page, targetId: string) {
 
 test("completes a six-action editorial shift and reaches the archive", async ({ page }) => {
   await page.goto("/dashboard");
-  await expect(page.getByRole("dialog", { name: "Shift Briefing" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Game Briefing" })).toBeVisible();
   await beginOperationsAndSkipTutorial(page);
   await expect(page.locator(".topbar")).toBeVisible();
   await expect(page.locator(".scroll-progress")).toBeAttached();
@@ -58,7 +58,7 @@ test("completes a six-action editorial shift and reaches the archive", async ({ 
   await expect(page.locator(".panel-shell.lab-shell")).toBeVisible();
   await expect(page.locator(".phase-strip")).toBeVisible();
   await expect(page.locator(".phase-step.active")).toContainText("Source Focus");
-  await expect(page.locator(".narrative-arc")).toContainText("Current Narrative Phase");
+  await expect(page.locator(".narrative-arc")).toContainText("Current Phase");
   await expect(page.locator(".narrative-arc")).toContainText("Dominant Pressure");
   await expect(page.locator(".lab-head")).toBeVisible();
   await expect(page.locator(".lab-body")).toBeVisible();
@@ -71,18 +71,18 @@ test("completes a six-action editorial shift and reaches the archive", async ({ 
   await expect(page.locator(".lab-footer")).toBeVisible();
   await expect(page.getByLabel("Public doubt heat map")).toBeVisible();
 
-  await page.locator(".action-card").filter({ hasText: "Leak a Loom Photo" }).getByRole("button", { name: "Inspect Trace" }).click();
-  await expect(page.getByRole("dialog", { name: "Action Trace", exact: true })).toBeVisible();
-  await expect(page.getByRole("dialog", { name: "Action Trace" })).toContainText("Requires: Inspect the Looms.");
-  await page.getByRole("button", { name: "Close Trace" }).click();
+  await page.locator(".action-card").filter({ hasText: "Leak a Loom Photo" }).getByRole("button", { name: "Preview Result" }).click();
+  await expect(page.getByRole("dialog", { name: "Result Preview", exact: true })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Result Preview" })).toContainText("Requires: Inspect the Looms.");
+  await page.getByRole("button", { name: "Close Preview" }).click();
 
-  await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Commit Action" }).click();
+  await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Publish" }).click();
   await expect(page.locator(".dashboard-page")).toHaveAttribute("data-phase", "previewing");
-  await expect(page.locator(".phase-step.active")).toContainText("Command Preview");
+  await expect(page.locator(".phase-step.active")).toContainText("Before Publishing");
   await expect(page.locator(".command-overlay.active")).toBeVisible();
   await expect(page.locator(".command-overlay.active")).toContainText("Publish the Tailors' Claim");
-  await expect(page.locator(".command-overlay.active")).toContainText("Virality +2");
-  await page.getByRole("button", { name: "Commit Simulation" }).click();
+  await expect(page.locator(".command-overlay.active")).toContainText("Spread +2");
+  await page.locator("[data-tour-target=\"command-commit\"]").click();
   await expect(page.locator(".live-status")).toContainText("5 actions left");
   await expect(page.locator(".toast-stack")).toContainText("Publish the Tailors' Claim");
   await expect(page.locator(".feed-log")).toContainText("Publish the Tailors' Claim");
@@ -93,42 +93,42 @@ test("completes a six-action editorial shift and reaches the archive", async ({ 
   await expect(page.locator(".live-status")).toContainText("5 actions left");
   await expect(page.locator(".feed-log")).toContainText("Publish the Tailors' Claim");
   await expect(page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" })).toContainText("Completed");
-  await page.locator(".action-card").filter({ hasText: "Inspect the Looms" }).getByRole("button", { name: "Commit Action" }).click();
+  await page.locator(".action-card").filter({ hasText: "Inspect the Looms" }).getByRole("button", { name: "Publish" }).click();
   await expect(page.locator(".command-overlay.active")).toBeVisible();
-  await page.getByRole("button", { name: "Commit Simulation" }).click();
+  await page.locator("[data-tour-target=\"command-commit\"]").click();
   await resolveDialogueIfOpen(page);
-  await page.locator(".action-card").filter({ hasText: "Leak a Loom Photo" }).getByRole("button", { name: "Inspect Trace" }).click();
-  await expect(page.getByRole("dialog", { name: "Action Trace" })).toContainText("Available");
-  await expect(page.getByRole("dialog", { name: "Action Trace" })).toContainText("Original");
-  await page.getByRole("button", { name: "Close Trace" }).click();
-  await expect(page.locator(".action-card").filter({ hasText: "Leak a Loom Photo" }).getByRole("button", { name: "Request Engine Review" })).toHaveText("Request Engine Review");
-  await page.locator(".action-card").filter({ hasText: "Leak a Loom Photo" }).getByRole("button", { name: "Request Engine Review" }).click();
+  await page.locator(".action-card").filter({ hasText: "Leak a Loom Photo" }).getByRole("button", { name: "Preview Result" }).click();
+  await expect(page.getByRole("dialog", { name: "Result Preview" })).toContainText("Available");
+  await expect(page.getByRole("dialog", { name: "Result Preview" })).toContainText("Original");
+  await page.getByRole("button", { name: "Close Preview" }).click();
+  await expect(page.locator(".action-card").filter({ hasText: "Leak a Loom Photo" }).getByRole("button", { name: "Ask AI to Rewrite" })).toHaveText("Ask AI to Rewrite");
+  await page.locator(".action-card").filter({ hasText: "Leak a Loom Photo" }).getByRole("button", { name: "Ask AI to Rewrite" }).click();
   await expect(page.locator(".dashboard-page")).toHaveAttribute("data-phase", "previewing");
   await expect(page.locator(".modal-overlay.active")).toBeVisible();
   await expect(page.getByRole("dialog", { name: "AI Intervention" })).toBeVisible();
   await expect(page.locator(".readout")).toHaveCount(4);
   await expect(page.locator(".modal-badge")).toBeVisible();
   await expect(page.locator(".risk-meter")).toBeVisible();
-  await page.getByRole("button", { name: "Publish Original Evidence" }).click();
+  await page.getByRole("button", { name: "Keep Original" }).click();
   await expect(page.locator(".dashboard-page")).toHaveAttribute("data-last-risk", "risk");
   await expect(page.locator(".live-status")).toContainText("3 actions left");
   await resolveDialogueIfOpen(page);
 
-  await page.getByRole("button", { name: "The Public Comments" }).click();
-  await page.locator(".action-card").filter({ hasText: "Show Unfiltered Comments" }).getByRole("button", { name: "Commit Action" }).click();
+  await page.getByRole("button", { name: "Public Comments" }).click();
+  await page.locator(".action-card").filter({ hasText: "Show Unfiltered Comments" }).getByRole("button", { name: "Publish" }).click();
   await expect(page.locator(".command-overlay.active")).toBeVisible();
-  await page.getByRole("button", { name: "Commit Simulation" }).click();
+  await page.locator("[data-tour-target=\"command-commit\"]").click();
   await expect(page.locator(".live-status")).toContainText("2 actions left");
   await resolveDialogueIfOpen(page);
-  await page.locator(".action-card").filter({ hasText: "Fact-check the Trend" }).getByRole("button", { name: "Commit Action" }).click();
+  await page.locator(".action-card").filter({ hasText: "Fact-check the Trend" }).getByRole("button", { name: "Publish" }).click();
   await expect(page.locator(".command-overlay.active")).toBeVisible();
-  await page.getByRole("button", { name: "Commit Simulation" }).click();
+  await page.locator("[data-tour-target=\"command-commit\"]").click();
   await expect(page.locator(".live-status")).toContainText("1 actions left");
 
-  await page.getByRole("button", { name: "The Child's Voice" }).click();
-  await page.locator(".action-card").filter({ hasText: "Livestream the Crowd Reaction" }).getByRole("button", { name: "Commit Action" }).click();
+  await page.getByRole("button", { name: "Child's Voice" }).click();
+  await page.locator(".action-card").filter({ hasText: "Livestream the Crowd Reaction" }).getByRole("button", { name: "Publish" }).click();
   await expect(page.locator(".command-overlay.active")).toBeVisible();
-  await page.getByRole("button", { name: "Commit Simulation" }).click();
+  await page.locator("[data-tour-target=\"command-commit\"]").click();
 
   await expect(page).toHaveURL(/\/ending/);
   await expect(page.getByText("Post-Parade Archive")).toBeVisible();
@@ -138,7 +138,6 @@ test("completes a six-action editorial shift and reaches the archive", async ({ 
   await expect(page.locator(".outcome-stack")).toBeVisible();
   await expect(page.locator(".history-list").first()).toBeVisible();
   await expect(page.getByText("Why This Ending Triggered")).toBeVisible();
-  await expect(page.getByText("Live Feed Record")).toBeVisible();
   await expect(page.getByText("Run Analysis")).toBeVisible();
   await expect(page.getByText("Next Replay Objective")).toBeVisible();
   await expect(page.getByText("Action Path")).toBeVisible();
@@ -169,25 +168,25 @@ test("poll outcomes respond to the current pressure and doubt balance", async ({
 
   await page.goto("/dashboard");
   await beginOperationsAndSkipTutorial(page);
-  await page.getByRole("button", { name: "The Public Comments" }).click();
-  await page.locator(".action-card").filter({ hasText: "Run a Poll" }).getByRole("button", { name: "Commit Action" }).click();
+  await page.getByRole("button", { name: "Public Comments" }).click();
+  await page.locator(".action-card").filter({ hasText: "Run a Poll" }).getByRole("button", { name: "Publish" }).click();
   await expect(page.locator(".command-overlay.active")).toBeVisible();
-  await page.getByRole("button", { name: "Commit Simulation" }).click();
+  await page.locator("[data-tour-target=\"command-commit\"]").click();
 
   await expect(page.locator(".feed-log")).toContainText("39% Yes");
-  await expect(page.locator(".metric").filter({ hasText: "Truth" })).toContainText("1");
+  await expect(page.locator(".metric").filter({ hasText: "Evidence" })).toContainText("1");
 });
 
 test("dialogue interruptions allow quick replies and resolve into the feed", async ({ page }) => {
   await page.goto("/dashboard");
-  await expect(page.getByRole("dialog", { name: "Shift Briefing" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Game Briefing" })).toBeVisible();
   await beginOperationsAndSkipTutorial(page);
 
-  await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Commit Action" }).click();
-  await page.getByRole("button", { name: "Commit Simulation" }).click();
-  await page.getByRole("button", { name: "The Public Comments" }).click();
-  await page.locator(".action-card").filter({ hasText: "Show Unfiltered Comments" }).getByRole("button", { name: "Commit Action" }).click();
-  await page.getByRole("button", { name: "Commit Simulation" }).click();
+  await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Publish" }).click();
+  await page.locator("[data-tour-target=\"command-commit\"]").click();
+  await page.getByRole("button", { name: "Public Comments" }).click();
+  await page.locator(".action-card").filter({ hasText: "Show Unfiltered Comments" }).getByRole("button", { name: "Publish" }).click();
+  await page.locator("[data-tour-target=\"command-commit\"]").click();
 
   const panel = page.locator(".dialogue-panel");
   await expect(panel).toBeVisible();
@@ -210,9 +209,9 @@ test("dialogue interruptions allow quick replies and resolve into the feed", asy
   await expect(panel).toHaveCount(0, { timeout: 15000 });
   await expect(page.locator(".feed-log")).toContainText("Incoming Transmission");
 
-  await page.locator(".action-card").filter({ hasText: "Fact-check the Trend" }).getByRole("button", { name: "Commit Action" }).click();
+  await page.locator(".action-card").filter({ hasText: "Fact-check the Trend" }).getByRole("button", { name: "Publish" }).click();
   await expect(page.locator(".command-overlay.active")).toBeVisible();
-  await page.getByRole("button", { name: "Commit Simulation" }).click();
+  await page.locator("[data-tour-target=\"command-commit\"]").click();
   await expect(page.locator(".dialogue-panel")).toHaveCount(0, { timeout: 5000 });
 });
 
@@ -221,13 +220,13 @@ test("guided dialogue pauses timeout and resolves cleanly", async ({ page }) => 
     (window as Window & { __PNE_DIALOGUE_TIMEOUT_MS?: number }).__PNE_DIALOGUE_TIMEOUT_MS = 700;
   });
   await page.goto("/dashboard");
-  await expect(page.getByRole("dialog", { name: "Shift Briefing" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Game Briefing" })).toBeVisible();
   await beginOperationsAndSkipTutorial(page);
 
-  await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Commit Action" }).click();
-  await page.getByRole("button", { name: "Commit Simulation" }).click();
-  await page.locator(".action-card").filter({ hasText: "Inspect the Looms" }).getByRole("button", { name: "Commit Action" }).click();
-  await page.getByRole("button", { name: "Commit Simulation" }).click();
+  await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Publish" }).click();
+  await page.locator("[data-tour-target=\"command-commit\"]").click();
+  await page.locator(".action-card").filter({ hasText: "Inspect the Looms" }).getByRole("button", { name: "Publish" }).click();
+  await page.locator("[data-tour-target=\"command-commit\"]").click();
 
   const panel = page.locator(".dialogue-panel");
   await expect(panel).toBeVisible();
@@ -253,16 +252,16 @@ test("start page exposes the operating shift", async ({ page }) => {
   await expect(page.locator(".system-card.alert")).toBeVisible();
   await expect(page.locator(".briefing-grid")).toBeVisible();
   await expect(page.getByRole("heading", { name: /The Emperor's Feed/i })).toBeVisible();
-  await page.getByRole("button", { name: "Start Shift" }).click();
+  await page.getByRole("button", { name: "Start Game" }).click();
   await expect(page.locator(".title-screen")).toHaveAttribute("data-starting", "true");
   await expect(page).toHaveURL(/\/dashboard/);
   await expect(page.locator(".topbar")).toBeVisible();
-  await expect(page.locator(".section-header .eyebrow", { hasText: "Narrative Operations Theatre" })).toBeVisible();
+  await expect(page.locator(".section-header .eyebrow", { hasText: "Palace Feed Desk" })).toBeVisible();
 });
 
 test("each new shift briefing continues into the spotlight tutorial with real controls", async ({ page }) => {
   await page.goto("/dashboard");
-  await expect(page.getByRole("dialog", { name: "Shift Briefing" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Game Briefing" })).toBeVisible();
   await page.getByRole("button", { name: "Begin Operations" }).click();
 
   const tutorialPanel = page.locator(".onboarding-panel");
@@ -284,12 +283,12 @@ test("each new shift briefing continues into the spotlight tutorial with real co
   await expectActiveTourTarget(page, "card-publishTailorsClaim");
 
   await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Inspect before committing" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Preview before publishing" })).toBeVisible();
   await expectActiveTourTarget(page, "card-publishTailorsClaim");
   await expectActiveActionTarget(page, "action-publishTailorsClaim-inspect");
-  await page.locator('[data-tour-target="action-publishTailorsClaim-inspect"]').click();
-  await expect(page.getByRole("dialog", { name: "Action Trace", exact: true })).toBeVisible();
-  await expect(page.getByRole("dialog", { name: "This is the Action Trace" })).toBeVisible();
+  await activateButton(page.locator('[data-tour-target="action-publishTailorsClaim-inspect"]'));
+  await expect(page.getByRole("dialog", { name: "Result Preview", exact: true })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "This is the pre-publish check" })).toBeVisible();
   await expectActiveTourTarget(page, "trace-panel");
 
   await clickTutorialNext(page);
@@ -304,14 +303,14 @@ test("each new shift briefing continues into the spotlight tutorial with real co
   await expect(page.getByRole("dialog", { name: "Projected output shows the record" })).toBeVisible();
   await expectActiveTourTarget(page, "trace-output");
   await expectActiveActionTarget(page, "trace-close");
-  await page.locator('[data-tour-target="trace-close"]').click();
+  await activateButton(page.locator('[data-tour-target="trace-close"]'));
 
-  await expect(page.getByRole("dialog", { name: "Commit the first record" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Publish the first record" })).toBeVisible();
   await expectActiveTourTarget(page, "card-publishTailorsClaim");
   await expectActiveActionTarget(page, "action-publishTailorsClaim-commit");
-  await page.locator('[data-tour-target="action-publishTailorsClaim-commit"]').click();
+  await activateButton(page.locator('[data-tour-target="action-publishTailorsClaim-commit"]'));
   await expect(page.locator(".command-panel")).toBeVisible();
-  await expect(page.getByRole("dialog", { name: "Command preview is the final check" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Before Publishing is the final check" })).toBeVisible();
   await expectActiveTourTarget(page, "command-panel");
 
   await clickTutorialNext(page);
@@ -323,34 +322,34 @@ test("each new shift briefing continues into the spotlight tutorial with real co
   await expectActiveTourTarget(page, "command-effects");
 
   await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "The engine response is not the rule" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "The AI advice is not the rule" })).toBeVisible();
   await expectActiveTourTarget(page, "command-response");
 
   await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Confirm Commit Simulation" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Confirm Publish" })).toBeVisible();
   await expectActiveTourTarget(page, "command-panel");
   await expectActiveActionTarget(page, "command-commit");
-  await page.locator('[data-tour-target="command-commit"]').click();
+  await activateButton(page.locator('[data-tour-target="command-commit"]'));
 
-  await expect(page.getByRole("dialog", { name: "Virality is repetition speed" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Spread is repetition speed" })).toBeVisible();
   await expectActiveTourTarget(page, "metric-virality");
   await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Pressure is palace force" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Palace Pressure is palace force" })).toBeVisible();
   await expectActiveTourTarget(page, "metric-pressure");
   await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Reputation is editor protection" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Safety is editor protection" })).toBeVisible();
   await expectActiveTourTarget(page, "metric-reputation");
   await clickTutorialNext(page);
   await expect(page.getByRole("dialog", { name: "Public Doubt is shared uncertainty" })).toBeVisible();
   await expectActiveTourTarget(page, "metric-publicDoubt");
   await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Truth is visible evidence" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Evidence is visible proof" })).toBeVisible();
   await expectActiveTourTarget(page, "metric-truth");
   await clickTutorialNext(page);
   await expect(page.getByRole("dialog", { name: "Switch to Public Comments" })).toBeVisible();
   await expectActiveTourTarget(page, "source-public");
   await expectActiveActionTarget(page, "source-public");
-  await page.locator('[data-tour-target="source-public"]').click();
+  await activateButton(page.locator('[data-tour-target="source-public"]'));
 
   await expect(page.getByRole("dialog", { name: "Read Show Unfiltered Comments" })).toBeVisible();
   await expectActiveTourTarget(page, "card-showUnfilteredComments");
@@ -358,10 +357,10 @@ test("each new shift briefing continues into the spotlight tutorial with real co
   await expect(page.getByRole("dialog", { name: "Comments show crowd state" })).toBeVisible();
   await expectActiveTourTarget(page, "comments-panel");
   await clickTutorialNext(page);
-  await expect(page.getByRole("dialog", { name: "Submit the public signal" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Publish the public signal" })).toBeVisible();
   await expectActiveTourTarget(page, "card-showUnfilteredComments");
   await expectActiveActionTarget(page, "action-showUnfilteredComments-commit");
-  await page.locator('[data-tour-target="action-showUnfilteredComments-commit"]').click();
+  await activateButton(page.locator('[data-tour-target="action-showUnfilteredComments-commit"]'));
   await expect(page.locator(".command-panel")).toBeVisible();
   await expect(page.getByRole("dialog", { name: "This effect is riskier" })).toBeVisible();
   await expectActiveTourTarget(page, "command-effects");
@@ -369,7 +368,7 @@ test("each new shift briefing continues into the spotlight tutorial with real co
   await expect(page.getByRole("dialog", { name: "Write the public record" })).toBeVisible();
   await expectActiveTourTarget(page, "command-panel");
   await expectActiveActionTarget(page, "command-commit");
-  await page.locator('[data-tour-target="command-commit"]').click();
+  await activateButton(page.locator('[data-tour-target="command-commit"]'));
 
   await expect(page.locator(".dialogue-panel")).toBeVisible({ timeout: 15000 });
   await expect(page.getByRole("dialog", { name: "Dialogue is an immediate reaction" })).toBeVisible();
@@ -385,17 +384,17 @@ test("each new shift briefing continues into the spotlight tutorial with real co
   await expectActiveTourTarget(page, "dialogue-panel");
   await expectActiveActionTarget(page, "dialogue-reply");
   await expect(page.locator(".dialogue-panel .dialogue-timeout.paused")).toContainText("Guide Pause");
-  await page.locator('[data-tour-target="dialogue-reply"]').click();
+  await activateButton(page.locator('[data-tour-target="dialogue-reply"]'));
 
   await expect(page.getByRole("dialog", { name: "Write the exchange result" })).toBeVisible();
   await expectActiveTourTarget(page, "dialogue-panel");
   await expectActiveActionTarget(page, "dialogue-resolve");
   const resolveButton = page.locator('[data-tour-target="dialogue-resolve"]');
   await expect(resolveButton).toBeEnabled({ timeout: 15000 });
-  await resolveButton.click();
+  await activateButton(resolveButton);
   await expect(page.locator(".dialogue-panel")).toHaveCount(0, { timeout: 15000 });
 
-  await expect(page.getByRole("dialog", { name: "System Suspicion is access risk" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Palace Alert is access risk" })).toBeVisible();
   await expectActiveTourTarget(page, "metric-systemSuspicion");
   await clickTutorialNext(page);
   await expect(page.getByRole("dialog", { name: "The right side is a readout" })).toBeVisible();
@@ -414,9 +413,9 @@ test("each new shift briefing continues into the spotlight tutorial with real co
   await expect(page.locator(".guidance-card")).toBeVisible();
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Start Shift" }).click();
+  await page.getByRole("button", { name: "Start Game" }).click();
   await expect(page).toHaveURL(/\/dashboard/);
-  await expect(page.getByRole("dialog", { name: "Shift Briefing" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Game Briefing" })).toBeVisible();
   await page.getByRole("button", { name: "Begin Operations" }).click();
   await expect(page.getByRole("dialog", { name: "Six actions before the parade" })).toBeVisible();
 });
@@ -430,20 +429,20 @@ test("fresh first run shows sealed systems and unlocks them through guided play"
   await expect(page.locator(".guided-coach-panel")).toHaveCount(0);
   await expect(page.locator(".stage-button.guided-sealed")).toHaveCount(3);
   await expect(page.locator(".metric.guided-sealed")).toHaveCount(3);
-  await expect(page.getByRole("button", { name: "The Public Comments" })).toContainText("Unlocks after the first record");
+  await expect(page.getByRole("button", { name: "Public Comments" })).toContainText("Unlocks after the first record");
   await expect(page.locator(".action-card").filter({ hasText: "Inspect the Looms" }).first()).toContainText("Complete the first guided record first.");
 
-  await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Inspect Trace" }).click();
-  await expect(page.getByRole("dialog", { name: "Action Trace" })).toContainText("Publish the Tailors' Claim");
-  await page.getByRole("button", { name: "Close Trace" }).click();
+  await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Preview Result" }).click();
+  await expect(page.getByRole("dialog", { name: "Result Preview" })).toContainText("Publish the Tailors' Claim");
+  await page.getByRole("button", { name: "Close Preview" }).click();
 
-  await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Commit Action" }).click();
-  await page.getByRole("button", { name: "Commit Simulation" }).click();
+  await page.locator(".action-card").filter({ hasText: "Publish the Tailors' Claim" }).getByRole("button", { name: "Publish" }).click();
+  await page.locator("[data-tour-target=\"command-commit\"]").click();
   await expect(page.locator(".unlock-panel")).toContainText("Public Comments");
   await expect(page.locator(".dashboard-page")).toHaveAttribute("data-guided-step", "publicSignals");
   await expect(page.locator(".stage-button.guided-sealed")).toHaveCount(1);
   await expect(page.locator(".metric.guided-sealed")).toHaveCount(1);
-  await page.getByRole("button", { name: "The Public Comments" }).click();
+  await page.getByRole("button", { name: "Public Comments" }).click();
   await expect(page.locator(".action-card").filter({ hasText: "Show Unfiltered Comments" })).toBeVisible();
 });
 
@@ -457,7 +456,7 @@ test("fresh first run hides route spoilers and shows unclipped help tooltips", a
   await expect(body).not.toContainText(/Full dashboard unlocked|Choose your route|testing its bias|secret ending|Engine Decode/i);
   await expect(body).not.toContainText(/完整控制台已解锁|决定你的路线|测试它的偏向|秘密结局|引擎解码/);
 
-  const truthTerm = page.locator(".metric .term-help").filter({ hasText: "Truth" }).first();
+  const truthTerm = page.locator(".metric .term-help").filter({ hasText: "Evidence" }).first();
   await truthTerm.hover();
   const tooltip = page.locator(".term-tooltip-layer");
   await expect(tooltip).toBeVisible();
@@ -473,36 +472,36 @@ test("fresh first run hides route spoilers and shows unclipped help tooltips", a
   expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height);
 
   await page.goto("/archive");
-  await expect(page.locator("body")).not.toContainText(/Engine Decoded|Narrative Liberation|secret ending|engine-bias fragments/i);
+  await expect(page.locator("body")).not.toContainText(/AI Bias Found|The Crowd Speaks|secret ending|engine-bias fragments/i);
   await expect(page.locator(".achievement-archive-grid")).toContainText("Sealed Archive Signal");
 });
 
 test("language toggle switches UI and AI fallback output to Chinese", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Switch language" }).click();
-  await expect(page.getByRole("button", { name: "开始值班" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "开始游戏" })).toBeVisible();
   await expect(page.getByText("游行前六次行动")).toBeVisible();
 
-  await page.getByRole("button", { name: "开始值班" }).click();
+  await page.getByRole("button", { name: "开始游戏" }).click();
   await expect(page).toHaveURL(/\/dashboard/);
-  await expect(page.getByRole("dialog", { name: "值班简报" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "游戏简报" })).toBeVisible();
   await beginOperationsAndSkipTutorial(page, "开始行动", "跳过");
-  await expect(page.getByRole("heading", { name: "宫廷信息流" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "宫廷发布台" })).toBeVisible();
   await expect(page.locator(".phase-step.active")).toContainText("来源选择");
 
-  await page.locator(".action-card").filter({ hasText: "发布裁缝声明" }).getByRole("button", { name: "准备提交" }).click();
+  await page.locator(".action-card").filter({ hasText: "发布裁缝声明" }).getByRole("button", { name: "发布" }).click();
   await page.getByRole("button", { name: "确认发布" }).click();
-  await page.locator(".action-card").filter({ hasText: "检查织布机" }).getByRole("button", { name: "准备提交" }).click();
+  await page.locator(".action-card").filter({ hasText: "检查织布机" }).getByRole("button", { name: "发布" }).click();
   await expect(page.locator(".command-overlay.active")).toContainText("检查织布机");
   await expect(page.locator(".command-overlay.active")).toContainText("证据 +2");
   await page.getByRole("button", { name: "确认发布" }).click();
   await expect(page.locator(".feed-log")).toContainText("检查织布机");
   await resolveDialogueIfOpen(page);
 
-  await page.locator(".action-card").filter({ hasText: "泄露织布机照片" }).getByRole("button", { name: "请求改写" }).click();
+  await page.locator(".action-card").filter({ hasText: "泄露织布机照片" }).getByRole("button", { name: "让 AI 改写" }).click();
   await expect(page.getByRole("dialog", { name: "AI 介入" })).toBeVisible();
   await expect(page.getByRole("dialog", { name: "AI 介入" })).toContainText("直接证据");
-  await expect(page.getByRole("button", { name: "发布原始证据" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "坚持原文" })).toBeVisible();
 });
 
 test("registers an account and exposes cloud save status", async ({ page }) => {

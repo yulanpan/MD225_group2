@@ -43,10 +43,10 @@ describe("i18n helpers", () => {
     expect(zoneText("child", "zh").title).toBe("孩子的声音");
     expect(metricLabel("truth", "zh")).toBe("证据");
     expect(metricLabel("pressure", "zh")).toBe("宫廷压力");
-    expect(metricLabel("publicDoubt", "zh")).toBe("人群起疑");
+    expect(metricLabel("publicDoubt", "zh")).toBe("群众怀疑");
     expect(metricLabel("reputation", "zh")).toBe("你的安全");
-    expect(metricLabel("systemSuspicion", "zh")).toBe("被盯上");
-    expect(commonText("startShift", "zh")).toBe("开始值班");
+    expect(metricLabel("systemSuspicion", "zh")).toBe("宫廷警戒");
+    expect(commonText("startShift", "zh")).toBe("开始游戏");
     expect(commonText("aiFallback", "en")).toBe("RULE MODE");
     expect(commonText("aiFallback", "zh")).toBe("离线回应");
     expect(phaseCopy("scanning", "zh").label).toBe("先看后果");
@@ -71,7 +71,7 @@ describe("i18n helpers", () => {
 
   it("returns localized ending copy without changing state", () => {
     const copy = endingText("viralCollapse", "zh");
-    expect(copy.title).toBe("真话失控传播");
+    expect(copy.title).toBe("真话传开");
     expect(initialState.actionsLeft).toBe(6);
   });
 
@@ -83,7 +83,7 @@ describe("i18n helpers", () => {
     expect(fallbackCommentsText("zh")).toHaveLength(4);
     expect(fallbackFinalReportText("zh")).toContain("本局没有形成单一结果");
     expect(initialCommentsText("zh")).toHaveLength(4);
-    expect(initialFeedEventText("zh").title).toBe("值班已开启");
+    expect(initialFeedEventText("zh").title).toBe("游戏已开始");
     expect(commentsForToneText("praise", "zh")[0]).toContain("愚人");
     expect(commentsForToneText("child", "zh")[0]).toContain("没穿");
     expect(commentsForToneText("conflicted", "zh")[0]).toContain("华丽");

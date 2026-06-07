@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     const result = await callStructuredOutput<AiReaction>(
       "ai_reaction",
       aiReactionResponseSchema,
-      `Generate a Palace Narrative Engine reaction for action "${actionId}".
+      `Generate a Palace AI reaction for action "${actionId}".
 Language requirement: ${aiLanguageInstruction(language)}
 Current state: ${JSON.stringify(state)}
 Recent history: ${history.join(" -> ") || "none"}

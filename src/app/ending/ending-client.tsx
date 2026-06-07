@@ -131,7 +131,7 @@ export default function EndingClient() {
       <div className="scroll-progress" aria-hidden="true" />
       <div className="cursor-light" aria-hidden="true" />
       <header className="topbar" aria-label="Navigation">
-        <Link className="brand-mark" href="/">{language === "zh" ? "PNE / 宫廷信息流" : "PNE / Royal Feed"}</Link>
+        <Link className="brand-mark" href="/">{language === "zh" ? "The Emperor's Feed / 宫廷发布台" : "The Emperor's Feed / Palace Feed"}</Link>
         <nav className="topbar-links">
           <Link href="/">{commonText("start", language)}</Link>
           <Link href="/dashboard">{commonText("operations", language)}</Link>
@@ -168,8 +168,8 @@ export default function EndingClient() {
             <h3>{copy.title}</h3>
             <div className="archive-meta">
               <span>{language === "zh" ? `结局：${copy.title}` : `Classification: ${copy.title}`}</span>
-              <span>{language === "zh" ? "总结：宫廷叙事引擎" : "Compiled by: Palace Narrative Engine"}</span>
-              <span>{language === "zh" ? "操作记录：本局 6 次行动" : "Action Trace: 6-action run"}</span>
+              <span>{language === "zh" ? "总结：宫廷 AI" : "Compiled by: Palace AI"}</span>
+              <span>{language === "zh" ? "操作记录：本局 6 次行动" : "Action Record: 6-action run"}</span>
             </div>
             <p>{report}</p>
             <AnimatePresence>

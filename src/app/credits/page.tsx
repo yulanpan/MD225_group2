@@ -13,7 +13,7 @@ export default function CreditsPage() {
       <div className="scroll-progress" aria-hidden="true" />
       <div className="cursor-light" aria-hidden="true" />
       <header className="topbar" aria-label="Navigation">
-        <Link className="brand-mark" href="/">{language === "zh" ? "PNE / 宫廷信息流" : "PNE / Royal Feed"}</Link>
+        <Link className="brand-mark" href="/">{language === "zh" ? "The Emperor's Feed / 宫廷发布台" : "The Emperor's Feed / Palace Feed"}</Link>
         <nav className="topbar-links">
           <Link href="/">{commonText("start", language)}</Link>
           <Link href="/dashboard">{commonText("operations", language)}</Link>
@@ -49,7 +49,7 @@ export default function CreditsPage() {
               <span>{language === "zh" ? "主题：信息流、沉默和共同说出的真话" : "Theme: feeds, silence, and shared truth"}</span>
               <span>{language === "zh" ? "玩法：六次发布决定游行前的局势" : "Play: six posts shape the parade"}</span>
             </div>
-            <p>{language === "zh" ? "游戏把童话里的沉默变成一次信息流值班：你决定哪些话能被看见。" : "The game turns the tale's public silence into a feed shift: you decide which words become visible."}</p>
+            <p>{language === "zh" ? "游戏把童话里的沉默变成一次发布选择：你决定哪些话能被看见。" : "The game turns the tale's public silence into a publishing game: you decide which words become visible."}</p>
           </article>
 
           <div className="outcome-stack">
@@ -63,7 +63,7 @@ export default function CreditsPage() {
             </article>
             <article className="outcome-card" data-index="03" data-reveal>
               <h4>{language === "zh" ? "AI 披露" : "AI Disclosure"}</h4>
-              <p>{language === "zh" ? "游戏会使用故事内的“宫廷叙事引擎”生成建议、改写、评论和结局报告。结局由玩家行动决定。" : "The game uses the in-world Palace Narrative Engine for advice, rewrites, comments, and ending reports. Player actions determine the ending."}</p>
+              <p>{language === "zh" ? "游戏会使用故事内的“宫廷 AI”生成建议、改写、评论和结局报告。结局由玩家行动决定。" : "The game uses the in-world Palace AI for advice, rewrites, comments, and ending reports. Player actions determine the ending."}</p>
             </article>
           </div>
         </div>
