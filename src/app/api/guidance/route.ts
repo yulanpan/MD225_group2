@@ -72,6 +72,35 @@ function fallbackGuidance(
       };
 }
 
+function isGuidanceResult(value: unknown, mode: "engine" | "coach"): value is GuidanceResult {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Partial<GuidanceResult>;
+  return record.mode === mode
+    && typeof record.message === "string"
+    && record.message.trim().length > 0
+    && typeof record.objective === "string"
+    && record.objective.trim().length > 0
+    && (record.risk === "low" || record.risk === "medium" || record.risk === "high");
+}
+
+function normalizeGuidanceResult(value: unknown, mode: "engine" | "coach", fallback: GuidanceResult) {
+  if (isGuidanceResult(value, mode)) return value;
+  if (!value || typeof value !== "object") return null;
+  const record = value as { guidance?: unknown; message?: unknown };
+  const message = typeof record.guidance === "string"
+    ? record.guidance.trim()
+    : typeof record.message === "string"
+      ? record.message.trim()
+      : "";
+  if (!message) return null;
+  return {
+    mode,
+    message,
+    objective: fallback.objective,
+    risk: fallback.risk
+  } satisfies GuidanceResult;
+}
+
 export async function POST(request: Request) {
   const parsed = guidanceRequestSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
@@ -119,8 +148,9 @@ Rules:
 - Return compact UI copy only.`,
       { retries: 1, baseDelayMs: 250, temperature: 0.4, maxOutputTokens: 420 }
     );
-    const source = sourceForLocalizedPayload(result.data, language);
-    const payload = source === "live" ? result.data : fallback;
+    const liveData = normalizeGuidanceResult(result.data, mode, fallback);
+    const source = liveData ? sourceForLocalizedPayload(liveData, language) : "fallback";
+    const payload = source === "live" && liveData ? liveData : fallback;
     return Response.json(payload, {
       headers: {
         "X-PNE-AI-Source": source,

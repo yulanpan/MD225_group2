@@ -139,6 +139,25 @@ describe("localized AI route fallbacks", () => {
     expectGuidanceCopyConcrete(copy);
   });
 
+  it("normalizes single-field guidance output from compatible providers", async () => {
+    process.env.OPENAI_API_KEY = "sk-test";
+    mockStructuredOutput({
+      guidance: "宫廷 AI 建议维持官方叙事，避免引入未经认证的细节。"
+    });
+
+    const { response, payload, copy } = await requestGuidance({});
+
+    expect(response.headers.get("X-PNE-AI-Source")).toBe("live");
+    expect(payload).toMatchObject({
+      mode: "engine",
+      message: expect.stringContaining("宫廷 AI 建议维持官方叙事"),
+      objective: expect.stringContaining("你的安全"),
+      risk: "low"
+    });
+    expect(payload).not.toHaveProperty("guidance");
+    expectGuidanceCopyConcrete(copy);
+  });
+
   it("uses concrete palace metric language across guidance fallback modes", async () => {
     delete process.env.OPENAI_API_KEY;
 
