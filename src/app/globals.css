@@ -5102,6 +5102,17 @@ body.breach .comments-module {
   }
 }
 
+@media (min-width: 1181px) {
+  .dashboard-page[data-tutorial-active="true"][data-tour-step^="command"] .command-overlay {
+    place-items: center start;
+    padding: 20px clamp(460px, 31vw, 620px) 20px clamp(24px, 6vw, 96px);
+  }
+
+  .dashboard-page[data-tutorial-active="true"][data-tour-step^="command"] .command-panel {
+    width: min(840px, 100%);
+  }
+}
+
 @media (max-width: 1180px) {
   .hero,
   .section-header,

@@ -150,14 +150,19 @@ function escapeTourTarget(targetId: OnboardingTargetId) {
   return targetId.replace(/"/g, "\\\"");
 }
 
-function spotlightPanelPosition(rect: SpotlightRect | null, panelSize?: { width: number; height: number } | null): SpotlightPanelPosition {
+function spotlightPanelPosition(
+  rect: SpotlightRect | null,
+  panelSize?: { width: number; height: number } | null,
+  surface?: OnboardingSurface
+): SpotlightPanelPosition {
   if (typeof window === "undefined" || !rect) return { top: 96, left: 24, width: 460, maxHeight: 640 };
   const margin = 18;
   const gap = 30;
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
   const targetRect = rect;
-  const width = Math.min(480, Math.max(280, viewportWidth - margin * 2));
+  const prefersSidePlacement = surface === "command" || surface === "trace" || surface === "dialogue";
+  const width = Math.min(prefersSidePlacement ? 420 : 480, Math.max(prefersSidePlacement ? 300 : 280, viewportWidth - margin * 2));
   const naturalHeight = Math.min(panelSize?.height ?? 380, Math.max(180, viewportHeight - margin * 2));
   const maxLeft = Math.max(margin, viewportWidth - width - margin);
 
@@ -166,6 +171,7 @@ function spotlightPanelPosition(rect: SpotlightRect | null, panelSize?: { width:
     top: number;
     maxHeight: number;
     priority: number;
+    placement: "side" | "vertical" | "corner";
     overlap: number;
     clampDistance: number;
     usableHeight: number;
@@ -188,7 +194,7 @@ function spotlightPanelPosition(rect: SpotlightRect | null, panelSize?: { width:
     return overlapX * overlapY;
   }
 
-  function createCandidate(rawLeft: number, rawTop: number, maxHeight: number, priority: number): Candidate {
+  function createCandidate(rawLeft: number, rawTop: number, maxHeight: number, priority: number, placement: Candidate["placement"]): Candidate {
     const usableHeight = Math.max(0, Math.min(naturalHeight, maxHeight));
     const maxTop = Math.max(margin, viewportHeight - usableHeight - margin);
     const left = clampToRange(rawLeft, margin, maxLeft);
@@ -198,6 +204,7 @@ function spotlightPanelPosition(rect: SpotlightRect | null, panelSize?: { width:
       top,
       maxHeight: Math.max(120, Math.min(maxHeight, viewportHeight - margin * 2)),
       priority,
+      placement,
       overlap: overlapArea(left, top, usableHeight),
       clampDistance: Math.abs(left - rawLeft) + Math.abs(top - rawTop),
       usableHeight
@@ -213,12 +220,12 @@ function spotlightPanelPosition(rect: SpotlightRect | null, panelSize?: { width:
   const cornerTop = targetRect.top > viewportHeight / 2 ? margin : Math.max(margin, viewportHeight - naturalHeight - margin);
 
   const candidates = [
-    createCandidate(targetRect.right + gap, sideTop, sideHeight, 0),
-    createCandidate(targetRect.left - gap - width, sideTop, sideHeight, 1),
-    createCandidate(centeredLeft, targetRect.bottom + gap, bottomRoom, 2),
-    createCandidate(centeredLeft, targetRect.top - gap - topHeight, topRoom, 3),
-    createCandidate(viewportWidth - width - margin, cornerTop, sideHeight, 4),
-    createCandidate(margin, cornerTop, sideHeight, 5)
+    createCandidate(targetRect.right + gap, sideTop, sideHeight, 0, "side"),
+    createCandidate(targetRect.left - gap - width, sideTop, sideHeight, 1, "side"),
+    createCandidate(centeredLeft, targetRect.bottom + gap, bottomRoom, 2, "vertical"),
+    createCandidate(centeredLeft, targetRect.top - gap - topHeight, topRoom, 3, "vertical"),
+    createCandidate(viewportWidth - width - margin, cornerTop, sideHeight, 4, "corner"),
+    createCandidate(margin, cornerTop, sideHeight, 5, "corner")
   ];
 
   const best = candidates.sort((a, b) => {
@@ -229,6 +236,11 @@ function spotlightPanelPosition(rect: SpotlightRect | null, panelSize?: { width:
     const bHeightPenalty = b.usableHeight >= 190 ? 0 : 190 - b.usableHeight;
     if (aHeightPenalty !== bHeightPenalty) return aHeightPenalty - bHeightPenalty;
     if (a.overlap !== b.overlap) return a.overlap - b.overlap;
+    if (prefersSidePlacement) {
+      const aSidePenalty = a.placement === "side" ? 0 : 1;
+      const bSidePenalty = b.placement === "side" ? 0 : 1;
+      if (aSidePenalty !== bSidePenalty) return aSidePenalty - bSidePenalty;
+    }
     if (a.clampDistance !== b.clampDistance) return a.clampDistance - b.clampDistance;
     return a.priority - b.priority;
   })[0];
@@ -1090,7 +1102,7 @@ export default function DashboardClient() {
           ? "trace"
           : "dashboard";
   const tutorialVisible = Boolean(activeTutorialStep && activeTutorialStep.surface === currentTutorialSurface && !engineIntroOpen && unlockAnimationQueue.length === 0);
-  const tutorialPanelPosition = spotlightPanelPosition(spotlightRect, tutorialPanelSize);
+  const tutorialPanelPosition = spotlightPanelPosition(spotlightRect, tutorialPanelSize, activeTutorialStep?.surface);
   const overlayActive = Boolean(
     pendingCommand ||
     pending ||

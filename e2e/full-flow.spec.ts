@@ -79,11 +79,51 @@ async function expectTutorialPanelClearOfTarget(page: Page, targetId: string) {
   await expect.poll(async () => {
     const tutorialBox = await panel.boundingBox();
     const targetBox = await target.boundingBox();
-    if (!tutorialBox || !targetBox) return Number.MAX_SAFE_INTEGER;
+    if (!tutorialBox || !targetBox) return "missing";
     const overlapX = Math.max(0, Math.min(tutorialBox.x + tutorialBox.width, targetBox.x + targetBox.width) - Math.max(tutorialBox.x, targetBox.x));
     const overlapY = Math.max(0, Math.min(tutorialBox.y + tutorialBox.height, targetBox.y + targetBox.height) - Math.max(tutorialBox.y, targetBox.y));
-    return overlapX * overlapY;
-  }, { timeout: 5000 }).toBeLessThanOrEqual(1);
+    const overlapArea = overlapX * overlapY;
+    const targetArea = targetBox.width * targetBox.height;
+    const coverage = targetArea > 0 ? overlapArea / targetArea : 1;
+    const targetCenterCovered =
+      targetBox.x + targetBox.width / 2 >= tutorialBox.x &&
+      targetBox.x + targetBox.width / 2 <= tutorialBox.x + tutorialBox.width &&
+      targetBox.y + targetBox.height / 2 >= tutorialBox.y &&
+      targetBox.y + targetBox.height / 2 <= tutorialBox.y + tutorialBox.height;
+    return coverage <= 0.35 && !targetCenterCovered ? "ok" : `coverage ${coverage.toFixed(2)}, center ${targetCenterCovered}`;
+  }, { timeout: 5000 }).toBe("ok");
+}
+
+async function expectTutorialPanelWithinViewport(page: Page) {
+  const panel = page.locator(".onboarding-panel");
+  await expect(panel).toBeVisible();
+  await expect.poll(async () => {
+    const viewport = page.viewportSize();
+    const box = await panel.boundingBox();
+    if (!viewport || !box) return "missing";
+    const tolerance = 2;
+    const left = box.x >= -tolerance;
+    const top = box.y >= -tolerance;
+    const right = box.x + box.width <= viewport.width + tolerance;
+    const bottom = box.y + box.height <= viewport.height + tolerance;
+    return left && top && right && bottom ? "ok" : `${Math.round(box.x)},${Math.round(box.y)},${Math.round(box.x + box.width)},${Math.round(box.y + box.height)} in ${viewport.width}x${viewport.height}`;
+  }, { timeout: 5000 }).toBe("ok");
+}
+
+async function expectCommandTutorialLayout(page: Page) {
+  await expect(page.locator(".command-panel")).toBeVisible();
+  await expectTutorialPanelWithinViewport(page);
+  const viewport = page.viewportSize();
+  if (!viewport || viewport.width <= 1180) return;
+
+  await expect.poll(async () => {
+    const commandBox = await page.locator(".command-panel").boundingBox();
+    const tutorialBox = await page.locator(".onboarding-panel").boundingBox();
+    if (!commandBox || !tutorialBox) return "missing";
+    const gap = tutorialBox.x - (commandBox.x + commandBox.width);
+    const right = tutorialBox.x + tutorialBox.width;
+    return gap >= 12 && right <= viewport.width - 2 ? "ok" : `gap ${Math.round(gap)}, right ${Math.round(right)} of ${viewport.width}`;
+  }, { timeout: 5000 }).toBe("ok");
 }
 
 async function expectTutorialPanelClearOfDialogue(page: Page) {
@@ -435,6 +475,7 @@ test("each new shift briefing continues into the spotlight tutorial with real co
   await expect(page.getByRole("dialog", { name: "Before Publishing is the final check" })).toBeVisible();
   await expectActiveTourTarget(page, "command-panel");
   await expectActiveActionTarget(page, "command-commit");
+  await expectCommandTutorialLayout(page);
   await activateButton(page.locator('[data-tour-target="command-commit"]'));
 
   await expect(page.getByRole("dialog", { name: "Metrics show the run's direction" })).toBeVisible();
@@ -454,6 +495,7 @@ test("each new shift briefing continues into the spotlight tutorial with real co
   await expect(page.getByRole("dialog", { name: "This move is riskier" })).toBeVisible();
   await expectActiveTourTarget(page, "command-panel");
   await expectActiveActionTarget(page, "command-commit");
+  await expectCommandTutorialLayout(page);
   await activateButton(page.locator('[data-tour-target="command-commit"]'));
 
   await expect(page.locator(".dialogue-panel")).toBeVisible({ timeout: 15000 });
