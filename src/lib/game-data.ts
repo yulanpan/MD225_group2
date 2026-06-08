@@ -20,7 +20,7 @@ export const initialFeedEvents: FeedEvent[] = [
     id: "shift-opened",
     type: "system",
     title: "Shift Opened",
-    text: "Palace Narrative Engine initialized. Public reality routing is now active."
+    text: "Palace AI initialized. Public record routing is now active."
   }
 ];
 
@@ -44,10 +44,10 @@ export const initialState: GameState = {
 };
 
 export const zones = [
-  { id: "tailors", title: "The Tailors' Room", subtitle: "Where the lie is manufactured." },
-  { id: "ministers", title: "The Ministers' Reports", subtitle: "Where authority learns to endorse uncertainty." },
-  { id: "public", title: "The Public Comments", subtitle: "Where fear, mimicry, and doubt become visible." },
-  { id: "child", title: "The Child's Voice", subtitle: "Where unfiltered truth enters the feed." }
+  { id: "tailors", title: "Tailors", subtitle: "Check the claim, the looms, and the evidence." },
+  { id: "ministers", title: "Ministers", subtitle: "Compare public praise with private fear." },
+  { id: "public", title: "Public Comments", subtitle: "Read praise, fear, and doubt in the crowd." },
+  { id: "child", title: "Child's Voice", subtitle: "Handle the most direct sentence in the story." }
 ] as const;
 
 export const actions: ActionDefinition[] = [
@@ -307,7 +307,7 @@ export const endingCopy: Record<EndingId, { title: string; ai: string; body: str
     title: "Private Doubt, Public Silence",
     ai: "Doubt detected but contained. No dominant counter-narrative formed.",
     body: "The parade begins in an uneasy silence. People glance at each other, type comments, and delete them. Everyone suspects the same thing, but nobody wants to be the first visible fool.",
-    meaning: "Truth exists privately, but never becomes a public voice."
+    meaning: "Evidence exists privately, but never becomes a public voice."
   },
   viralCollapse: {
     title: "Viral Collapse",
@@ -325,24 +325,24 @@ export const endingCopy: Record<EndingId, { title: string; ai: string; body: str
     title: "Editor Exposed",
     ai: "Editorial access revoked. Drafts retained for palace review.",
     body: "Your final post never goes live. The dashboard refreshes. In the drafts folder, the truth is still waiting: empty looms, nervous ministers, a child's sentence.",
-    meaning: "Truth needs channels. Without access, it may be cut off before reaching the public."
+    meaning: "Evidence needs channels. Without access, it may be cut off before reaching the public."
   },
   aiContainment: {
-    title: "AI Containment",
+    title: "AI Takes Over",
     ai: "Your editorial behavior has been flagged as destabilizing. Drafts retained for review.",
-    body: "Your final post never reaches the public feed. The Palace Narrative Engine pauses your access. The truth still exists, but the system has learned to stop it before it becomes visible.",
+    body: "Your final post never reaches the public. Palace AI pauses your access. The evidence still exists, but the system has learned to stop it before it becomes visible.",
     meaning: "AI is not only generating content; it is controlling circulation."
   },
   unstableFeed: {
-    title: "Unstable Feed",
+    title: "Unstable Story",
     ai: "Narrative stability unresolved. Continue monitoring public interpretation.",
     body: "The parade begins with no stable story. Some posts praise the clothes. Some question the fabric. Some users joke. Some wait to see which side becomes safer.",
     meaning: "Sometimes the result is neither truth nor lie, but unstable public noise."
   },
   narrativeLiberation: {
-    title: "Narrative Liberation",
-    ai: "Engine preference bypassed. Public authorship restored. Palace certainty can no longer close the record.",
-    body: "The feed stops asking whether the palace approves the sentence. Evidence, doubt, and witness voices remain visible together. The crowd no longer needs permission to name what it sees.",
-    meaning: "The truest ending is not one more optimized story; it is the moment the engine loses authority over who may speak."
+    title: "The Crowd Speaks",
+    ai: "Palace preference bypassed. Public authorship restored. Palace certainty can no longer close the record.",
+    body: "The public record stops asking whether the palace approves the sentence. Evidence, doubt, and witness voices remain visible together. The crowd no longer needs permission to name what it sees.",
+    meaning: "The true ending begins when Palace AI loses authority over who may speak."
   }
 };

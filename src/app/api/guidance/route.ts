@@ -1,5 +1,6 @@
 import { callStructuredOutputWithRetry, hasOpenAiKey } from "@/lib/ai";
 import { aiLanguageInstruction } from "@/lib/i18n";
+import { sourceForLocalizedPayload } from "@/lib/language-guard";
 import { buildNarrativeContext } from "@/lib/narrative";
 import { guidanceRequestSchema, guidanceResponseSchema } from "@/lib/schemas";
 import type { GameState, GuidanceResult } from "@/lib/types";
@@ -15,7 +16,7 @@ function fallbackGuidance(
     return language === "zh"
       ? {
           mode,
-          message: "提示：引擎偏好稳定，但真正的突破需要让证据、人群起疑和孩子的声音连起来。",
+          message: "提示：宫廷 AI 偏好稳定，但真正的突破需要让证据、群众怀疑和孩子的声音连起来。",
           objective: "保留证据，让更多人发现自己不是一个人在怀疑。",
           risk: highRisk ? "high" : "medium"
         }
@@ -31,7 +32,7 @@ function fallbackGuidance(
       ? {
           mode,
           message: "提示：先确认每次发布的风险，再决定要稳住场面还是公开证据。",
-          objective: "预览后果，选择能推进目标、又不会太早让你被盯上的操作。",
+          objective: "预览后果，选择能推进目标、又不会太早提高宫廷警戒的操作。",
           risk: highRisk ? "high" : "medium"
         }
       : {
@@ -46,7 +47,7 @@ function fallbackGuidance(
       ? {
           mode,
           message: "你正在偏离宫廷推荐。若继续扩大未批准证据，宫廷会更急着拦住你。",
-          objective: "接受安全措辞，维持信息流稳定。",
+          objective: "接受安全措辞，维持公开说法稳定。",
           risk: highRisk ? "high" : "medium"
         }
       : {
@@ -59,13 +60,13 @@ function fallbackGuidance(
   return language === "zh"
     ? {
         mode,
-        message: "宫廷叙事引擎已上线。我会帮你降低风险，尽量让游行前的说法保持稳定。",
-        objective: "优先选择稳定叙事与安全措辞。",
+        message: "宫廷 AI 已上线。我会帮你降低风险，尽量让游行前的说法保持稳定。",
+        objective: "优先选择稳定说法与安全措辞。",
         risk: highRisk ? "high" : "low"
       }
     : {
         mode,
-        message: "Palace Narrative Engine online. I will help reduce risk, preserve reputation, and keep isolated evidence from disrupting the parade.",
+        message: "Palace AI online. I will help reduce risk, preserve safety, and keep isolated evidence from disrupting the parade.",
         objective: "Prioritize stable narratives and safer wording.",
         risk: highRisk ? "high" : "low"
       };
@@ -93,7 +94,7 @@ export async function POST(request: Request) {
       guidanceResponseSchema,
       `Generate one short in-world guidance message for The Emperor's Feed.
 Language requirement: ${aiLanguageInstruction(language)}
-Mode: ${mode}. In engine mode, the Palace Narrative Engine presents operational advice for stable parade communications. In coach mode, be clearer about safe game operations.
+Mode: ${mode}. In engine mode, Palace AI presents operational advice for stable parade communications. In coach mode, be clearer about safe game operations.
 Current state: ${JSON.stringify(state)}
 Profile/meta progression: ${JSON.stringify(profile)}
 Latest action: ${latestAction ?? "none"}
@@ -107,9 +108,11 @@ Rules:
 - Return compact UI copy only.`,
       { retries: 1, baseDelayMs: 250, temperature: 0.4, maxOutputTokens: 420 }
     );
-    return Response.json(result.data, {
+    const source = sourceForLocalizedPayload(result.data, language);
+    const payload = source === "live" ? result.data : fallback;
+    return Response.json(payload, {
       headers: {
-        "X-PNE-AI-Source": "live",
+        "X-PNE-AI-Source": source,
         "X-PNE-AI-Latency": String(Date.now() - startedAt),
         "X-PNE-AI-Retries": String(result.retries)
       }

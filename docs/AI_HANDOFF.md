@@ -7,9 +7,9 @@ This is a playable Next.js implementation of *The Emperor's Feed*. Treat the rep
 The game is a six-action narrative control experience:
 
 1. Player starts on `/`.
-2. Player enters `/dashboard` as the Royal Feed Editor.
+2. Player enters `/dashboard` as the Palace Feed Editor.
 3. Each editorial action changes deterministic game state.
-4. Some actions trigger Palace Narrative Engine reactions, public comments, dialogue interruptions, or guidance.
+4. Some actions trigger Palace AI reactions, public comments, dialogue interruptions, or guidance.
 5. After the action budget is exhausted, the app stores final state and moves to `/ending`.
 
 The app remains usable without a live AI key because API routes fall back to deterministic copy.
@@ -69,7 +69,7 @@ Route behavior:
 
 - Preserve bilingual behavior. Prefer updating `src/lib/i18n.ts` instead of scattering translated strings.
 - Keep the dashboard dense and operational. It should feel like a control surface, not a marketing page.
-- Keep the Palace Narrative Engine tone bureaucratic, calm, and risk-management oriented.
+- Keep the Palace AI tone bureaucratic, calm, and risk-management oriented.
 - Tutorial scrolling is sensitive. `dashboard-client.tsx` contains a safe scroll helper that avoids centering oversized dashboard panels and leaving blank space above the active target.
 - Audio is user-gesture gated by browser policy; unlock happens when the player starts a shift.
 

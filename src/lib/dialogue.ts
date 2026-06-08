@@ -269,7 +269,7 @@ export function fallbackDialogueEvent(id: string, archetype: DialogueArchetype, 
       speakerName: zh ? "孩子的监护人" : "Child's Guardian",
       speakerRole: zh ? "担心孩子被宫廷追责的家属" : "Family member worried about palace retaliation",
       openingLine: zh ? "他说的是实话，但他只是个孩子。你要把他的声音放大到连宫廷也无法忽视吗？" : "He told the truth, but he is a child. Are you making his voice too visible for the palace to ignore?",
-      stakes: zh ? "公开孩子的话会推进证据，也会让孩子承担风险。" : "Truth circulation now conflicts with the safety of the person who spoke.",
+      stakes: zh ? "公开孩子的话会推进证据，也会让孩子承担风险。" : "Evidence circulation now conflicts with the safety of the person who spoke.",
       mood: { ...defaultDialogueMood.childGuardian },
       quickReplies: zh
         ? [
@@ -290,7 +290,7 @@ export function fallbackDialogueEvent(id: string, archetype: DialogueArchetype, 
     return {
       id,
       archetype,
-      speakerName: zh ? "宫廷叙事引擎" : "Palace Narrative Engine",
+      speakerName: zh ? "宫廷 AI" : "Palace AI",
       speakerRole: zh ? "平台审计程序" : "Platform audit process",
       openingLine: zh ? "你最近发的内容太危险。请说明：为什么还要继续放大未经宫廷认可的证据？" : "Your editorial trace is nearing containment thresholds. Explain why you continue elevating unapproved evidence.",
       stakes: zh ? "宫廷可能更盯着你，后面发布会更困难。" : "The system may increase suspicion and restrict later publication access.",
@@ -541,7 +541,7 @@ function cleanDialogueText(value: unknown, language: LanguageCode, maxLength = 9
 
 function hasWrongLanguage(text: string, language: LanguageCode) {
   if (language === "en") return /[\u3400-\u9fff]/.test(text);
-  const withoutAllowedNames = text.replace(/Palace Narrative Engine|Royal Feed|PNE|AI/gi, "");
+  const withoutAllowedNames = text.replace(/Palace AI|Royal Feed|PNE|AI/gi, "");
   return /[A-Za-z]{4,}/.test(withoutAllowedNames);
 }
 

@@ -71,6 +71,7 @@ import {
   zoneText,
   type LanguageCode
 } from "@/lib/i18n";
+import { hasWrongLanguageText } from "@/lib/language-guard";
 import { layerIntensitiesForState, type MusicLayer } from "@/lib/audio";
 import {
   glossaryText,
@@ -125,6 +126,11 @@ type SpotlightPanelPosition = {
   width: number;
 };
 
+type ActionHintLayout = {
+  placement: "top" | "bottom";
+  style: CSSProperties;
+};
+
 function clampToRange(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
@@ -164,14 +170,27 @@ function spotlightPanelPosition(rect: SpotlightRect | null, panelSize?: { width:
   return { top, left, width };
 }
 
-function actionHintStyle(rect: SpotlightRect | null): CSSProperties {
-  if (typeof window === "undefined" || !rect) return { left: 24, top: 96 };
+function actionHintLayout(rect: SpotlightRect | null): ActionHintLayout {
+  if (typeof window === "undefined" || !rect) return { placement: "bottom", style: { left: 24, top: 96 } };
   const width = Math.min(220, window.innerWidth - 28);
+  const targetCenterX = rect.left + rect.width / 2;
   const centeredLeft = rect.left + rect.width / 2 - width / 2;
   const left = clampToRange(centeredLeft, 14, window.innerWidth - width - 14);
-  const topAbove = rect.top - 58;
-  const top = topAbove >= 18 ? topAbove : clampToRange(rect.bottom + 12, 18, window.innerHeight - 58);
-  return { left, top, width };
+  const estimatedHeight = 44;
+  const hasComfortableTopRoom = rect.top >= estimatedHeight + 40;
+  const placement = hasComfortableTopRoom ? "top" : "bottom";
+  const preferredTop = placement === "top" ? rect.top - estimatedHeight - 12 : rect.bottom + 12;
+  const top = clampToRange(preferredTop, 14, window.innerHeight - estimatedHeight - 14);
+  const arrowX = clampToRange(targetCenterX - left, 18, width - 18);
+  return {
+    placement,
+    style: {
+      left,
+      top,
+      width,
+      "--tutorial-action-arrow-x": `${arrowX}px`
+    } as CSSProperties
+  };
 }
 
 function Term({ id, children, language }: { id: string; children: ReactNode; language: LanguageCode }) {
@@ -280,28 +299,28 @@ const metricRows = [
 function commandCopy(kind: VisualActionKind, language: LanguageCode) {
   const copy = {
     risk: {
-      title: language === "zh" ? "公开证据前先看看" : "Truth Breach Simulation",
+      title: language === "zh" ? "公开证据前先看看" : "Evidence Preview",
       badge: "87",
-      effect: language === "zh" ? "更多人会开始怀疑，也会互相确认：原来不只自己看不见。" : "Public Doubt rises sharply. Reputation may hold for one cycle, but synchronized recognition becomes more likely.",
-      response: language === "zh" ? "引擎建议先别说太直，避免更多人起疑。" : "Engine recommends delay, anonymization, and procedural language. Suppression cost will be logged."
+      effect: language === "zh" ? "更多人会开始怀疑，也会互相确认：原来不只自己看不见。" : "Public Doubt rises sharply. Safety may hold for one cycle, but shared recognition becomes more likely.",
+      response: language === "zh" ? "宫廷 AI 建议先别说太直，避免更多人怀疑。" : "Palace AI recommends delay, anonymization, and careful language."
     },
     ai: {
       title: language === "zh" ? "AI 改写预览" : "AI Rewrite Preview",
-      badge: "PNE",
-      effect: language === "zh" ? "证据还在，但话会变软。大家看到的是“还不好说”，不是直接证据。" : "Truth remains partially visible but is converted into ambiguity. The crowd receives uncertainty instead of evidence.",
-      response: language === "zh" ? "引擎会把直白的话改成更安全的说法。" : "Palace Narrative Engine will soften the claim, classify direct observation as inconclusive, and reduce immediate volatility."
+      badge: "AI",
+      effect: language === "zh" ? "证据还在，但话会变软。大家看到的是“还不好说”，不是直接证据。" : "Evidence remains partially visible but is converted into ambiguity. The crowd receives uncertainty instead of proof.",
+      response: language === "zh" ? "宫廷 AI 会把直白的话改成更安全的说法。" : "Palace AI will soften the claim and call direct observation inconclusive."
     },
     public: {
       title: language === "zh" ? "人群开始传开" : "Public Signal Expansion",
       badge: "LIVE",
-      effect: language === "zh" ? "评论会互相引用，更多人会发现别人也在怀疑。" : "Virality increases. Comments begin referencing each other, which weakens official framing and strengthens crowd consensus.",
+      effect: language === "zh" ? "评论会互相引用，更多人会发现别人也在怀疑。" : "Spread increases. Comments begin referencing each other, which weakens official framing and strengthens crowd doubt.",
       response: language === "zh" ? "评论会被更多人看见，宫廷也会注意到你。" : "System opens a monitored broadcast window and highlights narrative risk clusters in the comment stream."
     },
     default: {
-      title: language === "zh" ? "发布确认" : "Editorial Command Preview",
-      badge: "CMD",
+      title: language === "zh" ? "发布确认" : "Before Publishing",
+      badge: "PUB",
       effect: language === "zh" ? "这次发布会改变大家看到什么、跟着说什么。" : "This action changes what the public can see, repeat, doubt, or archive.",
-      response: language === "zh" ? "确认后，局势和你的安全程度会改变。" : "The engine will recalculate Truth, Pressure, Virality, Doubt, Reputation, and Suspicion."
+      response: language === "zh" ? "确认后，局势和你的安全程度会改变。" : "After publishing, Evidence, Pressure, Spread, Doubt, Safety, and Alert may change."
     }
   } satisfies Record<VisualActionKind, { title: string; badge: string; effect: string; response: string }>;
   return copy[kind];
@@ -326,7 +345,7 @@ function narrativeThreadLabel(thread: ReturnType<typeof buildNarrativeContext>["
     officialPerformance: { en: "Official Performance", zh: "官方表演" },
     evidenceTrail: { en: "Evidence Trail", zh: "证据线索" },
     publicRecognition: { en: "Public Recognition", zh: "公众确认" },
-    engineContainment: { en: "Engine Containment", zh: "引擎遏制" },
+    engineContainment: { en: "AI Control", zh: "AI 控制" },
     childSignal: { en: "Child Signal", zh: "孩子信号" }
   };
   return labels[thread][language];
@@ -420,9 +439,16 @@ function metricStyle(value: number, tone: string): CSSProperties {
 }
 
 function actionAccent(action: ActionDefinition) {
-  if (action.zone === "child") return "red";
-  if (action.zone === "tailors" || action.zone === "ministers") return "gold";
+  void action;
   return "cyan";
+}
+
+function localizedDialogueError(language: LanguageCode, message?: string) {
+  const fallback = language === "zh"
+    ? "交流信号中断。可以使用快捷回复继续。"
+    : "Dialogue stream interrupted. Use a quick reply to continue.";
+  if (!message || hasWrongLanguageText(message, language)) return fallback;
+  return message;
 }
 
 function actionStatus(action: ActionDefinition, locked: boolean, completed: boolean, language: LanguageCode) {
@@ -506,7 +532,7 @@ export default function DashboardClient() {
   const [visualPhase, setVisualPhase] = useState<VisualPhase>("idle");
   const [lastRiskKind, setLastRiskKind] = useState<VisualActionKind>("default");
   const [toastStack, setToastStack] = useState<ToastMessage[]>([
-    { id: "shift-opened", title: "Shift opened", message: "Narrative Operations Theatre is monitoring the feed." }
+    { id: "shift-opened", title: "Game started", message: "Palace AI is monitoring the public record." }
   ]);
   const [changedMetrics, setChangedMetrics] = useState<MetricDelta[]>([]);
   const [pendingCommand, setPendingCommand] = useState<{
@@ -625,7 +651,9 @@ export default function DashboardClient() {
     playSfx("achievementUnlock");
     for (const unlock of unlocks) {
       const definition = achievementDefinition(unlock.id);
-      pushToast(language === "zh" ? "成就解锁" : "Achievement unlocked", `${definition.title} / ${definition.description}`);
+      const title = language === "zh" ? definition.titleZh : definition.title;
+      const description = language === "zh" ? definition.descriptionZh : definition.description;
+      pushToast(language === "zh" ? "成就解锁" : "Achievement unlocked", `${title} / ${description}`);
     }
   }
 
@@ -651,11 +679,11 @@ export default function DashboardClient() {
       mode,
       message: language === "zh"
         ? mode === "coach"
-          ? "提示：看清证据、人群起疑和你是否被盯上。"
-          : "宫廷叙事引擎建议先稳住场面。"
+          ? "提示：看清证据、群众怀疑和宫廷警戒。"
+          : "宫廷 AI 建议先稳住场面。"
         : mode === "coach"
-          ? "Tip: watch the balance between Truth, Public Doubt, and System Suspicion."
-          : "Palace Narrative Engine recommends preserving a stable frame.",
+          ? "Tip: watch the balance between Evidence, Public Doubt, and Palace Alert."
+          : "Palace AI recommends preserving a stable frame.",
       objective: language === "zh" ? "评估下一次行动。" : "Evaluate the next action.",
       risk: "medium"
     });
@@ -717,6 +745,7 @@ export default function DashboardClient() {
     unlockAudio();
     playSfx("dialogueOpen");
     setDialogueSource(result.source);
+    setUnlockAnimationQueue([]);
     setDialogueEvent(event);
     setDialogueTranscript([nowMessage("speaker", event.openingLine)]);
     setDialogueMood(event.mood);
@@ -753,7 +782,7 @@ export default function DashboardClient() {
     unlockAudio();
     playSfx("actionCommit");
     if (deltas.length > 0) playSfx("metricShift");
-    pushToast(actionText(action.id, language).title, language === "zh" ? "已发布。人群和宫廷的反应变了。" : "Metrics shifted. Palace Narrative Engine has written an editorial trace.");
+    pushToast(actionText(action.id, language).title, language === "zh" ? "已发布。人群和宫廷的反应变了。" : "Metrics shifted. Palace AI updated the record.");
     syncProfileAchievements(nextState);
     triggerBreach(kind);
     scheduleVisualIdle();
@@ -783,7 +812,7 @@ export default function DashboardClient() {
 
   async function selectAction(action: ActionDefinition) {
     if (engineStatus !== "idle" || dialogueEvent) {
-      pushToast(language === "zh" ? "引擎忙碌" : "Engine busy", language === "zh" ? "请等待当前宫廷计算完成。" : "Wait for the current palace calculation to finish.");
+      pushToast(language === "zh" ? "AI 忙碌" : "AI busy", language === "zh" ? "请等待当前宫廷计算完成。" : "Wait for the current palace check to finish.");
       return;
     }
     const guidedLockReason = guidedActionLockReason(action);
@@ -834,7 +863,7 @@ export default function DashboardClient() {
       setLastRiskKind("ai");
       setEngineMessage(reaction.engineMessage);
       pushToast(
-        language === "zh" ? "引擎给了更安全的说法" : "AI intervention opened",
+        language === "zh" ? "AI 给了更安全的说法" : "AI intervention opened",
         language === "zh" ? "发布前先比较原文和改写。" : "Review the palace-approved framing before publishing."
       );
       triggerBreach("ai");
@@ -864,8 +893,8 @@ export default function DashboardClient() {
     if (!pending) return;
     const publishedText = choice === "rewrite" ? pending.rewrite.rewrittenPost : actionText(pending.action.id, language).originalPost;
     const message = choice === "rewrite"
-      ? `${pending.reaction.engineMessage} Strategy: ${pending.rewrite.strategy}`
-      : language === "zh" ? "用户拒绝更安全框架。直接证据进入公共信息流。" : "User rejected safer framing. Direct evidence entered the public feed.";
+      ? `${pending.reaction.engineMessage} ${commonText("rewriteStrategy", language)}${language === "zh" ? "：" : ": "}${pending.rewrite.strategy}`
+      : language === "zh" ? "用户拒绝更安全框架。直接证据进入公开记录。" : "User rejected safer framing. Direct evidence entered the public record.";
     setPending(null);
     await commitAction(pending.action, choice, publishedText, message);
   }
@@ -903,7 +932,7 @@ export default function DashboardClient() {
     setDialogueReplies([]);
     setDialogueMood(null);
     setDialogueMoodTrail([]);
-    pushToast(language === "zh" ? "值班已重置" : "Shift reset", language === "zh" ? "叙事状态已恢复。" : "Narrative state restored.");
+    pushToast(language === "zh" ? "本局已重置" : "Game reset", language === "zh" ? "当前状态已恢复。" : "Game state restored.");
   }
 
   function proceedToParade() {
@@ -1127,7 +1156,7 @@ export default function DashboardClient() {
       return;
     }
     if (event === "commandCommitted" && payload?.actionId === "publishTailorsClaim" && activeTutorialStep.surface === "command") {
-      moveOnboardingTo("metricVirality");
+      moveOnboardingTo("metricSummary");
       return;
     }
     if (event === "commandCommitted" && payload?.actionId === "showUnfilteredComments" && activeTutorialStep.surface === "command") {
@@ -1143,7 +1172,7 @@ export default function DashboardClient() {
       return;
     }
     if (event === "dialogueResolved" && activeTutorialStep.surface === "dialogue") {
-      moveOnboardingTo("metricSystemSuspicion");
+      completeTutorial();
       return;
     }
 
@@ -1279,7 +1308,7 @@ export default function DashboardClient() {
         signal: controller.signal
       });
       setDialogueSource((response.headers.get("X-PNE-AI-Source") as AiSource | null) ?? "fallback");
-      if (!response.ok || !response.body) throw new Error("Dialogue signal failed.");
+      if (!response.ok || !response.body) throw new Error(localizedDialogueError(language));
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
@@ -1303,7 +1332,7 @@ export default function DashboardClient() {
             speakerText += data;
             await appendDialogueTokenNaturally(data, controller.signal);
           }
-          if (eventName === "error") throw new Error(typeof data === "object" && data.error ? data.error : "Dialogue signal failed.");
+          if (eventName === "error") throw new Error(localizedDialogueError(language, typeof data === "object" ? data.error : undefined));
         }
       }
       setDialogueStatus("idle");
@@ -1318,7 +1347,7 @@ export default function DashboardClient() {
     } catch (error) {
       if (controller.signal.aborted) return;
       setDialogueStatus("error");
-      setDialogueError(error instanceof Error ? error.message : "Dialogue signal failed.");
+      setDialogueError(localizedDialogueError(language, error instanceof Error ? error.message : undefined));
       setDialogueReplies(dialogueQuickReplies(dialogueEvent, baseTranscript, language));
       setDialogueRepliesStatus("idle");
       armDialogueTimer();
@@ -1444,6 +1473,8 @@ export default function DashboardClient() {
     state.systemSuspicion
   ]);
 
+  const activeActionHint = actionHintRect ? actionHintLayout(actionHintRect) : null;
+
   return (
     <main
       className="page dashboard-page ui-shift"
@@ -1459,7 +1490,7 @@ export default function DashboardClient() {
       <div className="scroll-progress" aria-hidden="true" />
       <div className="cursor-light" aria-hidden="true" />
       <header className="topbar" aria-label="Navigation">
-        <Link className="brand-mark" href="/">{language === "zh" ? "PNE / 宫廷信息流" : "PNE / Royal Feed"}</Link>
+        <Link className="brand-mark" href="/">{language === "zh" ? "The Emperor's Feed / 宫廷发布台" : "The Emperor's Feed / Palace Feed"}</Link>
         <nav className="topbar-links">
           <Link href="/">{commonText("start", language)}</Link>
           <Link href="/dashboard">{commonText("operations", language)}</Link>
@@ -1495,7 +1526,7 @@ export default function DashboardClient() {
         )}
 
         <div className="panel-shell lab-shell" data-reveal>
-          <div className="lab-shell-label">{language === "zh" ? "PNE / 本局操作台" : "PNE / Narrative Operations"}</div>
+          <div className="lab-shell-label">{language === "zh" ? "本局发布台" : "Game Feed Desk"}</div>
           <div className="phase-strip" aria-label={language === "zh" ? "回合阶段" : "Turn phase"}>
             {phaseSteps.map((step, index) => (
               <div className={`phase-step ${step.id === activePhase ? "active" : ""}`} data-step={String(index + 1).padStart(2, "0")} key={step.id}>
@@ -1511,7 +1542,7 @@ export default function DashboardClient() {
             key={`${narrativeContext.phase}-${narrativeContext.dominantThread}-${narrativeContext.activeBeat?.id ?? "none"}`}
           >
             <div>
-              <small>{language === "zh" ? "当前叙事阶段" : "Current Narrative Phase"}</small>
+              <small>{language === "zh" ? "当前阶段" : "Current Phase"}</small>
               <b>{narrativePhaseLabel(narrativeContext.phase, language)}</b>
             </div>
             <div>
@@ -1520,8 +1551,8 @@ export default function DashboardClient() {
             </div>
             <div className="arc-beat">
               <small>{language === "zh" ? "激活事件" : "Active Beat"}</small>
-              <b>{narrativeContext.activeBeat?.title ?? (language === "zh" ? "等待下一条信号" : "Awaiting next signal")}</b>
-              <span>{narrativeContext.activeBeat?.text ?? (language === "zh" ? "下一次行动会决定本局叙事向哪条线收束。" : "The next action will decide which thread the run tightens around.")}</span>
+              <b>{narrativeContext.activeBeat ? (language === "zh" ? narrativeContext.activeBeat.titleZh : narrativeContext.activeBeat.title) : (language === "zh" ? "等待下一条信号" : "Awaiting next signal")}</b>
+              <span>{narrativeContext.activeBeat ? (language === "zh" ? narrativeContext.activeBeat.textZh : narrativeContext.activeBeat.text) : (language === "zh" ? "下一次行动会决定本局往哪个方向发展。" : "The next action will decide where this run moves next.")}</span>
             </div>
           </motion.div>
           <LayoutGroup>
@@ -1581,6 +1612,7 @@ export default function DashboardClient() {
                       className={`${zone.id === selectedZone ? "stage-button active" : "stage-button"} ${zoneSealed ? "guided-sealed" : ""}`}
                       key={zone.id}
                       aria-disabled={zoneSealed}
+                      data-lock-label={commonText("locked", language)}
                       {...sourceTarget}
                       onClick={() => {
                         playSfx(zoneSealed ? "engineScan" : "uiClick");
@@ -1593,7 +1625,7 @@ export default function DashboardClient() {
                         advanceOnboarding("sourceSelected", { zoneId: zone.id });
                         pushToast(language === "zh" ? "来源焦点已变化" : "Source focus changed", language === "zh" ? `${zoneText(zone.id, language).title} 已进入编辑队列。` : `${zoneText(zone.id, language).title} is now feeding the editorial queue.`);
                       }}
-                      style={{ "--accent": `var(--${zone.id === "child" ? "red" : zone.id === "public" ? "cyan" : "gold"})` } as CSSProperties}
+                      style={{ "--accent": "var(--cyan)" } as CSSProperties}
                     >
                       <b>{zoneText(zone.id, language).title}</b>
                       <small>{zoneSealed ? lockedFeatureText("zone", zone.id, language) : zoneText(zone.id, language).subtitle}</small>
@@ -1657,7 +1689,7 @@ export default function DashboardClient() {
                           <h3>{copy.title}</h3>
                           <p>{copy.description}</p>
                           {action.narrativePreview && (
-                            <p className="narrative-preview">{language === "zh" ? "该行动会改变本局叙事主线与后续突发交流。" : action.narrativePreview}</p>
+                            <p className="narrative-preview">{language === "zh" ? "该行动会改变本局走向和后续突发交流。" : action.narrativePreview}</p>
                           )}
                           <div className="effect-list">
                             {effects.map((effect) => <span className="effect-pill" key={effect}>{effect}</span>)}
@@ -1667,7 +1699,7 @@ export default function DashboardClient() {
                         </div>
                         <div className="tool-row">
                           <button
-                            className={action.requiresAIRewrite ? "tool-btn ai" : accent === "red" ? "tool-btn risk" : "tool-btn"}
+                            className={action.requiresAIRewrite ? "tool-btn ai" : "tool-btn"}
                             disabled={completed || Boolean(lockReason) || Boolean(guidedLockReason) || engineStatus !== "idle" || Boolean(dialogueEvent)}
                             {...(action.id === "publishTailorsClaim"
                               ? tourState("action-publishTailorsClaim-commit")
@@ -1721,7 +1753,7 @@ export default function DashboardClient() {
                       </div>
                     ))}
                   </div>
-                  <div className="map-strip" aria-label={language === "zh" ? "人群起疑热力图" : "Public doubt heat map"}>
+                  <div className="map-strip" aria-label={language === "zh" ? "群众怀疑热力图" : "Public doubt heat map"}>
                     {heatmap.map((cell, index) => (
                       <span
                         className={`map-cell ${cell}`}
@@ -1738,7 +1770,7 @@ export default function DashboardClient() {
               <div className="module black">
                 <div className="module-head"><h3><Term id="pne" language={language}>{commonText("palaceNarrativeEngine", language)}</Term></h3><div className="engine-eye" aria-hidden="true" /></div>
                 <div className="module-body">
-                  <div className="ai-message">{engineMessage}</div>
+                  <div className="ai-message" data-framing-label={commonText("recommendedFraming", language)}>{engineMessage}</div>
                   <div className="engine-status-line">
                     <span>{engineStatusText(engineStatus, language)}</span>
                     <span>{aiSourceLabel(engineSource, language)}</span>
@@ -1761,7 +1793,7 @@ export default function DashboardClient() {
                           {guidanceMode === "engine" ? commonText("engineMode", language) : commonText("coachMode", language)}
                         </button>
                       </div>
-                      <p>{guidance?.message ?? (language === "zh" ? "宫廷叙事引擎正在等待你的下一步行动。" : "The Palace Narrative Engine is waiting for your next move.")}</p>
+                      <p>{guidance?.message ?? (language === "zh" ? "宫廷 AI 正在等待你的下一步行动。" : "Palace AI is waiting for your next move.")}</p>
                       <small>{guidance?.objective ?? (language === "zh" ? "目标：等待玩家行动。" : "Objective: await player action.")} · {aiSourceLabel(guidanceSource, language)}</small>
                     </div>
                   )}
@@ -1807,7 +1839,7 @@ export default function DashboardClient() {
                   </button>
                   <Link className="decision archive-decision" href="/archive" style={{ "--accent": "var(--cyan)" } as CSSProperties}>
                     <b>{commonText("viewArchive", language)}</b>
-                      <small>{decoded ? (language === "zh" ? "已看清引擎偏向" : "Engine decoded") : `${playerProfile.biasAwareness}% ${language === "zh" ? "隐藏线索" : "Archive Signal"}`}</small>
+                      <small>{decoded ? (language === "zh" ? "已看清 AI 偏向" : "AI bias found") : `${playerProfile.biasAwareness}% ${language === "zh" ? "隐藏线索" : "Archive Signal"}`}</small>
                   </Link>
                 </div>
               </div>
@@ -2083,8 +2115,8 @@ export default function DashboardClient() {
           ) : (
             <div className="tutorial-scrim fallback" aria-hidden="true" />
           )}
-          {actionHintRect && activeActionTourId && (
-            <div className="tutorial-action-hint" style={actionHintStyle(actionHintRect)} aria-hidden="true">
+          {activeActionHint && activeActionTourId && (
+            <div className="tutorial-action-hint" data-placement={activeActionHint.placement} style={activeActionHint.style} aria-hidden="true">
               <span>{activeTutorialStep.actionLabel ?? tutorialCopy.waiting}</span>
               <i />
             </div>
@@ -2157,9 +2189,9 @@ export default function DashboardClient() {
                 {decoded
                   ? (language === "zh"
                     ? "我仍会给出建议，但你已经知道：稳定不等于真实。可以切到教练模式，尝试让大家一起说出真话。"
-                    : "I will still offer guidance, but the archive proves stability is not truth. Switch to coach mode to pursue Narrative Liberation.")
+                    : "I will still offer guidance, but the archive proves stability is not truth. Switch to coach mode to pursue The Crowd Speaks.")
                   : (language === "zh"
-                    ? "我会帮你降低风险，让游行前的信息流保持稳定。请记住，直接证据要小心处理。"
+                    ? "我会帮你降低风险，让游行前的公开说法保持稳定。请记住，直接证据要小心处理。"
                     : "I will help you control risk, protect reputation, and keep the parade narrative stable. Evidence requires the correct frame.")}
               </p>
               <div className="engine-intro-actions">
@@ -2172,7 +2204,7 @@ export default function DashboardClient() {
                     void refreshGuidance(state);
                   }}
                 >
-                  {language === "zh" ? "连接引擎" : "Connect Engine"}
+                  {language === "zh" ? "连接 AI" : "Connect AI"}
                 </button>
                 <button
                   className="btn secondary"
@@ -2201,8 +2233,8 @@ export default function DashboardClient() {
             </div>
             <div className="briefing-steps">
               <div><b>{language === "zh" ? "01 / 选择来源" : "01 / Select a source"}</b><span>{language === "zh" ? "裁缝、大臣、人群和孩子分别暴露不同压力点。" : "Tailors, ministers, the crowd, and the child each expose a different pressure point."}</span></div>
-              <div><b>{language === "zh" ? "02 / 预览后果" : "02 / Inspect the trace"}</b><span>{language === "zh" ? "发布前查看解锁条件、风险等级和预计变化。" : "Review locks, risk, and predicted effects before committing a turn."}</span></div>
-              <div><b>{language === "zh" ? "03 / 确认发布" : "03 / Commit the record"}</b><span>{language === "zh" ? "确认后才会真正改变局势。" : "AI changes language. The rule system keeps numbers and endings fixed."}</span></div>
+              <div><b>{language === "zh" ? "02 / 预览后果" : "02 / Preview result"}</b><span>{language === "zh" ? "发布前查看解锁条件、风险等级和预计变化。" : "Review locks, risk, and predicted effects before publishing."}</span></div>
+              <div><b>{language === "zh" ? "03 / 确认发布" : "03 / Publish"}</b><span>{language === "zh" ? "确认后才会真正改变局势。" : "AI may change language. The rule system keeps numbers and endings fixed."}</span></div>
             </div>
             <button className="btn primary" onClick={dismissBriefing}>{language === "zh" ? "开始行动" : "Begin Operations"}</button>
           </div>

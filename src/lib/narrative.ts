@@ -73,7 +73,7 @@ export const narrativeBeats: NarrativeBeat[] = [
     title: "Empty Loom Recorded",
     titleZh: "空织布机被记录",
     text: "The absence of thread becomes a record the engine must classify away.",
-    textZh: "没有线这件事进入记录，引擎需要想办法把它说得不那么直接。",
+    textZh: "没有线这件事进入记录，宫廷 AI 需要想办法把它说得不那么直接。",
     priority: 70
   },
   {

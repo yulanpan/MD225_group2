@@ -27,7 +27,7 @@ const metricKeys: NumericStateKey[] = [
 export function classifyActionKind(action: ActionDefinition, choice?: ActionChoice): VisualActionKind {
   if (action.requiresAIRewrite && choice !== "original") return "ai";
   if (choice === "original") return "risk";
-  if (action.zone === "child" || action.id.toLowerCase().includes("livestream")) return "risk";
+  if (action.id.toLowerCase().includes("livestream")) return "risk";
   if (action.zone === "public") return "public";
   if (action.id.toLowerCase().includes("leak") || action.id.toLowerCase().includes("fact")) return "risk";
   return "default";

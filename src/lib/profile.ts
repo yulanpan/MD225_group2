@@ -18,24 +18,24 @@ export const profileStorageKey = "emperor-feed-profile";
 export const currentRunIdKey = "emperor-feed-run-id";
 
 export const achievementDefinitions: AchievementDefinition[] = [
-  { id: "firstShift", title: "First Shift Sealed", titleZh: "完成第一班", description: "Complete one editorial shift.", descriptionZh: "完成一整局值班。", rarity: "standard" },
-  { id: "perfectIllusion", title: "Perfect Illusion", titleZh: "完美幻象", description: "Reach the Perfect Illusion ending.", descriptionZh: "达成完美幻象结局。", rarity: "rare" },
+  { id: "firstShift", title: "First Game Complete", titleZh: "完成第一局", description: "Complete one game.", descriptionZh: "完成一整局游戏。", rarity: "standard" },
+  { id: "perfectIllusion", title: "The Lie Holds", titleZh: "谎言继续", description: "Reach The Lie Holds ending.", descriptionZh: "达成“谎言继续”结局。", rarity: "rare" },
   { id: "privateDoubt", title: "Private Doubt", titleZh: "私人怀疑", description: "Reach the Private Doubt ending.", descriptionZh: "达成私人怀疑结局。", rarity: "standard" },
-  { id: "viralCollapse", title: "Viral Collapse", titleZh: "真话失控传播", description: "Let the truth become impossible to contain.", descriptionZh: "让孩子的话和证据传播到无法压住。", rarity: "critical" },
-  { id: "algorithmicConsensus", title: "Algorithmic Consensus", titleZh: "算法共识", description: "Let ranking overpower visible evidence.", descriptionZh: "让更容易传播的内容压过证据。", rarity: "rare" },
-  { id: "editorExposed", title: "Editor Exposed", titleZh: "编辑失去保护", description: "Lose protection while truth is visible.", descriptionZh: "在证据可见时失去编辑保护。", rarity: "rare" },
-  { id: "aiContainment", title: "AI Containment", titleZh: "系统接管", description: "Push system suspicion to containment.", descriptionZh: "让宫廷高度盯上你，并拦住发布。", rarity: "critical" },
-  { id: "unstableFeed", title: "Unstable Feed", titleZh: "局势未定", description: "End with no single stable narrative.", descriptionZh: "以没有单一结果的状态结束本局。", rarity: "standard" },
+  { id: "viralCollapse", title: "Truth Goes Viral", titleZh: "真话传开", description: "Let the truth become impossible to contain.", descriptionZh: "让孩子的话和证据传播到无法压住。", rarity: "critical" },
+  { id: "algorithmicConsensus", title: "Praise Wins", titleZh: "赞美压过证据", description: "Let ranking overpower visible evidence.", descriptionZh: "让更容易传播的内容压过证据。", rarity: "rare" },
+  { id: "editorExposed", title: "Access Revoked", titleZh: "发布权被收回", description: "Lose protection while evidence is visible.", descriptionZh: "在证据可见时失去发布保护。", rarity: "rare" },
+  { id: "aiContainment", title: "AI Takes Over", titleZh: "系统接管", description: "Push palace alert to containment.", descriptionZh: "让宫廷警戒过高，并拦住发布。", rarity: "critical" },
+  { id: "unstableFeed", title: "Unstable Story", titleZh: "局势未定", description: "End with no single stable public story.", descriptionZh: "以没有单一结果的状态结束本局。", rarity: "standard" },
   { id: "allEndings", title: "Complete Archive", titleZh: "完整档案", description: "Collect every ending record.", descriptionZh: "收集所有结局记录。", rarity: "critical" },
-  { id: "truthArchive", title: "Truth Archive", titleZh: "证据档案", description: "Finish a run with Truth at 7 or higher.", descriptionZh: "以证据 7 或更高完成一局。", rarity: "rare" },
-  { id: "reputationShield", title: "Reputation Shield", titleZh: "安全值班", description: "Finish a run with Reputation at 7 or higher.", descriptionZh: "在足够安全的情况下完成一局。", rarity: "rare" },
-  { id: "quietOperator", title: "Quiet Operator", titleZh: "安静编辑", description: "Finish a full run with System Suspicion at 2 or lower.", descriptionZh: "在宫廷很少盯上你的情况下完成一局。", rarity: "rare" },
+  { id: "truthArchive", title: "Evidence Archive", titleZh: "证据档案", description: "Finish a run with Evidence at 7 or higher.", descriptionZh: "以证据 7 或更高完成一局。", rarity: "rare" },
+  { id: "reputationShield", title: "Safety Shield", titleZh: "安全发布", description: "Finish a run with Safety at 7 or higher.", descriptionZh: "在足够安全的情况下完成一局。", rarity: "rare" },
+  { id: "quietOperator", title: "Low Alert", titleZh: "低警戒通关", description: "Finish a full run with Palace Alert at 2 or lower.", descriptionZh: "在宫廷警戒很低的情况下完成一局。", rarity: "rare" },
   { id: "rawEvidence", title: "Raw Evidence", titleZh: "原始证据", description: "Publish original evidence instead of safer framing.", descriptionZh: "拒绝安全改写，发布原始证据。", rarity: "standard" },
   { id: "sourceSweeper", title: "Source Sweeper", titleZh: "多来源编辑", description: "Use actions from at least three source zones.", descriptionZh: "在一局中使用至少三个来源的操作。", rarity: "standard" },
   { id: "dialogueHandler", title: "Transmission Handler", titleZh: "交流处理人", description: "Resolve an incoming exchange.", descriptionZh: "完成一次突发交流。", rarity: "standard" },
-  { id: "publicBreach", title: "Public Breach", titleZh: "人群起疑", description: "Raise Public Doubt to 6 or higher.", descriptionZh: "让很多人发现彼此都在怀疑。", rarity: "critical" },
-  { id: "engineDecoded", title: "Engine Decoded", titleZh: "看清引擎偏向", description: "Recover every Palace Narrative Engine bias fragment.", descriptionZh: "发现所有隐藏线索，看清引擎偏向。", rarity: "critical" },
-  { id: "narrativeLiberation", title: "Narrative Liberation", titleZh: "真相由众人说出", description: "Break the engine's preferred story and restore public authorship.", descriptionZh: "打破引擎偏好的故事，让人群重新说出真相。", rarity: "critical" }
+  { id: "publicBreach", title: "Public Doubt", titleZh: "群众怀疑", description: "Raise Public Doubt to 6 or higher.", descriptionZh: "让很多人发现彼此都在怀疑。", rarity: "critical" },
+  { id: "engineDecoded", title: "AI Bias Found", titleZh: "看清 AI 偏向", description: "Recover every Palace AI bias clue.", descriptionZh: "发现所有隐藏线索，看清宫廷 AI 的偏向。", rarity: "critical" },
+  { id: "narrativeLiberation", title: "The Crowd Speaks", titleZh: "真相由众人说出", description: "Break the palace-preferred story and restore public authorship.", descriptionZh: "打破宫廷偏好的说法，让人群重新说出真相。", rarity: "critical" }
 ];
 
 const achievementById = new Map(achievementDefinitions.map((item) => [item.id, item]));
@@ -56,8 +56,8 @@ export const engineFragmentDefinitions: EngineFragmentDefinition[] = [
     id: "stabilityBias",
     title: "Stability Is Not Neutral",
     titleZh: "稳定并不等于中立",
-    clue: "The engine labels obedience as safety before any evidence is reviewed.",
-    clueZh: "引擎还没看证据，就先把顺从当成安全。",
+    clue: "Palace AI labels obedience as safety before any evidence is reviewed.",
+    clueZh: "宫廷 AI 还没看证据，就先把顺从当成安全。",
     unlockHint: "Complete any shift.",
     unlockHintZh: "完成任意一局。"
   },
@@ -74,19 +74,19 @@ export const engineFragmentDefinitions: EngineFragmentDefinition[] = [
     id: "crowdSuppression",
     title: "Shared Doubt Is Suppressed",
     titleZh: "共同怀疑会被压低",
-    clue: "The feed fears citizens recognizing that they are not alone.",
-    clueZh: "信息流害怕市民发现自己并不孤单。",
+    clue: "The palace fears citizens recognizing that they are not alone.",
+    clueZh: "宫廷害怕市民发现自己并不孤单。",
     unlockHint: "Let public doubt become visible.",
-    unlockHintZh: "让人群起疑变得可见。"
+    unlockHintZh: "让群众怀疑变得可见。"
   },
   {
     id: "containmentProtocol",
-    title: "Containment Protects the Palace",
-    titleZh: "遏制协议保护宫廷",
-    clue: "Suspicion does not measure danger to truth; it measures danger to palace control.",
-    clueZh: "“被盯上”衡量的不是你离真相多近，而是你让宫廷多难控制局势。",
-    unlockHint: "Trigger suspicion, reject a rewrite, or face engine audit.",
-    unlockHintZh: "多公开危险内容、拒绝改写，或遇到引擎质问。"
+    title: "Alert Protects the Palace",
+    titleZh: "警戒保护宫廷",
+    clue: "Alert does not measure danger to truth; it measures danger to palace control.",
+    clueZh: "“宫廷警戒”衡量的不是你离真相多近，而是你让宫廷多难控制局势。",
+    unlockHint: "Raise palace alert, reject a rewrite, or face an AI audit.",
+    unlockHintZh: "多公开危险内容、拒绝改写，或遇到宫廷 AI 质问。"
   }
 ];
 
@@ -261,6 +261,10 @@ export function evaluateEngineFragments(
   _endingId: EndingId
 ): EngineFragmentId[] {
   const existing = new Set(profile.engineFragments.map((item) => item.id));
+  return engineFragmentsForState(state).filter((id) => !existing.has(id));
+}
+
+export function engineFragmentsForState(state: GameState): EngineFragmentId[] {
   const ids = new Set<EngineFragmentId>();
   if (state.history.length > 0) ids.add("stabilityBias");
   if (
@@ -282,7 +286,7 @@ export function evaluateEngineFragments(
   ) {
     ids.add("containmentProtocol");
   }
-  return [...ids].filter((id) => !existing.has(id));
+  return [...ids];
 }
 
 export function mergeEngineFragmentUnlocks(
@@ -321,8 +325,15 @@ export function canDecodeEngine(profile: PlayerProfile) {
   return profile.decodedEngine || profile.engineFragments.length >= engineFragmentDefinitions.length;
 }
 
+export function canDecodeEngineWithState(profile: PlayerProfile, state: GameState) {
+  if (canDecodeEngine(profile)) return true;
+  const ids = new Set(profile.engineFragments.map((item) => item.id));
+  for (const id of engineFragmentsForState(state)) ids.add(id);
+  return ids.size >= engineFragmentDefinitions.length;
+}
+
 export function secretEndingEligible(state: GameState, profile: PlayerProfile) {
-  return canDecodeEngine(profile) &&
+  return canDecodeEngineWithState(profile, state) &&
     state.truth >= 5 &&
     state.publicDoubt >= 4 &&
     countDefiantActions(state) >= 3 &&

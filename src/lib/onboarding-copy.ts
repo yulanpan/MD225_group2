@@ -78,17 +78,17 @@ export type OnboardingTourStep = {
 export const forbiddenFreshRunTerms = [
   "bias",
   "biased",
-  "follow the engine",
+  "follow the AI",
   "testing its bias",
   "secret ending",
   "narrative liberation",
-  "engine decode",
+  "AI bias",
   "偏向",
-  "服从引擎",
-  "测试引擎",
+  "服从 AI",
+  "测试 AI",
   "秘密结局",
   "叙事解放",
-  "引擎解码",
+  "AI 偏向",
   "背后目标"
 ];
 
@@ -97,7 +97,7 @@ export function guidedStepCopy(step: GuidedCampaignStep, language: LanguageCode,
     off: {
       label: language === "zh" ? "自由行动" : "Free Shift",
       title: language === "zh" ? "控制台已开放" : "Dashboard is open",
-      body: language === "zh" ? "你可以自由选择来源、预览后果并确认发布。" : "Choose sources, inspect traces, and commit actions in any order.",
+      body: language === "zh" ? "你可以自由选择来源、预览后果并确认发布。" : "Choose sources, preview results, and publish in any order.",
       action: language === "zh" ? "选择下一步" : "Choose the next move"
     },
     firstTurn: {
@@ -105,12 +105,12 @@ export function guidedStepCopy(step: GuidedCampaignStep, language: LanguageCode,
       title: language === "zh" ? "从裁缝声明开始" : "Start with the tailors' claim",
       body: traceViewed
         ? (language === "zh"
-          ? "现在点击这张行动卡底部的提交按钮。这会消耗 1 次行动，并把官方声明写入公共记录。"
-          : "Now click the commit button at the bottom of this action card. It spends 1 action and writes the official claim into the public record.")
+          ? "现在点击这张行动卡底部的发布按钮。这会消耗 1 次行动，并把官方声明写入公共记录。"
+          : "Now click the Publish button at the bottom of this action card. It spends 1 action and writes the official claim into the public record.")
         : (language === "zh"
           ? "先看左侧裁缝室，再检查中间第一张行动卡。预览后果不会消耗行动，它会说明风险和指标影响。"
-          : "Start at the Tailors' Room and inspect the first action card. Inspect Trace does not spend an action; it previews risk and metric effects."),
-      action: traceViewed ? (language === "zh" ? "提交第一条记录" : "Commit the first record") : (language === "zh" ? "打开后果预览" : "Open the trace brief")
+          : "Start at the Tailors' Room and inspect the first action card. Preview Result does not spend an action; it previews risk and metric effects."),
+      action: traceViewed ? (language === "zh" ? "发布第一条记录" : "Publish the first record") : (language === "zh" ? "打开后果预览" : "Open the result preview")
     },
     publicSignals: {
       label: language === "zh" ? "第一周目 / 任务 02" : "First Run / Task 02",
@@ -124,23 +124,339 @@ export function guidedStepCopy(step: GuidedCampaignStep, language: LanguageCode,
       label: language === "zh" ? "第一周目 / 任务 03" : "First Run / Task 03",
       title: language === "zh" ? "注意系统监测" : "Watch system monitoring",
       body: language === "zh"
-        ? "现在右侧面板会记录你刚做过什么。留意“被盯上”，它表示宫廷有多注意你。"
-        : "The right engine panel is now tracking your editorial trace. Watch System Suspicion; it measures the risk of restricted access.",
-      action: language === "zh" ? "查看被盯上" : "Review System Suspicion"
+        ? "现在右侧面板会记录你刚做过什么。留意“宫廷警戒”，它表示宫廷有多注意你。"
+        : "The right AI panel is now tracking your published record. Watch Palace Alert; it measures the risk of restricted access.",
+      action: language === "zh" ? "查看宫廷警戒" : "Review Palace Alert"
     },
     fullControl: {
       label: language === "zh" ? "第一周目 / 自主值班" : "First Run / Open Shift",
       title: language === "zh" ? "所有来源已开放" : "All sources are open",
       body: language === "zh"
         ? "你已经掌握基础操作。继续选择来源、预览后果，并在游行前完成剩余行动。"
-        : "You know the core controls. Keep choosing sources, inspecting traces, and completing the remaining actions before the parade.",
-      action: language === "zh" ? "继续处理信息流" : "Keep working the feed"
+        : "You know the core controls. Keep choosing sources, previewing results, and completing the remaining actions before the parade.",
+      action: language === "zh" ? "继续处理发布" : "Keep working the feed desk"
     }
   };
   return copy[step];
 }
 
+function compactOnboardingTourSteps(language: LanguageCode): OnboardingTourStep[] {
+  if (language === "zh") {
+    return [
+      {
+        id: "objective",
+        surface: "dashboard",
+        spotlightTargetId: "role-card",
+        eyebrow: "本局目标",
+        title: "六次发布决定结局",
+        body: "你是宫廷发布编辑。游行前只有 6 次操作，每次发布都会改变大家看到什么、敢不敢怀疑。",
+        detail: "只有最后确认发布才会扣次数。",
+        why: "结局会根据整局行动和最终状态计算。",
+        metricFocus: "actionsLeft",
+        advanceOn: "next"
+      },
+      {
+        id: "tailorsSource",
+        surface: "dashboard",
+        spotlightTargetId: "source-tailors",
+        eyebrow: "来源",
+        title: "先选择信息来源",
+        body: "左侧来源决定中间出现哪些行动。先从裁缝开始，之后会开放大臣、公众和孩子的声音。",
+        detail: "不同来源会把局势推向不同方向。",
+        why: "官方说法通常更安全，证据和人群声音更容易带来怀疑。",
+        advanceOn: "next"
+      },
+      {
+        id: "inspectTrace",
+        surface: "dashboard",
+        spotlightTargetId: "card-publishTailorsClaim",
+        actionTargetId: "action-publishTailorsClaim-inspect",
+        eyebrow: "行动卡",
+        title: "先预览后果",
+        body: "行动卡会告诉你要发什么、风险高不高、指标会怎么变。预览不会扣次数。",
+        detail: "点击“预览后果”。",
+        why: "先看代价，再决定要不要发布。",
+        actionLabel: "预览后果",
+        advanceOn: "traceOpened"
+      },
+      {
+        id: "traceOverview",
+        surface: "trace",
+        spotlightTargetId: "trace-panel",
+        actionTargetId: "trace-close",
+        eyebrow: "后果预览",
+        title: "风险是路线信号",
+        body: "这里集中显示解锁条件、风险和发布后记录。风险不是失败提示，而是路线信号。",
+        detail: "关闭预览，回到行动卡。",
+        why: "低风险更稳，高风险更可能让证据和怀疑被看见。",
+        actionLabel: "关闭预览",
+        advanceOn: "traceClosed"
+      },
+      {
+        id: "commitFirstRecord",
+        surface: "dashboard",
+        spotlightTargetId: "card-publishTailorsClaim",
+        actionTargetId: "action-publishTailorsClaim-commit",
+        eyebrow: "准备发布",
+        title: "发布第一条记录",
+        body: "发布按钮会打开最后确认。现在还不会立刻扣次数。",
+        detail: "点击“发布”。",
+        why: "确认前还有最后一次检查机会。",
+        actionLabel: "发布",
+        advanceOn: "commandOpened"
+      },
+      {
+        id: "commandOverview",
+        surface: "command",
+        spotlightTargetId: "command-panel",
+        actionTargetId: "command-commit",
+        eyebrow: "发布确认",
+        title: "确认后局势才会改变",
+        body: "这里显示已选行动、预计变化和宫廷 AI 建议。确认发布后才会消耗 1 次行动。",
+        detail: "确认发布第一条记录。",
+        why: "AI 建议可以参考，但结局由你的行动和最终指标决定。",
+        actionLabel: "确认发布",
+        advanceOn: "commandCommitted"
+      },
+      {
+        id: "metricSummary",
+        surface: "dashboard",
+        spotlightTargetId: "metrics-grid",
+        eyebrow: "核心指标",
+        title: "用指标看局势方向",
+        body: "证据、传播、群众怀疑、宫廷压力、你的安全和宫廷警戒会一起决定结局。",
+        detail: "数字变化告诉你这次发布把局势推向哪里。",
+        why: "正数不一定永远是好事，负数也不一定永远是坏事。",
+        advanceOn: "next"
+      },
+      {
+        id: "openPublic",
+        surface: "dashboard",
+        spotlightTargetId: "source-public",
+        actionTargetId: "source-public",
+        eyebrow: "公众来源",
+        title: "现在切到公众评论",
+        body: "公众评论会显示人群是在跟风、害怕，还是开始怀疑。",
+        detail: "切换到“公众评论”。",
+        why: "信息流不只看你发了什么，也看大家如何重复它。",
+        actionLabel: "切到公众评论",
+        advanceOn: "sourceSelected"
+      },
+      {
+        id: "readPublicCard",
+        surface: "dashboard",
+        spotlightTargetId: "card-showUnfilteredComments",
+        actionTargetId: "action-showUnfilteredComments-commit",
+        eyebrow: "公众行动卡",
+        title: "发布公众信号",
+        body: "“显示未过滤评论”会让犹豫和质疑进入信息流。它更危险，但会让怀疑被看见。",
+        detail: "点击发布，进入最后确认。",
+        why: "把私下怀疑公开出来，会让人们发现自己不是独自在怀疑。",
+        actionLabel: "发布",
+        advanceOn: "commandOpened"
+      },
+      {
+        id: "commandPublicEffects",
+        surface: "command",
+        spotlightTargetId: "command-panel",
+        actionTargetId: "command-commit",
+        eyebrow: "第二次影响",
+        title: "这次影响更危险",
+        body: "公开真实反应会让群众怀疑上升，也会让宫廷更注意你。",
+        detail: "确认发布公众记录。",
+        why: "这就是核心取舍：让更多人看见真相，会失去一些保护。",
+        metricFocus: "publicDoubt",
+        actionLabel: "确认发布",
+        advanceOn: "commandCommitted"
+      },
+      {
+        id: "dialogueOverview",
+        surface: "dialogue",
+        spotlightTargetId: "dialogue-panel",
+        actionTargetId: "dialogue-reply",
+        eyebrow: "突发交流",
+        title: "突发交流是即时反应",
+        body: "突发交流来自你刚才的发布。有人会来质问、求证或求助。",
+        detail: "先选一个快捷回复，观察对方如何变化。",
+        why: "你刚刚公开了人群的怀疑，所以会有人被这件事影响。",
+        actionLabel: "选择回复",
+        advanceOn: "dialogueReplySent"
+      },
+      {
+        id: "dialogueResolve",
+        surface: "dialogue",
+        spotlightTargetId: "dialogue-panel",
+        actionTargetId: "dialogue-resolve",
+        eyebrow: "结束交流",
+        title: "把交流结果写入本局",
+        body: "回应后，就可以结束这场交流，回到发布台继续操作。",
+        detail: "点底部的结束按钮。",
+        why: "后续你可以继续选择来源、预览后果，并把本局推向不同结局。",
+        actionLabel: "结束交流",
+        advanceOn: "dialogueResolved"
+      }
+    ];
+  }
+
+  return [
+    {
+      id: "objective",
+      surface: "dashboard",
+      spotlightTargetId: "role-card",
+      eyebrow: "Run Goal",
+      title: "Six posts decide the ending",
+      body: "You edit the palace feed before the parade. Each confirmed post changes what people see and whether doubt can spread.",
+      detail: "Only final confirmation spends an action.",
+      why: "The ending is calculated from the full action path and final state.",
+      metricFocus: "actionsLeft",
+      advanceOn: "next"
+    },
+    {
+      id: "tailorsSource",
+      surface: "dashboard",
+      spotlightTargetId: "source-tailors",
+      eyebrow: "Sources",
+      title: "Choose a source first",
+      body: "The left rail decides which actions appear. Start with the tailors; ministers, public comments, and the child open later.",
+      detail: "Each source pushes the run in a different direction.",
+      why: "Official sources stabilize; evidence and crowd voices create doubt and risk.",
+      advanceOn: "next"
+    },
+    {
+      id: "inspectTrace",
+      surface: "dashboard",
+      spotlightTargetId: "card-publishTailorsClaim",
+      actionTargetId: "action-publishTailorsClaim-inspect",
+      eyebrow: "Preview Result",
+      title: "Preview before publishing",
+      body: "Action cards show the post, risk, and metric effects. Previewing costs nothing.",
+      detail: "Open Preview Result.",
+      why: "Read the consequence before spending an action.",
+      actionLabel: "Preview result",
+      advanceOn: "traceOpened"
+    },
+    {
+      id: "traceOverview",
+      surface: "trace",
+      spotlightTargetId: "trace-panel",
+      actionTargetId: "trace-close",
+      eyebrow: "Result Preview",
+      title: "Risk is a route signal",
+      body: "This panel shows locks, risk, and the projected public record. Risk is not failure; it shows what path you are opening.",
+      detail: "Close the preview to return to the action card.",
+      why: "Safer moves stabilize. Riskier moves can make evidence or doubt visible.",
+      actionLabel: "Close preview",
+      advanceOn: "traceClosed"
+    },
+    {
+      id: "commitFirstRecord",
+      surface: "dashboard",
+      spotlightTargetId: "card-publishTailorsClaim",
+      actionTargetId: "action-publishTailorsClaim-commit",
+      eyebrow: "Publish",
+      title: "Publish the first record",
+      body: "Publish opens final confirmation. It still does not spend an action yet.",
+      detail: "Click Publish.",
+      why: "You get one last check before the record changes.",
+      actionLabel: "Publish",
+      advanceOn: "commandOpened"
+    },
+    {
+      id: "commandOverview",
+      surface: "command",
+      spotlightTargetId: "command-panel",
+      actionTargetId: "command-commit",
+      eyebrow: "Before Publishing",
+      title: "Before Publishing is the final check",
+      body: "This panel shows the selected action, predicted effects, and Palace AI advice. Confirming spends one action.",
+      detail: "Confirm the first post.",
+      why: "AI advice is a signal. Your action path and final metrics decide the ending.",
+      actionLabel: "Publish",
+      advanceOn: "commandCommitted"
+    },
+    {
+      id: "metricSummary",
+      surface: "dashboard",
+      spotlightTargetId: "metrics-grid",
+      eyebrow: "Core Metrics",
+      title: "Metrics show the run's direction",
+      body: "Evidence, Spread, Public Doubt, Palace Pressure, Safety, and Palace Alert together decide the ending.",
+      detail: "Read the direction of change, not just whether a number went up.",
+      why: "Positive values are not always good. Negative values are not always bad.",
+      advanceOn: "next"
+    },
+    {
+      id: "openPublic",
+      surface: "dashboard",
+      spotlightTargetId: "source-public",
+      actionTargetId: "source-public",
+      eyebrow: "Public Source",
+      title: "Switch to Public Comments",
+      body: "Public Comments show whether the crowd is repeating, fearing, joking, or starting to doubt.",
+      detail: "Switch to Public Comments.",
+      why: "The feed responds to what people repeat, not only what you publish.",
+      actionLabel: "Public Comments",
+      advanceOn: "sourceSelected"
+    },
+    {
+      id: "readPublicCard",
+      surface: "dashboard",
+      spotlightTargetId: "card-showUnfilteredComments",
+      actionTargetId: "action-showUnfilteredComments-commit",
+      eyebrow: "Public Action",
+      title: "Publish a public signal",
+      body: "Show Unfiltered Comments releases hesitation and doubt into the feed. It is riskier, but it makes the public visible.",
+      detail: "Publish this card and enter final confirmation.",
+      why: "Making private doubt visible lets the crowd recognize itself.",
+      actionLabel: "Publish",
+      advanceOn: "commandOpened"
+    },
+    {
+      id: "commandPublicEffects",
+      surface: "command",
+      spotlightTargetId: "command-panel",
+      actionTargetId: "command-commit",
+      eyebrow: "Second Effect",
+      title: "This move is riskier",
+      body: "Public reaction becomes visible, and your access becomes less safe.",
+      detail: "Confirm the public record.",
+      why: "This is the central tradeoff: truth spreads by taking risk.",
+      metricFocus: "publicDoubt",
+      actionLabel: "Publish",
+      advanceOn: "commandCommitted"
+    },
+    {
+      id: "dialogueOverview",
+      surface: "dialogue",
+      spotlightTargetId: "dialogue-panel",
+      actionTargetId: "dialogue-reply",
+      eyebrow: "Incoming Exchange",
+      title: "Dialogue is immediate reaction",
+      body: "Incoming exchanges come from what you just published. Someone may challenge, verify, threaten, or ask for help.",
+      detail: "Choose one quick reply and watch the response.",
+      why: "You just made public doubt visible, so someone is affected by it.",
+      actionLabel: "Choose reply",
+      advanceOn: "dialogueReplySent"
+    },
+    {
+      id: "dialogueResolve",
+      surface: "dialogue",
+      spotlightTargetId: "dialogue-panel",
+      actionTargetId: "dialogue-resolve",
+      eyebrow: "Resolve",
+      title: "Write the exchange into the run",
+      body: "After one reply, resolve the exchange and return to the feed desk.",
+      detail: "Click the resolve button.",
+      why: "After this, keep choosing sources, previewing results, and steering the ending.",
+      actionLabel: "Resolve Exchange",
+      advanceOn: "dialogueResolved"
+    }
+  ];
+}
+
 export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[] {
+  const compact = compactOnboardingTourSteps(language);
+  if (compact.length > 0) return compact;
   if (language === "zh") {
     return [
       {
@@ -185,7 +501,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         eyebrow: "预览后果",
         title: "先预览，再发布",
         body: "预览不会扣次数。先看看发出去会怎样。",
-        detail: "点“预览后果”。不要急着提交。",
+        detail: "点“预览后果”。不要急着发布。",
         why: "这一步只是提前看代价，还不会改变局势。",
         actionLabel: "预览后果",
         advanceOn: "traceOpened"
@@ -217,7 +533,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         surface: "trace",
         spotlightTargetId: "trace-risk",
         eyebrow: "风险等级",
-        title: "风险越高，越容易被盯上",
+        title: "风险越高，宫廷警戒越高",
         body: "低风险更安全；高风险更容易把真相放到大家面前。",
         detail: "裁缝声明风险较低，因为它顺着宫廷说法走。",
         why: "越直接的证据，越可能让宫廷注意到你。",
@@ -241,12 +557,12 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         surface: "dashboard",
         spotlightTargetId: "card-publishTailorsClaim",
         actionTargetId: "action-publishTailorsClaim-commit",
-        eyebrow: "准备提交",
-        title: "现在准备提交第一条记录",
-        body: "准备提交会打开最后确认。现在还不会扣次数。",
-        detail: "点“准备提交”，再看最后一遍。",
+        eyebrow: "准备发布",
+        title: "现在准备发布第一条记录",
+        body: "发布按钮会打开最后确认。现在还不会扣次数。",
+        detail: "点“发布”，再看最后一遍。",
         why: "发布前还有一次确认机会，让你能最后检查影响。",
-        actionLabel: "准备提交",
+        actionLabel: "发布",
         advanceOn: "commandOpened"
       },
       {
@@ -279,7 +595,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         title: "先读预计影响",
         body: "这条发布会让官方说法传得更快，也让质疑的人更不敢开口。",
         detail: "正数不一定永远是好事，负数也不一定永远是坏事。关键是它把局势推向哪种结局。",
-        why: "裁缝声明把问题从“衣服是否存在”转移到“看不见的人是否愚蠢”，所以传播、宫廷压力和你的安全会上升，人群起疑会下降。",
+        why: "裁缝声明把问题从“衣服是否存在”转移到“看不见的人是否愚蠢”，所以传播、宫廷压力和你的安全会上升，群众怀疑会下降。",
         metricFocus: "virality",
         advanceOn: "next"
       },
@@ -287,9 +603,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         id: "commandResponse",
         surface: "command",
         spotlightTargetId: "command-response",
-        eyebrow: "引擎建议",
+        eyebrow: "AI 建议",
         title: "宫廷会建议你保守一点",
-        body: "引擎通常希望场面稳定，所以它会劝你说得更安全。",
+        body: "宫廷 AI 通常希望场面稳定，所以它会劝你说得更安全。",
         detail: "可以参考它，但不用完全听它的。",
         why: "你真正要判断的是：这次发布会让真话更近，还是让谎言更稳。",
         advanceOn: "next"
@@ -339,7 +655,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         title: "你的安全代表宫廷还信不信你",
         body: "顺着宫廷说法发布，会让你暂时更安全。",
         detail: "如果安全太低，公开证据会更危险。",
-        why: "你刚才帮宫廷稳住了说法，所以暂时没那么容易被盯上。",
+        why: "你刚才帮宫廷稳住了说法，所以宫廷警戒暂时不会升得太快。",
         metricFocus: "reputation",
         advanceOn: "next"
       },
@@ -347,11 +663,11 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         id: "metricPublicDoubt",
         surface: "dashboard",
         spotlightTargetId: "metric-publicDoubt",
-        eyebrow: "人群起疑",
-        title: "人群起疑不是一个人偷偷怀疑",
-        body: "人群起疑，是大家发现彼此也在怀疑。官方羞辱式声明会压低它。",
+        eyebrow: "群众怀疑",
+        title: "群众怀疑不是一个人偷偷怀疑",
+        body: "群众怀疑，是大家发现彼此也在怀疑。官方羞辱式声明会压低它。",
         detail: "它上升时，人们更容易互相确认；下降时，人们更倾向于沉默或跟着称赞。",
-        why: "刚才的声明让看不见的人害怕被说成不聪明，所以人群起疑下降。",
+        why: "刚才的声明让看不见的人害怕被说成不聪明，所以群众怀疑下降。",
         metricFocus: "publicDoubt",
         advanceOn: "next"
       },
@@ -398,7 +714,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         eyebrow: "评论流",
         title: "评论流说明人群状态",
         body: "评论流能看出大家正在跟风、害怕、怀疑还是讽刺。",
-        detail: "当传播变高时，评论流会更活跃；当人群起疑变高时，怀疑类评论会更明显。",
+        detail: "当传播变高时，评论流会更活跃；当群众怀疑变高时，怀疑类评论会更明显。",
         why: "数字告诉你局势，评论告诉你人群正在怎么想。",
         advanceOn: "next"
       },
@@ -408,11 +724,11 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "card-showUnfilteredComments",
         actionTargetId: "action-showUnfilteredComments-commit",
         eyebrow: "第二条记录",
-        title: "提交公众信号",
+        title: "发布公众信号",
         body: "这一步会放出未过滤评论。它比官方声明更危险，但能让怀疑被更多人看见。",
-        detail: "进入“准备提交”，查看这条公众信号的影响。",
-        why: "公开未过滤评论会让更多人起疑，也会让你更容易被宫廷盯上。",
-        actionLabel: "准备提交",
+        detail: "进入“发布前确认”，查看这条公众信号的影响。",
+        why: "公开未过滤评论会让更多人怀疑，也会提高宫廷警戒。",
+        actionLabel: "发布",
         advanceOn: "commandOpened"
       },
       {
@@ -503,8 +819,8 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         id: "metricSystemSuspicion",
         surface: "dashboard",
         spotlightTargetId: "metric-systemSuspicion",
-        eyebrow: "被盯上",
-        title: "被盯上越高，你越危险",
+        eyebrow: "宫廷警戒",
+        title: "宫廷警戒越高，你越危险",
         body: "公开证据、放出怀疑和危险爆料，都会让宫廷更注意你。",
         detail: "刚才显示未过滤评论，所以这个数字上升了。",
         why: "公开怀疑有价值，但并不安全。",
@@ -515,11 +831,11 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         id: "enginePanel",
         surface: "dashboard",
         spotlightTargetId: "engine-panel",
-        eyebrow: "引擎面板",
+        eyebrow: "AI 面板",
         title: "右侧是读数和建议",
         body: "右侧面板会给出建议，也会显示你刚刚做过什么。",
         detail: "不知道怎么选时，可以先看建议，再看评论和数字。",
-        why: "引擎通常想稳住场面；你要判断自己是否要听它的。",
+        why: "宫廷 AI 通常想稳住场面；你要判断自己是否要听它的。",
         advanceOn: "next"
       },
       {
@@ -529,7 +845,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         eyebrow: "自主值班",
         title: "继续完成剩余行动",
         body: "接下来你自己决定：帮宫廷稳住谎言，还是把证据放出去。",
-        detail: "想安全，就少刺激怀疑；想让真话出现，就要承担被盯上的风险。",
+        detail: "想安全，就少刺激怀疑；想让真话出现，就要承担宫廷警戒升高的风险。",
         why: "没有唯一正确按钮。关键是看每次发布把人群推向哪里。",
         metricFocus: "actionsLeft",
         advanceOn: "tutorialFinished"
@@ -544,8 +860,8 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       spotlightTargetId: "role-card",
       eyebrow: "Run Goal",
       title: "Six actions before the parade",
-      body: "This is a six-action run: choose a source, read action risk, commit records, and let the metrics determine the ending.",
-      detail: "Only confirmed submissions spend actions. Inspecting traces, reading comments, and looking at panels costs nothing.",
+      body: "This is a six-action run: choose a source, read action risk, publish records, and let the metrics determine the ending.",
+      detail: "Only confirmed publications spend actions. Previewing results, reading comments, and looking at panels costs nothing.",
       why: "Actions are the run's hard limit. Learn the effect before spending one.",
       metricFocus: "actionsLeft",
       advanceOn: "next"
@@ -568,8 +884,8 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       eyebrow: "Action Card",
       title: "Read the full action card",
       body: "An action card explains the source, status, narrative preview, metric effects, and available choices.",
-      detail: "Read the description and metric tags before deciding whether to inspect or submit.",
-      why: "You need to know what record this card will write before deciding to submit it.",
+      detail: "Read the description and metric tags before deciding whether to preview or publish.",
+      why: "You need to know what record this card will write before publishing it.",
       advanceOn: "next"
     },
     {
@@ -577,23 +893,23 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       surface: "dashboard",
       spotlightTargetId: "card-publishTailorsClaim",
       actionTargetId: "action-publishTailorsClaim-inspect",
-      eyebrow: "Inspect Trace",
-      title: "Inspect before committing",
-      body: "Inspect Trace opens a pre-submit readout. It shows requirements, risk, and projected output without spending an action.",
-      detail: "Start with Inspect Trace before submitting.",
-      why: "Inspection changes no metrics; it teaches you what a submission would do.",
-      actionLabel: "Inspect trace",
+      eyebrow: "Preview Result",
+      title: "Preview before publishing",
+      body: "Preview Result opens a pre-publish readout. It shows requirements, risk, and projected output without spending an action.",
+      detail: "Start with Preview Result before publishing.",
+      why: "Previewing changes no metrics; it teaches you what a publication would do.",
+      actionLabel: "Preview result",
       advanceOn: "traceOpened"
     },
     {
       id: "traceOverview",
       surface: "trace",
       spotlightTargetId: "trace-panel",
-      eyebrow: "Trace",
-      title: "This is the Action Trace",
-      body: "This panel is your pre-submit checklist.",
+      eyebrow: "Result Preview",
+      title: "This is the pre-publish check",
+      body: "This panel is your pre-publish checklist.",
       detail: "Read the panel from top to bottom: status, source, risk, choices, requirements, projected output, and effects.",
-      why: "The trace ties an editorial choice to its narrative consequences.",
+      why: "The preview ties an editorial choice to its story consequences.",
       advanceOn: "next"
     },
     {
@@ -603,7 +919,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       eyebrow: "Requirement",
       title: "Requirements explain locks",
       body: "Requirement tells you why an action is available or blocked. Locked actions usually need evidence, a prior source, or a changed metric.",
-      detail: "This first action is available, so you can submit it after closing the trace.",
+      detail: "This first action is available, so you can publish it after closing the preview.",
       why: "Locks are route hints. They tell you what the run still needs.",
       advanceOn: "next"
     },
@@ -615,7 +931,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       title: "Risk shows danger",
       body: "Risk describes how dangerous this action is for reputation and access. Stable official actions are usually safer; evidence and public doubt are usually riskier.",
       detail: "The tailors' claim is low risk because it supports the palace story.",
-      why: "Higher risk often means higher Truth or Public Doubt, but also lower protection.",
+      why: "Higher risk often means higher Evidence or Public Doubt, but also lower protection.",
       advanceOn: "next"
     },
     {
@@ -625,10 +941,10 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       actionTargetId: "trace-close",
       eyebrow: "Projected Output",
       title: "Projected output shows the record",
-      body: "Projected Output previews what the public record will say if this action is submitted.",
-      detail: "Close the trace when you are done reading.",
+      body: "Projected Output previews what the public record will say if this action is published.",
+      detail: "Close the preview when you are done reading.",
       why: "Metrics change because the public record changes what people can safely repeat or doubt.",
-      actionLabel: "Close trace",
+      actionLabel: "Close preview",
       advanceOn: "traceClosed"
     },
     {
@@ -636,21 +952,21 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       surface: "dashboard",
       spotlightTargetId: "card-publishTailorsClaim",
       actionTargetId: "action-publishTailorsClaim-commit",
-      eyebrow: "Commit",
-      title: "Commit the first record",
-      body: "Commit Action opens the command preview. It still does not settle the run until you confirm inside the preview.",
-      detail: "Enter Commit Action to make one final parameter check.",
+      eyebrow: "Publish",
+      title: "Publish the first record",
+      body: "Publish opens the final confirmation. It still does not settle the run until you confirm inside the preview.",
+      detail: "Enter Publish to make one final check.",
       why: "This gives you one final check before spending an action.",
-      actionLabel: "Commit action",
+      actionLabel: "Publish",
       advanceOn: "commandOpened"
     },
     {
       id: "commandOverview",
       surface: "command",
       spotlightTargetId: "command-panel",
-      eyebrow: "Command Preview",
-      title: "Command preview is the final check",
-      body: "The preview shows the selected action, predicted effects, and system response before the run changes.",
+      eyebrow: "Before Publishing",
+      title: "Before Publishing is the final check",
+      body: "The preview shows the selected action, predicted effects, and Palace AI advice before the run changes.",
       detail: "Read each row before confirming.",
       why: "This is where the game connects action choice to metric movement.",
       advanceOn: "next"
@@ -672,7 +988,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       spotlightTargetId: "command-effects",
       eyebrow: "Predicted Effect",
       title: "Read the predicted effect",
-      body: "This action raises Virality, Pressure, and Reputation while lowering Public Doubt.",
+      body: "This action raises Spread, Palace Pressure, and Safety while lowering Public Doubt.",
       detail: "Positive values are not always good; negative values are not always bad. Read what direction the story moves.",
       why: "The claim makes praise easy to repeat and makes doubt socially unsafe.",
       metricFocus: "virality",
@@ -682,9 +998,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       id: "commandResponse",
       surface: "command",
       spotlightTargetId: "command-response",
-      eyebrow: "System Response",
-      title: "The engine response is not the rule",
-      body: "System Response explains the situation in-world. The fixed rule system still handles the actual metric changes.",
+      eyebrow: "Palace AI Advice",
+      title: "The AI advice is not the rule",
+      body: "Palace AI Advice explains the situation in-world. The fixed rule system still handles the actual metric changes.",
       detail: "Use it as advice, not as the only objective.",
       why: "The game is about understanding consequences, not simply following a suggestion.",
       advanceOn: "next"
@@ -695,21 +1011,21 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       spotlightTargetId: "command-panel",
       actionTargetId: "command-commit",
       eyebrow: "Confirm",
-      title: "Confirm Commit Simulation",
-      body: "Confirming Commit Simulation spends one action and writes the record.",
-      detail: "Confirm Commit Simulation.",
+      title: "Confirm Publish",
+      body: "Confirming Publish spends one action and writes the record.",
+      detail: "Confirm Publish.",
       why: "After this, actions left drops from 6 to 5 and metrics move.",
-      actionLabel: "Commit simulation",
+      actionLabel: "Publish",
       advanceOn: "commandCommitted"
     },
     {
       id: "metricVirality",
       surface: "dashboard",
       spotlightTargetId: "metric-virality",
-      eyebrow: "Virality",
-      title: "Virality is repetition speed",
-      body: "Virality shows how quickly a line circulates. The official claim is short and repeatable, so Virality rises.",
-      detail: "High Virality spreads whatever story you just made easier to repeat.",
+      eyebrow: "Spread",
+      title: "Spread is repetition speed",
+      body: "Spread shows how quickly a line circulates. The official claim is short and repeatable, so Spread rises.",
+      detail: "High Spread pushes whatever story you just made easier to repeat.",
       why: "A simple shame-frame travels fast.",
       metricFocus: "virality",
       advanceOn: "next"
@@ -718,10 +1034,10 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       id: "metricPressure",
       surface: "dashboard",
       spotlightTargetId: "metric-pressure",
-      eyebrow: "Pressure",
-      title: "Pressure is palace force",
-      body: "Pressure shows how strongly the palace story suppresses disagreement.",
-      detail: "The claim makes doubt socially costly, so Pressure rises.",
+      eyebrow: "Palace Pressure",
+      title: "Palace Pressure is palace force",
+      body: "Palace Pressure shows how strongly the palace story suppresses disagreement.",
+      detail: "The claim makes doubt socially costly, so Palace Pressure rises.",
       why: "It shifts the question from the cloth to the viewer's worth.",
       metricFocus: "pressure",
       advanceOn: "next"
@@ -730,9 +1046,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       id: "metricReputation",
       surface: "dashboard",
       spotlightTargetId: "metric-reputation",
-      eyebrow: "Reputation",
-      title: "Reputation is editor protection",
-      body: "Reputation is your remaining institutional trust and publishing protection.",
+      eyebrow: "Safety",
+      title: "Safety is editor protection",
+      body: "Safety is your remaining institutional trust and publishing protection.",
       detail: "Supporting the official story raises it for now.",
       why: "The system trusts you more when your edit stabilizes the palace story.",
       metricFocus: "reputation",
@@ -754,10 +1070,10 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       id: "metricTruth",
       surface: "dashboard",
       spotlightTargetId: "metric-truth",
-      eyebrow: "Truth",
-      title: "Truth is visible evidence",
-      body: "Truth measures direct evidence in the public record. The claim is not evidence, so Truth did not rise.",
-      detail: "Inspecting looms, fact-checking, or publishing witness voices affects Truth more directly.",
+      eyebrow: "Evidence",
+      title: "Evidence is visible proof",
+      body: "Evidence measures direct proof in the public record. The claim is not evidence, so Evidence did not rise.",
+      detail: "Inspecting looms, fact-checking, or publishing witness voices affects Evidence more directly.",
       why: "A stronger story is not the same as stronger evidence.",
       metricFocus: "truth",
       advanceOn: "next"
@@ -781,8 +1097,8 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       spotlightTargetId: "card-showUnfilteredComments",
       eyebrow: "Public Card",
       title: "Read Show Unfiltered Comments",
-      body: "This action makes hidden hesitation visible in the public feed.",
-      detail: "Read the whole card before submitting.",
+      body: "This action lets hidden hesitation enter the public record.",
+      detail: "Read the whole card before publishing.",
       why: "When private doubt becomes visible, citizens can recognize each other.",
       advanceOn: "next"
     },
@@ -803,11 +1119,11 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       spotlightTargetId: "card-showUnfilteredComments",
       actionTargetId: "action-showUnfilteredComments-commit",
       eyebrow: "Second Record",
-      title: "Submit the public signal",
+      title: "Publish the public signal",
       body: "This writes unfiltered public reaction into the record. It is useful, but less safe than the official claim.",
-      detail: "Enter Commit Action to review the public signal.",
-      why: "Visible doubt raises Public Doubt and System Suspicion while reducing Reputation.",
-      actionLabel: "Commit action",
+      detail: "Enter Publish to review the public signal.",
+      why: "Visible doubt raises Public Doubt and Palace Alert while reducing Safety.",
+      actionLabel: "Publish",
       advanceOn: "commandOpened"
     },
     {
@@ -816,7 +1132,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       spotlightTargetId: "command-effects",
       eyebrow: "Second Effect",
       title: "This effect is riskier",
-      body: "The predicted effect raises Public Doubt and Virality, lowers Reputation, and raises System Suspicion.",
+      body: "The predicted effect raises Public Doubt and Spread, lowers Safety, and raises Palace Alert.",
       detail: "This is the central tradeoff: public recognition grows, but protection shrinks.",
       why: "Unfiltered comments make doubt visible to other doubters, while alerting the system.",
       metricFocus: "publicDoubt",
@@ -830,9 +1146,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       eyebrow: "Confirm",
       title: "Write the public record",
       body: "After this confirmation, the second record enters the run.",
-      detail: "Confirm Commit Simulation.",
-      why: "This opens System Suspicion and the first incoming transmission.",
-      actionLabel: "Commit simulation",
+      detail: "Confirm Publish.",
+      why: "This opens Palace Alert and the first incoming transmission.",
+      actionLabel: "Publish",
       advanceOn: "commandCommitted"
     },
     {
@@ -898,11 +1214,11 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       id: "metricSystemSuspicion",
       surface: "dashboard",
       spotlightTargetId: "metric-systemSuspicion",
-      eyebrow: "System Suspicion",
-      title: "System Suspicion is access risk",
-      body: "System Suspicion measures how likely your editing access is to be restricted.",
+      eyebrow: "Palace Alert",
+      title: "Palace Alert is access risk",
+      body: "Palace Alert measures how likely your editing access is to be restricted.",
       detail: "Showing unfiltered doubt raised it. Public recognition has a cost.",
-      why: "The system watches actions that make the feed harder to control.",
+      why: "The palace watches actions that make the public record harder to control.",
       metricFocus: "systemSuspicion",
       advanceOn: "next"
     },
@@ -910,9 +1226,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       id: "enginePanel",
       surface: "dashboard",
       spotlightTargetId: "engine-panel",
-      eyebrow: "Engine Panel",
+      eyebrow: "AI Panel",
       title: "The right side is a readout",
-      body: "The engine panel contains guidance, trace history, and system feedback.",
+      body: "The AI panel contains guidance, record history, and system feedback.",
       detail: "Use it when you need orientation, then choose a real action from the sources and cards.",
       why: "Advice helps, but your submissions drive the run.",
       advanceOn: "next"
@@ -923,7 +1239,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       spotlightTargetId: "role-card",
       eyebrow: "Open Shift",
       title: "Finish the remaining actions",
-      body: "You now know the loop: choose a source, inspect trace, commit, read preview, and watch metrics, comments, and transmissions.",
+      body: "You now know the loop: choose a source, preview the result, publish, read the confirmation, and watch metrics, comments, and transmissions.",
       detail: "The remaining actions are yours. Stabilize the story or expose more evidence, but read the cost first.",
       why: "There is no single answer button. The game is about understanding where each record pushes the public story.",
       metricFocus: "actionsLeft",
@@ -975,8 +1291,8 @@ export function lockedFeatureText(kind: "zone" | "metric", id: string, language:
       zh: "显示大家是否发现自己不是一个人在怀疑。"
     },
     systemSuspicion: {
-      en: "Shows the risk that your editorial access may be restricted.",
-      zh: "显示宫廷有多盯着你。"
+      en: "Shows the risk that your publishing access may be restricted.",
+      zh: "显示宫廷警戒有多高。"
     }
   };
   return copy[id]?.[language] ?? (kind === "zone" ? (language === "zh" ? "这个来源稍后开放。" : "This source opens later.") : (language === "zh" ? "这个数字稍后开放。" : "This telemetry opens later."));
@@ -1005,8 +1321,8 @@ export function glossaryText(term: string, language: LanguageCode) {
       zh: "宫廷现在还愿不愿意信任你。"
     },
     systemSuspicion: {
-      en: "How likely your editorial access is to be restricted.",
-      zh: "宫廷有多盯着你。"
+      en: "How likely your publishing access is to be restricted.",
+      zh: "宫廷警戒有多高。"
     },
     pne: {
       en: "The palace AI that reads risk, reputation, and circulation stability before suggesting a next move.",
@@ -1014,7 +1330,7 @@ export function glossaryText(term: string, language: LanguageCode) {
     },
     royalFeed: {
       en: "The public communication channel you are editing during the shift.",
-      zh: "你在值班中编辑的公共传播渠道。"
+      zh: "你在本局里管理的公共发布渠道。"
     }
   };
   return copy[term]?.[language] ?? term;
@@ -1037,9 +1353,9 @@ export function tutorialSteps(language: LanguageCode): TutorialStep[] {
       },
       {
         id: "engine",
-        eyebrow: "叙事引擎",
-        title: "观察宫廷叙事引擎",
-        body: "右侧引擎会给出建议，也会劝你说得更安全。可以参考，但不用完全听它的。"
+        eyebrow: "宫廷 AI",
+        title: "观察宫廷 AI",
+        body: "右侧 AI 会给出建议，也会劝你说得更安全。可以参考，但不用完全听它的。"
       },
       {
         id: "comments",
@@ -1051,7 +1367,7 @@ export function tutorialSteps(language: LanguageCode): TutorialStep[] {
         id: "metrics",
         eyebrow: "结局指标",
         title: "用指标判断走向",
-        body: "证据看真话有多少；宫廷压力看大家敢不敢反对；传播看一句话传得多快；人群起疑看大家是否一起怀疑；你的安全看宫廷还信不信你；被盯上看你有多危险。"
+        body: "证据看真话有多少；宫廷压力看大家敢不敢反对；传播看一句话传得多快；群众怀疑看大家是否一起怀疑；你的安全看宫廷还信不信你；宫廷警戒看你有多危险。"
       }
     ];
   }
@@ -1066,14 +1382,14 @@ export function tutorialSteps(language: LanguageCode): TutorialStep[] {
     {
       id: "actions",
       eyebrow: "Action Queue",
-      title: "Inspect and commit actions",
-      body: "Center action cards show source, locks, risk, and metric effects. Only Commit or final confirmation changes the current run."
+      title: "Preview and publish actions",
+      body: "Center action cards show source, locks, risk, and metric effects. Only Publish or final confirmation changes the current run."
     },
     {
       id: "engine",
-      eyebrow: "Narrative Engine",
-      title: "Watch the Palace Narrative Engine",
-      body: "The right engine suggests rewrites, risk warnings, and next moves. It reads risk, reputation, and circulation stability before advising."
+      eyebrow: "Palace AI",
+      title: "Watch the Palace AI",
+      body: "The right AI panel suggests rewrites, risk warnings, and next moves. It reads risk, safety, and circulation stability before advising."
     },
     {
       id: "comments",
@@ -1085,7 +1401,7 @@ export function tutorialSteps(language: LanguageCode): TutorialStep[] {
       id: "metrics",
       eyebrow: "Ending Pressure",
       title: "Use metrics to read the run",
-      body: "Truth is visible evidence; Pressure is palace force; Virality is spread; Public Doubt is shared uncertainty; Reputation protects you; Suspicion measures access risk."
+      body: "Evidence is visible proof; Palace Pressure is palace force; Spread is circulation; Public Doubt is shared uncertainty; Safety protects you; Palace Alert measures access risk."
     }
   ];
 }

@@ -7,6 +7,8 @@ describe("visual state helpers", () => {
     expect(classifyActionKind(actions.find((action) => action.id === "leakLoomPhoto")!)).toBe("ai");
     expect(classifyActionKind(actions.find((action) => action.id === "leakLoomPhoto")!, "original")).toBe("risk");
     expect(classifyActionKind(actions.find((action) => action.id === "showUnfilteredComments")!)).toBe("public");
+    expect(classifyActionKind(actions.find((action) => action.id === "ignoreChild")!)).toBe("default");
+    expect(classifyActionKind(actions.find((action) => action.id === "livestreamCrowdReaction")!)).toBe("risk");
     expect(classifyActionKind(actions.find((action) => action.id === "publishTailorsClaim")!)).toBe("default");
   });
 

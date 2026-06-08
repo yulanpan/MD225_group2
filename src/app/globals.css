@@ -1506,7 +1506,7 @@ h2 {
 }
 
 .stage-button.guided-sealed::after {
-  content: "LOCKED";
+  content: attr(data-lock-label);
   position: absolute;
   right: 10px;
   top: 9px;
@@ -1661,8 +1661,7 @@ h2 {
   animation: impactIn 520ms var(--ease-command) both;
 }
 
-.action-card[data-risk="risk"].is-active,
-.action-card[data-zone="child"].is-active {
+.action-card[data-risk="risk"].is-active {
   box-shadow: 9px 9px 0 rgba(219, 41, 66, 0.24), var(--shadow);
 }
 
@@ -1953,14 +1952,6 @@ h2 {
   color: #006d82;
 }
 
-.tool-btn.risk {
-  --button-accent: var(--red);
-  background:
-    linear-gradient(105deg, rgba(219, 41, 66, 0.18), transparent 44%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(252, 231, 232, 0.9));
-  color: var(--red);
-}
-
 .tool-btn:disabled {
   cursor: not-allowed;
   opacity: 0.45;
@@ -2124,7 +2115,7 @@ h2 {
 }
 
 .ai-message::before {
-  content: "RECOMMENDED FRAMING";
+  content: attr(data-framing-label);
   display: block;
   margin-bottom: 7px;
   color: var(--cyan-hot);
@@ -2295,8 +2286,8 @@ h2 {
   box-shadow: 10px 10px 0 var(--black), var(--shadow);
 }
 
-.evidence-card::before {
-  content: "UNSEALED EVIDENCE";
+.evidence-card[data-evidence-label]::before {
+  content: attr(data-evidence-label);
   position: absolute;
   top: 24px;
   right: -48px;
@@ -2462,8 +2453,9 @@ h2 {
   text-transform: uppercase;
 }
 
-.archive-card::after {
-  content: "ARCHIVED";
+.archive-card[data-archive-label]::after,
+.ending-summary-card[data-archive-label]::after {
+  content: attr(data-archive-label);
   position: absolute;
   right: -20px;
   bottom: 48px;
@@ -2473,6 +2465,58 @@ h2 {
   padding: 9px 24px;
   font: 950 28px/1 var(--display);
   letter-spacing: 0.08em;
+}
+
+.ending-report-layout {
+  display: grid;
+  gap: 18px;
+}
+
+.ending-summary-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+  align-items: start;
+  gap: 18px 24px;
+  overflow: hidden;
+  border: 1px solid var(--line-2);
+  background: var(--white);
+  padding: 24px;
+  box-shadow: 10px 10px 0 var(--black), var(--shadow);
+}
+
+.ending-summary-card .ending-animation {
+  grid-row: span 4;
+  min-height: 220px;
+}
+
+.ending-summary-card h3 {
+  margin: 10px 0 8px;
+  color: var(--black);
+  font: 950 44px/0.9 var(--display);
+  letter-spacing: 0;
+}
+
+.ending-summary-card p {
+  max-width: 900px;
+  margin: 0;
+  color: var(--ink-2);
+  font-size: var(--text-md);
+  line-height: 1.62;
+}
+
+.ending-summary-card .archive-meta {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 10px 0 4px;
+}
+
+.ending-summary-card .ending-unlocks,
+.ending-summary-card .actions-main {
+  grid-column: 1 / -1;
+}
+
+.ending-summary-card .actions-main {
+  margin-top: 0;
 }
 
 .archive-meta {
@@ -2488,6 +2532,18 @@ h2 {
 .outcome-stack {
   display: grid;
   gap: 12px;
+}
+
+.ending-outcome-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ending-outcome-grid .wide,
+.ending-outcome-grid .action-path-card,
+.ending-outcome-grid .narrative-facets-card {
+  grid-column: 1 / -1;
 }
 
 .outcome-card {
@@ -2517,6 +2573,11 @@ h2 {
   text-transform: uppercase;
 }
 
+.ending-outcome-grid .outcome-card h4 {
+  font: 950 26px/0.96 var(--display);
+  text-transform: none;
+}
+
 .outcome-card p {
   position: relative;
   max-width: 720px;
@@ -2524,6 +2585,47 @@ h2 {
   color: var(--ink-2);
   font-size: var(--text-md);
   line-height: 1.65;
+}
+
+.source-card p {
+  max-width: 840px;
+}
+
+.source-link-list {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.source-link-list a {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--line);
+  background: rgba(255, 250, 240, 0.64);
+  padding: 11px 12px;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.source-link-list a:hover {
+  border-color: rgba(0, 166, 200, 0.45);
+  box-shadow: 0 8px 0 rgba(0, 166, 200, 0.11);
+  transform: translateY(-1px);
+}
+
+.source-link-list b {
+  color: var(--black);
+  font: 950 var(--text-sm)/1.22 var(--mono);
+  letter-spacing: 0;
+}
+
+.source-link-list span {
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+  line-height: 1.5;
 }
 
 .facet-list {
@@ -3495,6 +3597,7 @@ h2 {
 }
 
 .tutorial-action-hint {
+  --tutorial-action-arrow-x: 50%;
   position: fixed;
   z-index: 109;
   pointer-events: none;
@@ -3520,13 +3623,25 @@ h2 {
 }
 
 .tutorial-action-hint i {
+  position: absolute;
+  left: calc(var(--tutorial-action-arrow-x) - 13px);
   width: 0;
   height: 0;
   border-left: 13px solid transparent;
   border-right: 13px solid transparent;
-  border-top: 18px solid var(--red);
   filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.32));
+}
+
+.tutorial-action-hint[data-placement="top"] i {
+  bottom: -16px;
+  border-top: 18px solid var(--red);
   animation: tutorialArrowNudge 960ms ease-in-out infinite;
+}
+
+.tutorial-action-hint[data-placement="bottom"] i {
+  top: -16px;
+  border-bottom: 18px solid var(--red);
+  animation: tutorialArrowNudgeUp 960ms ease-in-out infinite;
 }
 
 .dialogue-overlay {
@@ -4288,7 +4403,6 @@ body.breach .risk-panel {
 }
 
 body.breach .action-card[data-risk="risk"],
-body.breach .action-card[data-zone="child"],
 .dashboard-page[data-last-risk="risk"] .map-cell.hot {
   animation: breachTilt 360ms var(--ease-breach) 2;
 }
@@ -4300,7 +4414,9 @@ body.breach .comments-module {
 .dashboard-page[data-atmosphere="collapse"] .lab-shell,
 .dashboard-page[data-atmosphere="contained"] .lab-shell,
 .report-page[data-ending="collapse"] .archive-card,
-.report-page[data-ending="contained"] .archive-card {
+.report-page[data-ending="contained"] .archive-card,
+.ending-report-page[data-ending="collapse"] .ending-summary-card,
+.ending-report-page[data-ending="contained"] .ending-summary-card {
   background:
     linear-gradient(135deg, rgba(219, 41, 66, 0.16), transparent 46%),
     rgba(255, 250, 240, 0.76);
@@ -4308,7 +4424,8 @@ body.breach .comments-module {
 }
 
 .dashboard-page[data-atmosphere="liberated"] .lab-shell,
-.report-page[data-ending="liberated"] .archive-card {
+.report-page[data-ending="liberated"] .archive-card,
+.ending-report-page[data-ending="liberated"] .ending-summary-card {
   background:
     linear-gradient(135deg, rgba(0, 220, 255, 0.22), transparent 36%),
     linear-gradient(45deg, transparent, rgba(185, 139, 47, 0.14)),
@@ -4829,6 +4946,11 @@ body.breach .comments-module {
   50% { transform: translateY(7px); }
 }
 
+@keyframes tutorialArrowNudgeUp {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
 @keyframes guidedCardSweep {
   0%, 100% { transform: translateX(0) skewX(-12deg); opacity: 0.18; }
   45% { transform: translateX(220%) skewX(-12deg); opacity: 0.66; }
@@ -4905,13 +5027,15 @@ body.breach .comments-module {
   .hero,
   .section-header,
   .lab-body,
-  .intervention-layout,
-  .report-layout,
-  .ending-layout,
-  .archive-dashboard,
-  .archive-room-grid {
-    grid-template-columns: 1fr;
-  }
+	  .intervention-layout,
+	  .report-layout,
+	  .ending-layout,
+	  .ending-summary-card,
+	  .ending-outcome-grid,
+	  .archive-dashboard,
+	  .archive-room-grid {
+	    grid-template-columns: 1fr;
+	  }
 
   .hero {
     gap: 44px;
@@ -4939,10 +5063,11 @@ body.breach .comments-module {
   }
 
   .lab-shell,
-  .archive-card,
-  .evidence-card {
-    box-shadow: var(--shadow);
-  }
+	  .archive-card,
+	  .ending-summary-card,
+	  .evidence-card {
+	    box-shadow: var(--shadow);
+	  }
 
   .archive-module.wide {
     grid-column: span 1;
@@ -5054,12 +5179,13 @@ body.breach .comments-module {
   .action-grid,
   .decision-grid,
   .command-body,
-  .modal-body,
-  .trace-grid,
-  .replay-target,
-  .state-list {
-    grid-template-columns: 1fr;
-  }
+	  .modal-body,
+	  .trace-grid,
+	  .replay-target,
+	  .state-list,
+	  .ending-summary-card .archive-meta {
+	    grid-template-columns: 1fr;
+	  }
 
   .archive-state-list,
   .achievement-archive-grid {
@@ -5234,6 +5360,10 @@ body.breach .comments-module {
   .evidence-card h3,
   .archive-card h3 {
     font-size: 46px;
+  }
+
+  .ending-summary-card h3 {
+    font-size: 36px;
   }
 
   .cursor-light {

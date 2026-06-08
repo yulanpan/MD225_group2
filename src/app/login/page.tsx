@@ -75,7 +75,7 @@ export default function LoginPage() {
       <div className="scroll-progress" aria-hidden="true" />
       <div className="cursor-light" aria-hidden="true" />
       <header className="topbar" aria-label="Navigation">
-        <Link className="brand-mark" href="/">{language === "zh" ? "PNE / 宫廷信息流" : "PNE / Royal Feed"}</Link>
+        <Link className="brand-mark" href="/">{language === "zh" ? "The Emperor's Feed / 宫廷发布台" : "The Emperor's Feed / Palace Feed"}</Link>
         <nav className="topbar-links">
           <Link href="/">{commonText("start", language)}</Link>
           <Link href="/dashboard">{commonText("operations", language)}</Link>

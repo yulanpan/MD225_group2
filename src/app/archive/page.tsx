@@ -73,7 +73,7 @@ export default function ArchivePage() {
       <div className="scroll-progress" aria-hidden="true" />
       <div className="cursor-light" aria-hidden="true" />
       <header className="topbar" aria-label="Navigation">
-        <Link className="brand-mark" href="/">{language === "zh" ? "PNE / 宫廷信息流" : "PNE / Royal Feed"}</Link>
+        <Link className="brand-mark" href="/">{language === "zh" ? "The Emperor's Feed / 宫廷发布台" : "The Emperor's Feed / Palace Feed"}</Link>
         <nav className="topbar-links">
           <Link href="/">{commonText("start", language)}</Link>
           <Link href="/dashboard">{commonText("operations", language)}</Link>
@@ -108,7 +108,7 @@ export default function ArchivePage() {
             <span>{profile.decodedEngine ? commonText("decodeProgress", language) : (language === "zh" ? "隐藏线索" : "Archive Signal")}</span>
             <strong>{profile.biasAwareness}%</strong>
             <p>{profile.decodedEngine
-              ? (language === "zh" ? "你已经看清引擎偏向。新的结局路线已经开放。" : "Engine bias fully decoded. The secret ending route is open.")
+              ? (language === "zh" ? "你已经看清宫廷 AI 的偏向。新的结局路线已经开放。" : "Palace AI bias found. The secret ending route is open.")
               : (language === "zh" ? "完成不同路线，会看到更多隐藏线索。" : "Complete varied shifts to recover more archive signals.")}</p>
           </article>
           <article className="archive-summary-panel">
@@ -125,7 +125,7 @@ export default function ArchivePage() {
 
         <div className="archive-room-grid">
           <section className="module archive-module">
-            <div className="module-head"><h3>{profile.decodedEngine ? (language === "zh" ? "引擎偏向" : "Engine Fragments") : (language === "zh" ? "隐藏线索" : "Archive Signals")}</h3></div>
+            <div className="module-head"><h3>{profile.decodedEngine ? (language === "zh" ? "AI 偏向" : "AI Bias Clues") : (language === "zh" ? "隐藏线索" : "Archive Signals")}</h3></div>
             <div className="module-body fragment-grid">
               {engineFragmentDefinitions.map((fragment) => {
                 const unlocked = fragmentIds.has(fragment.id);
