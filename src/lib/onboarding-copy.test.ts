@@ -6,6 +6,7 @@ import {
   onboardingTourSteps,
   tutorialSteps
 } from "./onboarding-copy";
+import { metricLabel } from "./i18n";
 
 function expectFreshCopySafe(text: string) {
   for (const term of forbiddenFreshRunTerms) {
@@ -128,5 +129,27 @@ describe("onboarding copy", () => {
         expect(fullCopy).not.toContain(term);
       }
     }
+  });
+
+  it("keeps metric names stable while explaining pressure and alert distinctly", () => {
+    expect(metricLabel("pressure", "zh")).toBe("宫廷压力");
+    expect(metricLabel("reputation", "zh")).toBe("你的安全");
+    expect(metricLabel("systemSuspicion", "zh")).toBe("宫廷警戒");
+    expect(metricLabel("pressure", "en")).toBe("Palace Pressure");
+    expect(metricLabel("reputation", "en")).toBe("Safety");
+    expect(metricLabel("systemSuspicion", "en")).toBe("Palace Alert");
+
+    const zhGuide = guidedStepCopy("systemSuspicion", "zh", false).body;
+    expect(zhGuide).toContain("宫廷开始注意你本人");
+    expect(zhGuide).toContain("可能限制");
+    expect(zhGuide).toContain("发布权");
+
+    const zhSummary = tutorialSteps("zh").find((step) => step.id === "metrics")?.body ?? "";
+    expect(zhSummary).toContain("宫廷压力看宫廷说法压住别人");
+    expect(zhSummary).toContain("宫廷警戒看宫廷是否开始盯上你");
+
+    const enSummary = tutorialSteps("en").find((step) => step.id === "metrics")?.body ?? "";
+    expect(enSummary).toContain("Palace Pressure suppresses disagreement");
+    expect(enSummary).toContain("Palace Alert means the palace is watching you");
   });
 });

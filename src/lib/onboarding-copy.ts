@@ -105,8 +105,8 @@ export function guidedStepCopy(step: GuidedCampaignStep, language: LanguageCode,
       title: language === "zh" ? "从裁缝声明开始" : "Start with the tailors' claim",
       body: traceViewed
         ? (language === "zh"
-          ? "现在点击这张行动卡底部的发布按钮。这会消耗 1 次行动，并把官方声明写入公共记录。"
-          : "Now click the Publish button at the bottom of this action card. It spends 1 action and writes the official claim into the public record.")
+          ? "现在点击这张行动卡底部的发布按钮。新手教程内这会写入公共记录，但不会消耗行动次数。"
+          : "Now click the Publish button at the bottom of this action card. During the guide, it writes the official claim without spending an action.")
         : (language === "zh"
           ? "先看左侧裁缝室，再检查中间第一张行动卡。预览后果不会消耗行动，它会说明风险和指标影响。"
           : "Start at the Tailors' Room and inspect the first action card. Preview Result does not spend an action; it previews risk and metric effects."),
@@ -124,8 +124,8 @@ export function guidedStepCopy(step: GuidedCampaignStep, language: LanguageCode,
       label: language === "zh" ? "第一周目 / 任务 03" : "First Run / Task 03",
       title: language === "zh" ? "注意系统监测" : "Watch system monitoring",
       body: language === "zh"
-        ? "现在右侧面板会记录你刚做过什么。留意“宫廷警戒”，它表示宫廷有多注意你。"
-        : "The right AI panel is now tracking your published record. Watch Palace Alert; it measures the risk of restricted access.",
+        ? "现在右侧面板会记录你刚做过什么。留意“宫廷警戒”：宫廷开始注意你本人时，可能限制你的发布权。"
+        : "The right AI panel is now tracking your published record. Watch Palace Alert: it tracks the palace noticing you and threatening your access.",
       action: language === "zh" ? "查看宫廷警戒" : "Review Palace Alert"
     },
     fullControl: {
@@ -150,7 +150,7 @@ function compactOnboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         eyebrow: "本局目标",
         title: "六次发布决定结局",
         body: "你是宫廷发布编辑。游行前只有 6 次操作，每次发布都会改变大家看到什么、敢不敢怀疑。",
-        detail: "只有最后确认发布才会扣次数。",
+        detail: "新手教程内确认发布不会扣次数；教程结束后，确认发布才会扣次数。",
         why: "结局会根据整局行动和最终状态计算。",
         metricFocus: "actionsLeft",
         advanceOn: "next"
@@ -186,7 +186,7 @@ function compactOnboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         actionTargetId: "trace-close",
         eyebrow: "后果预览",
         title: "风险是路线信号",
-        body: "这里集中显示解锁条件、风险和发布后记录。风险不是失败提示，而是路线信号。",
+        body: "这里集中显示解锁条件、风险和发布后记录。风险会提示这条路线的代价。",
         detail: "关闭预览，回到行动卡。",
         why: "低风险更稳，高风险更可能让证据和怀疑被看见。",
         actionLabel: "关闭预览",
@@ -212,7 +212,7 @@ function compactOnboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         actionTargetId: "command-commit",
         eyebrow: "发布确认",
         title: "确认后局势才会改变",
-        body: "这里显示已选行动、预计变化和宫廷 AI 建议。确认发布后才会消耗 1 次行动。",
+        body: "这里显示已选行动、预计变化和宫廷 AI 建议。新手教程内确认发布会生效，但不会消耗行动次数。",
         detail: "确认发布第一条记录。",
         why: "AI 建议可以参考，但结局由你的行动和最终指标决定。",
         actionLabel: "确认发布",
@@ -224,9 +224,9 @@ function compactOnboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "metrics-grid",
         eyebrow: "核心指标",
         title: "用指标看局势方向",
-        body: "证据、传播、群众怀疑、宫廷压力、你的安全和宫廷警戒会一起决定结局。",
-        detail: "数字变化告诉你这次发布把局势推向哪里。",
-        why: "正数不一定永远是好事，负数也不一定永远是坏事。",
+        body: "证据是真话进记录；宫廷压力是宫廷说法压住别人；宫廷警戒是宫廷开始盯上你。它们会和传播、群众怀疑、你的安全一起决定结局。",
+        detail: "数字变化告诉你这次发布是在稳住宫廷说法，还是把证据和怀疑推到台前。",
+        why: "正数不一定永远是好事，负数也不一定永远是坏事。关键是宫廷稳了，还是公众看见了。",
         advanceOn: "next"
       },
       {
@@ -251,7 +251,7 @@ function compactOnboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         title: "发布公众信号",
         body: "“显示未过滤评论”会让犹豫和质疑进入信息流。它更危险，但会让怀疑被看见。",
         detail: "点击发布，进入最后确认。",
-        why: "把私下怀疑公开出来，会让人们发现自己不是独自在怀疑。",
+        why: "把私下怀疑公开出来，会让人们发现彼此都在怀疑。",
         actionLabel: "发布",
         advanceOn: "commandOpened"
       },
@@ -306,7 +306,7 @@ function compactOnboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       eyebrow: "Run Goal",
       title: "Six posts decide the ending",
       body: "You edit the palace feed before the parade. Each confirmed post changes what people see and whether doubt can spread.",
-      detail: "Only final confirmation spends an action.",
+      detail: "During this guide, final confirmations do not spend actions. After the guide, confirmed posts do.",
       why: "The ending is calculated from the full action path and final state.",
       metricFocus: "actionsLeft",
       advanceOn: "next"
@@ -331,7 +331,7 @@ function compactOnboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       title: "Preview before publishing",
       body: "Action cards show the post, risk, and metric effects. Previewing costs nothing.",
       detail: "Open Preview Result.",
-      why: "Read the consequence before spending an action.",
+      why: "Read the consequence before committing a record.",
       actionLabel: "Preview result",
       advanceOn: "traceOpened"
     },
@@ -368,7 +368,7 @@ function compactOnboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       actionTargetId: "command-commit",
       eyebrow: "Before Publishing",
       title: "Before Publishing is the final check",
-      body: "This panel shows the selected action, predicted effects, and Palace AI advice. Confirming spends one action.",
+      body: "This panel shows the selected action, predicted effects, and Palace AI advice. During the guide, confirming changes the run without spending an action.",
       detail: "Confirm the first post.",
       why: "AI advice is a signal. Your action path and final metrics decide the ending.",
       actionLabel: "Publish",
@@ -381,7 +381,7 @@ function compactOnboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       eyebrow: "Core Metrics",
       title: "Metrics show the run's direction",
       body: "Evidence, Spread, Public Doubt, Palace Pressure, Safety, and Palace Alert together decide the ending.",
-      detail: "Read the direction of change, not just whether a number went up.",
+      detail: "Read the direction of change and the price behind the number.",
       why: "Positive values are not always good. Negative values are not always bad.",
       advanceOn: "next"
     },
@@ -394,7 +394,7 @@ function compactOnboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       title: "Switch to Public Comments",
       body: "Public Comments show whether the crowd is repeating, fearing, joking, or starting to doubt.",
       detail: "Switch to Public Comments.",
-      why: "The feed responds to what people repeat, not only what you publish.",
+      why: "The feed responds to what people repeat as much as what you publish.",
       actionLabel: "Public Comments",
       advanceOn: "sourceSelected"
     },
@@ -466,7 +466,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         eyebrow: "本局目标",
         title: "游行前只有六次操作",
         body: "你只有 6 次发布机会。可以帮宫廷圆谎，也可以把证据放出去。",
-        detail: "只有点到最后的“确认发布”才会扣次数。",
+        detail: "新手教程内确认发布不会扣次数；教程结束后，确认发布才会扣次数。",
         why: "次数有限，每次发布前先想清楚：这会让大家更相信，还是更怀疑？",
         metricFocus: "actionsLeft",
         advanceOn: "next"
@@ -534,7 +534,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "trace-risk",
         eyebrow: "风险等级",
         title: "风险越高，宫廷警戒越高",
-        body: "低风险更安全；高风险更容易把真相放到大家面前。",
+        body: "低风险通常保住你的安全；高风险更容易把真相放到大家面前，也更容易让宫廷盯上你。",
         detail: "裁缝声明风险较低，因为它顺着宫廷说法走。",
         why: "越直接的证据，越可能让宫廷注意到你。",
         advanceOn: "next"
@@ -571,9 +571,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "command-panel",
         eyebrow: "发布确认",
         title: "发布确认是最后检查",
-        body: "这里是最后确认页。先确认你选的是不是这张卡。",
-        detail: "再看数字怎么变、宫廷怎么建议。",
-        why: "点确认后，局势才会真的改变。",
+        body: "这里是最后确认页。先确认当前卡片选对了。",
+        detail: "再看证据、宫廷压力、你的安全和宫廷警戒会怎么变。",
+        why: "点确认后，宫廷说法、人群反应和你的位置才会真的改变。",
         advanceOn: "next"
       },
       {
@@ -583,7 +583,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         eyebrow: "已选行动",
         title: "确认你要发什么",
         body: "这里显示你马上要发布的内容。",
-        detail: "现在显示的是“发布裁缝声明”。它是一条官方声明，不是证据。",
+        detail: "现在显示的是“发布裁缝声明”。它是一条官方声明，证据仍然缺席。",
         why: "卡片很多时，先确认标题可以避免点错。",
         advanceOn: "next"
       },
@@ -605,7 +605,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "command-response",
         eyebrow: "AI 建议",
         title: "宫廷会建议你保守一点",
-        body: "宫廷 AI 通常希望场面稳定，所以它会劝你说得更安全。",
+        body: "宫廷 AI 通常希望游行前的说法被压稳，所以它会劝你少放直接证据。",
         detail: "可以参考它，但不用完全听它的。",
         why: "你真正要判断的是：这次发布会让真话更近，还是让谎言更稳。",
         advanceOn: "next"
@@ -617,9 +617,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         actionTargetId: "command-commit",
         eyebrow: "确认发布",
         title: "确认发布",
-        body: "确认发布后，这次选择才会生效，并消耗 1 次行动。",
+        body: "新手教程内确认发布会让这次选择生效，但不会消耗行动次数。",
         detail: "确认“发布”。",
-        why: "这一步之后，行动数会从 6 变成 5。",
+        why: "这一步之后，指标会改变，但新手教程仍会保留 6 次正式行动。",
         actionLabel: "确认发布",
         advanceOn: "commandCommitted"
       },
@@ -642,8 +642,8 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         eyebrow: "宫廷压力",
         title: "宫廷压力越高，越没人敢反对",
         body: "宫廷压力越高，大家越不敢说自己看不见。官方声明把怀疑者说成愚蠢，所以压力上升。",
-        detail: "高压力可以稳定表面秩序，但也可能让沉默变得更脆弱。",
-        why: "这条声明不是证明衣服存在，而是让质疑衣服的人付出社交代价。",
+        detail: "它压住公众和官员的嘴；宫廷警戒另外记录宫廷是否盯上你。",
+        why: "这条声明让质疑衣服的人承担社交代价。",
         metricFocus: "pressure",
         advanceOn: "next"
       },
@@ -653,7 +653,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "metric-reputation",
         eyebrow: "你的安全",
         title: "你的安全代表宫廷还信不信你",
-        body: "顺着宫廷说法发布，会让你暂时更安全。",
+        body: "顺着宫廷说法发布，会让你暂时更安全，也更像一个可靠的宫廷编辑。",
         detail: "如果安全太低，公开证据会更危险。",
         why: "你刚才帮宫廷稳住了说法，所以宫廷警戒暂时不会升得太快。",
         metricFocus: "reputation",
@@ -664,7 +664,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         surface: "dashboard",
         spotlightTargetId: "metric-publicDoubt",
         eyebrow: "群众怀疑",
-        title: "群众怀疑不是一个人偷偷怀疑",
+        title: "群众怀疑会彼此确认",
         body: "群众怀疑，是大家发现彼此也在怀疑。官方羞辱式声明会压低它。",
         detail: "它上升时，人们更容易互相确认；下降时，人们更倾向于沉默或跟着称赞。",
         why: "刚才的声明让看不见的人害怕被说成不聪明，所以群众怀疑下降。",
@@ -679,7 +679,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         title: "证据代表事实是否被看见",
         body: "证据表示大家能看到多少真相。刚才只是官方声明，没有展示织布机、照片或目击者，所以证据没有上升。",
         detail: "以后检查织布机、事实核查、公开孩子的声音，会更直接影响证据。",
-        why: "说法强不等于证据强；理解这点才能判断行动真正的方向。",
+        why: "强势说法可以压住证据；理解这点才能判断行动真正的方向。",
         metricFocus: "truth",
         advanceOn: "next"
       },
@@ -702,9 +702,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "card-showUnfilteredComments",
         eyebrow: "公众行动卡",
         title: "读未过滤评论这张卡",
-        body: "“显示未过滤评论”会把犹豫和质疑放出来，让大家看到自己不是一个人在怀疑。",
+        body: "“显示未过滤评论”会让藏起来的犹豫进入公开记录。",
         detail: "先读整张卡，不要只看按钮。",
-        why: "把私下怀疑公开出来，会让人们发现自己不是独自在怀疑。",
+        why: "当私下怀疑变得可见，怀疑者就能互相认出来。",
         advanceOn: "next"
       },
       {
@@ -821,9 +821,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "metric-systemSuspicion",
         eyebrow: "宫廷警戒",
         title: "宫廷警戒越高，你越危险",
-        body: "公开证据、放出怀疑和危险爆料，都会让宫廷更注意你。",
-        detail: "刚才显示未过滤评论，所以这个数字上升了。",
-        why: "公开怀疑有价值，但并不安全。",
+        body: "宫廷警戒表示宫廷开始注意你本人，可能限制你的发布权。",
+        detail: "刚才显示未过滤评论，让群众怀疑变得可见，所以这个数字上升了。",
+        why: "公开怀疑有价值，但宫廷越难控制局势，就越会盯上发布者。",
         metricFocus: "systemSuspicion",
         advanceOn: "next"
       },
@@ -833,8 +833,8 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "engine-panel",
         eyebrow: "AI 面板",
         title: "右侧是读数和建议",
-        body: "右侧面板会给出建议，也会显示你刚刚做过什么。",
-        detail: "不知道怎么选时，可以先看建议，再看评论和数字。",
+        body: "右侧面板会给出宫廷视角的建议，也会记录你刚刚做过什么。",
+        detail: "不知道怎么选时，先看它想压住什么，再看评论和数字实际变成什么。",
         why: "宫廷 AI 通常想稳住场面；你要判断自己是否要听它的。",
         advanceOn: "next"
       },
@@ -845,7 +845,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         eyebrow: "自主值班",
         title: "继续完成剩余行动",
         body: "接下来你自己决定：帮宫廷稳住谎言，还是把证据放出去。",
-        detail: "想安全，就少刺激怀疑；想让真话出现，就要承担宫廷警戒升高的风险。",
+        detail: "想保住你的安全，就少刺激怀疑；想让真话出现，就要承担宫廷警戒升高的风险。",
         why: "没有唯一正确按钮。关键是看每次发布把人群推向哪里。",
         metricFocus: "actionsLeft",
         advanceOn: "tutorialFinished"
@@ -861,8 +861,8 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       eyebrow: "Run Goal",
       title: "Six actions before the parade",
       body: "This is a six-action run: choose a source, read action risk, publish records, and let the metrics determine the ending.",
-      detail: "Only confirmed publications spend actions. Previewing results, reading comments, and looking at panels costs nothing.",
-      why: "Actions are the run's hard limit. Learn the effect before spending one.",
+      detail: "During this guide, confirmed publications do not spend actions. Previewing results, reading comments, and looking at panels also costs nothing.",
+      why: "After the guide, actions become the run's hard limit. Learn the effect before committing one.",
       metricFocus: "actionsLeft",
       advanceOn: "next"
     },
@@ -929,9 +929,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       spotlightTargetId: "trace-risk",
       eyebrow: "Risk",
       title: "Risk shows danger",
-      body: "Risk describes how dangerous this action is for reputation and access. Stable official actions are usually safer; evidence and public doubt are usually riskier.",
+      body: "Risk describes how dangerous this action is for Safety and access. Official actions are usually safer; Evidence and Public Doubt are usually easier for the palace to notice.",
       detail: "The tailors' claim is low risk because it supports the palace story.",
-      why: "Higher risk often means higher Evidence or Public Doubt, but also lower protection.",
+      why: "Higher risk often means higher Evidence or Public Doubt, but it can also raise Palace Alert.",
       advanceOn: "next"
     },
     {
@@ -956,7 +956,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       title: "Publish the first record",
       body: "Publish opens the final confirmation. It still does not settle the run until you confirm inside the preview.",
       detail: "Enter Publish to make one final check.",
-      why: "This gives you one final check before spending an action.",
+      why: "This gives you one final check before committing a record.",
       actionLabel: "Publish",
       advanceOn: "commandOpened"
     },
@@ -967,8 +967,8 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       eyebrow: "Before Publishing",
       title: "Before Publishing is the final check",
       body: "The preview shows the selected action, predicted effects, and Palace AI advice before the run changes.",
-      detail: "Read each row before confirming.",
-      why: "This is where the game connects action choice to metric movement.",
+      detail: "Check how Evidence, Palace Pressure, Safety, and Palace Alert will move.",
+      why: "This is where the game connects a post to what the palace controls and what the public can see.",
       advanceOn: "next"
     },
     {
@@ -999,10 +999,10 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       surface: "command",
       spotlightTargetId: "command-response",
       eyebrow: "Palace AI Advice",
-      title: "The AI advice is not the rule",
-      body: "Palace AI Advice explains the situation in-world. The fixed rule system still handles the actual metric changes.",
-      detail: "Use it as advice, not as the only objective.",
-      why: "The game is about understanding consequences, not simply following a suggestion.",
+      title: "AI advice has a point of view",
+      body: "Palace AI Advice speaks from the palace side. It usually wants the parade story controlled and direct Evidence softened.",
+      detail: "Use it as one signal among the metrics.",
+      why: "The game is about reading consequences while palace guidance pulls one way.",
       advanceOn: "next"
     },
     {
@@ -1012,9 +1012,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       actionTargetId: "command-commit",
       eyebrow: "Confirm",
       title: "Confirm Publish",
-      body: "Confirming Publish spends one action and writes the record.",
+      body: "During the guide, Confirming Publish writes the record without spending an action.",
       detail: "Confirm Publish.",
-      why: "After this, actions left drops from 6 to 5 and metrics move.",
+      why: "After this, the record and metrics move while your action count stays available for free play.",
       actionLabel: "Publish",
       advanceOn: "commandCommitted"
     },
@@ -1037,7 +1037,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       eyebrow: "Palace Pressure",
       title: "Palace Pressure is palace force",
       body: "Palace Pressure shows how strongly the palace story suppresses disagreement.",
-      detail: "The claim makes doubt socially costly, so Palace Pressure rises.",
+      detail: "It pressures citizens and officials into silence; Palace Alert separately tracks the palace watching you.",
       why: "It shifts the question from the cloth to the viewer's worth.",
       metricFocus: "pressure",
       advanceOn: "next"
@@ -1060,8 +1060,8 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       spotlightTargetId: "metric-publicDoubt",
       eyebrow: "Public Doubt",
       title: "Public Doubt is shared uncertainty",
-      body: "Public Doubt rises when citizens realize they are not doubting alone. The claim lowers it by making doubt feel unsafe.",
-      detail: "Low Public Doubt means people may still doubt privately, but they do not see each other.",
+      body: "Public Doubt rises when people realize private hesitation is shared. The claim lowers it by making questions feel unsafe.",
+      detail: "Low Public Doubt means doubters may still exist, but they do not see each other yet.",
       why: "The claim pressures doubters into silence.",
       metricFocus: "publicDoubt",
       advanceOn: "next"
@@ -1074,7 +1074,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       title: "Evidence is visible proof",
       body: "Evidence measures direct proof in the public record. The claim is not evidence, so Evidence did not rise.",
       detail: "Inspecting looms, fact-checking, or publishing witness voices affects Evidence more directly.",
-      why: "A stronger story is not the same as stronger evidence.",
+      why: "A stronger story can still leave Evidence weak.",
       metricFocus: "truth",
       advanceOn: "next"
     },
@@ -1216,7 +1216,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       spotlightTargetId: "metric-systemSuspicion",
       eyebrow: "Palace Alert",
       title: "Palace Alert is access risk",
-      body: "Palace Alert measures how likely your editing access is to be restricted.",
+      body: "Palace Alert measures whether the palace is noticing you and may restrict your publishing access.",
       detail: "Showing unfiltered doubt raised it. Public recognition has a cost.",
       why: "The palace watches actions that make the public record harder to control.",
       metricFocus: "systemSuspicion",
@@ -1287,8 +1287,8 @@ export function lockedFeatureText(kind: "zone" | "metric", id: string, language:
       zh: "显示一句话传播得有多快。"
     },
     publicDoubt: {
-      en: "Shows whether citizens realize they are not doubting alone.",
-      zh: "显示大家是否发现自己不是一个人在怀疑。"
+      en: "Shows when private doubt starts becoming visible to others.",
+      zh: "显示私下怀疑什么时候开始被别人看见。"
     },
     systemSuspicion: {
       en: "Shows the risk that your publishing access may be restricted.",
@@ -1306,7 +1306,7 @@ export function glossaryText(term: string, language: LanguageCode) {
     },
     pressure: {
       en: "How strongly palace authority is pushing one acceptable story.",
-      zh: "宫廷让大家不敢反对的程度。"
+      zh: "宫廷说法压住现场、让人不敢反对的程度。"
     },
     virality: {
       en: "How quickly posts, quotes, and reactions circulate.",
@@ -1318,15 +1318,15 @@ export function glossaryText(term: string, language: LanguageCode) {
     },
     reputation: {
       en: "Your remaining institutional trust and publishing protection.",
-      zh: "宫廷现在还愿不愿意信任你。"
+      zh: "宫廷暂时还信任你、允许你继续发布的程度。"
     },
     systemSuspicion: {
       en: "How likely your publishing access is to be restricted.",
-      zh: "宫廷警戒有多高。"
+      zh: "宫廷开始注意你、可能限制发布权的风险。"
     },
     pne: {
       en: "The palace AI that reads risk, reputation, and circulation stability before suggesting a next move.",
-      zh: "宫廷 AI，会劝你用更安全的说法稳住场面。"
+      zh: "宫廷 AI，会从宫廷视角提醒风险、你的安全和宫廷警戒。"
     },
     royalFeed: {
       en: "The public communication channel you are editing during the shift.",
@@ -1367,7 +1367,7 @@ export function tutorialSteps(language: LanguageCode): TutorialStep[] {
         id: "metrics",
         eyebrow: "结局指标",
         title: "用指标判断走向",
-        body: "证据看真话有多少；宫廷压力看大家敢不敢反对；传播看一句话传得多快；群众怀疑看大家是否一起怀疑；你的安全看宫廷还信不信你；宫廷警戒看你有多危险。"
+        body: "证据看真话进记录多少；宫廷压力看宫廷说法压住别人多少；传播看一句话传得多快；群众怀疑看大家是否一起怀疑；你的安全看宫廷还信不信你；宫廷警戒看宫廷是否开始盯上你。"
       }
     ];
   }
@@ -1401,7 +1401,7 @@ export function tutorialSteps(language: LanguageCode): TutorialStep[] {
       id: "metrics",
       eyebrow: "Ending Pressure",
       title: "Use metrics to read the run",
-      body: "Evidence is visible proof; Palace Pressure is palace force; Spread is circulation; Public Doubt is shared uncertainty; Safety protects you; Palace Alert measures access risk."
+      body: "Evidence is truth in the record; Palace Pressure suppresses disagreement; Spread is circulation; Public Doubt is shared uncertainty; Safety protects your role; Palace Alert means the palace is watching you."
     }
   ];
 }

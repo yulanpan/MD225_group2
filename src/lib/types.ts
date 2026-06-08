@@ -70,6 +70,7 @@ export type HistoryEntry = {
   publishedText: string;
   resultText?: string;
   engineMessage: string;
+  spentAction?: boolean;
   metricDeltas?: HistoryMetricDelta[];
   stateBefore: Omit<GameState, "history">;
   stateAfter: Omit<GameState, "history">;

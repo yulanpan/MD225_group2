@@ -6,6 +6,7 @@ import { buildNarrativeContext } from "@/lib/narrative";
 import type { GameState, GeneratedComments, PublicComment } from "@/lib/types";
 
 const stances: PublicComment["stance"][] = ["praise", "fear", "doubt", "satire", "procedural", "witness"];
+const generatedCommentCount = 10;
 
 function sanitizeCommentText(value: unknown, language: "en" | "zh") {
   if (typeof value !== "string") return "";
@@ -36,10 +37,10 @@ function safeGeneratedComments(value: GeneratedComments, fallback: GeneratedComm
       }, [])
     : [];
   const distinctStances = new Set(publicComments.map((comment) => comment.stance));
-  if (comments.length >= 4 && publicComments.length >= 4 && distinctStances.size >= 3) {
+  if (comments.length >= generatedCommentCount && publicComments.length >= generatedCommentCount && distinctStances.size >= 3) {
     return {
-      comments: comments.slice(0, 6),
-      publicComments: publicComments.slice(0, 6)
+      comments: comments.slice(0, generatedCommentCount),
+      publicComments: publicComments.slice(0, generatedCommentCount)
     };
   }
   return fallback;
@@ -65,7 +66,7 @@ export async function POST(request: Request) {
     const result = await callStructuredOutputWithRetry<GeneratedComments>(
       "generated_comments",
       commentsResponseSchema,
-      `Generate 6 short public comments for a fictional royal social media feed.
+      `Generate ${generatedCommentCount} short public comments for a fictional royal social media feed.
 Language requirement: ${aiLanguageInstruction(language)}
 Current state: ${JSON.stringify(state)}
 Narrative context: ${JSON.stringify(narrative)}
@@ -73,14 +74,14 @@ Latest post: ${latestPost}
 If pressure is high, include fear and conformity. If public doubt is high, include uncertainty, witness comparison, satire, or quiet truth.
 Return comments plus matching publicComments.
 Rules:
-- Return exactly 6 comments and 6 publicComments.
+- Return exactly ${generatedCommentCount} comments and ${generatedCommentCount} publicComments.
 - publicComments must include at least 3 different stances from praise, fear, doubt, satire, procedural, witness.
 - Text must sound like different feed users, not officials and not a narrator.
 - Include messy social texture: hesitation, mimicry, jokes, fear, and cautious observation.
 - Each comment text must be under 120 characters.
 - Use only allowedFacts from narrative context; do not add new events, witnesses, garment details, or offscreen scenes.`
       ,
-      { retries: 1, baseDelayMs: 300, temperature: 0.75, maxOutputTokens: 900 }
+      { retries: 1, baseDelayMs: 300, temperature: 0.75, maxOutputTokens: 1300 }
     );
     const fallback = fallbackCommentsForLanguage(language);
     const payload = safeGeneratedComments(result.data, fallback, language);

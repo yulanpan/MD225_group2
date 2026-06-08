@@ -58,6 +58,18 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function parseStructuredJson(text: string) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    const repaired = text
+      .trim()
+      .replace(/([{,]\s*)([A-Za-z_][A-Za-z0-9_-]*)(\s*:)/g, '$1"$2"$3')
+      .replace(/,\s*([}\]])/g, "$1");
+    return JSON.parse(repaired);
+  }
+}
+
 function shouldRetry(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
   return /408|429|500|502|503|504|fetch failed|network|timeout/i.test(message);
@@ -142,7 +154,7 @@ export async function callStructuredOutput<T>(
     data.choices?.find((item) => item.message?.content)?.message?.content ??
     data.output?.flatMap((item) => item.content ?? []).find((item) => item.text)?.text;
   if (!text) throw new Error("OpenAI response did not include JSON text");
-  return JSON.parse(text) as T;
+  return parseStructuredJson(text) as T;
 }
 
 export async function callStructuredOutputWithRetry<T>(

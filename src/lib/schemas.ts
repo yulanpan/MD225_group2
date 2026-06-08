@@ -200,14 +200,14 @@ export const commentsResponseSchema = {
   properties: {
     comments: {
       type: "array",
-      minItems: 6,
-      maxItems: 6,
+      minItems: 10,
+      maxItems: 10,
       items: { type: "string", maxLength: 120 }
     },
     publicComments: {
       type: "array",
-      minItems: 6,
-      maxItems: 6,
+      minItems: 10,
+      maxItems: 10,
       items: {
         type: "object",
         additionalProperties: false,

@@ -57,6 +57,20 @@ describe("AI helper", () => {
     expect(fetch).toHaveBeenCalledWith("https://api.openai.com/v1/chat/completions", expect.any(Object));
   });
 
+  it("repairs simple JSON-like structured output from compatible providers", async () => {
+    process.env.OPENAI_API_KEY = "sk-test";
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
+      choices: [{ message: { content: '{message: "宫廷 AI 建议维持官方叙事。"}' } }]
+    }), { status: 200 })));
+
+    await expect(callStructuredOutput<{ message: string }>("test_schema", {
+      type: "object",
+      properties: { message: { type: "string" } },
+      required: ["message"],
+      additionalProperties: false
+    }, "Return message.")).resolves.toEqual({ message: "宫廷 AI 建议维持官方叙事。" });
+  });
+
   it("supports custom OpenAI-compatible base URLs and response mode", async () => {
     process.env.OPENAI_API_KEY = "sk-test";
     process.env.OPENAI_BASE_URL = "https://ai.example.test";
@@ -159,8 +173,8 @@ describe("AI helper", () => {
 
   it("returns localized fallback payloads", () => {
     expect(fallbackReactionForLanguage("zh").engineMessage).toContain("直接证据");
-    expect(fallbackRewriteForLanguage("zh").strategy).toContain("暂时不能下结论");
-    expect(fallbackCommentsForLanguage("zh").comments).toHaveLength(4);
-    expect(fallbackFinalReportForLanguage("zh").report).toContain("本局没有形成单一结果");
+    expect(fallbackRewriteForLanguage("zh").strategy).toContain("宫廷警戒");
+    expect(fallbackCommentsForLanguage("zh").comments).toHaveLength(6);
+    expect(fallbackFinalReportForLanguage("zh").report).toContain("这一局收在游行前的混乱里");
   });
 });

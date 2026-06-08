@@ -297,12 +297,12 @@ export function fallbackDialogueEvent(id: string, archetype: DialogueArchetype, 
       mood: { ...defaultDialogueMood.engineAudit },
       quickReplies: zh
         ? [
-            makeChoice("public-interest", "这是公共利益。", "这是公共利益，不是煽动。", "challenge", { trust: -1, agitation: 1, openness: 1, leverage: -1 }),
+            makeChoice("public-interest", "这是公共利益。", "这是公共利益，需要公开。", "challenge", { trust: -1, agitation: 1, openness: 1, leverage: -1 }),
             makeChoice("soften-wording", "我会放软措辞。", "我会放软措辞，但保留事实。", "stabilize", { trust: 1, agitation: -1, openness: -1, leverage: 1 }),
             makeChoice("keep-evidence", "证据仍要可见。", "证据仍要可见。", "escalate", { trust: -1, agitation: 1, openness: 2, leverage: -1 })
           ]
         : [
-            makeChoice("public-interest", "This serves the public.", "This serves the public, not agitation.", "challenge", { trust: -1, agitation: 1, openness: 1, leverage: -1 }),
+            makeChoice("public-interest", "This serves the public.", "This serves the public record.", "challenge", { trust: -1, agitation: 1, openness: 1, leverage: -1 }),
             makeChoice("soften-wording", "I will soften the wording.", "I will soften the wording, but keep the facts.", "stabilize", { trust: 1, agitation: -1, openness: -1, leverage: 1 }),
             makeChoice("keep-evidence", "Keep the evidence visible.", "Keep the evidence visible.", "escalate", { trust: -1, agitation: 1, openness: 2, leverage: -1 })
           ],
@@ -338,11 +338,11 @@ export function fallbackDialogueReply(event: DialogueEvent, language: LanguageCo
   if (event.archetype === "tailorThreat") {
     return language === "zh"
       ? "记录不会消失。问题不在谁看不见，而在你们要求所有人把看不见说成看见。"
-      : "The record will not disappear. The issue is not who cannot see, but why everyone is being asked to call absence visible.";
+      : "The record will not disappear. The issue is why everyone is being asked to call absence visible.";
   }
   if (event.archetype === "publicWitness") {
     return language === "zh"
-      ? "那我会继续看评论是不是被隐藏。如果大家都看见同一件事，沉默就不会一直有效。"
+      ? "那我会继续看评论有没有被隐藏。如果大家都看见同一件事，沉默就不会一直有效。"
       : "Then I will watch whether those comments disappear. If everyone saw the same thing, silence will not hold for long.";
   }
   if (event.archetype === "engineAudit") {
@@ -357,12 +357,12 @@ export function fallbackDialogueReply(event: DialogueEvent, language: LanguageCo
   }
   if (event.archetype === "childGuardian") {
     return language === "zh"
-      ? "保护孩子不等于删除他说过的话。让人群重复它，风险就不再只落在一个人身上。"
-      : "Protecting the child is not the same as deleting what he said. If the crowd repeats it, the risk no longer rests on one person.";
+      ? "保护孩子，也要保留他说过的话。让人群重复它，风险就不再只落在一个人身上。"
+      : "Protect the child while preserving what he said. If the crowd repeats it, the risk no longer rests on one person.";
   }
   return language === "zh"
-    ? "宫廷需要可重复的信心，而不是可传播的怀疑。你的下一步会被记录。"
-    : "The palace needs repeatable confidence, not circulating doubt. Your next move will be recorded.";
+    ? "宫廷需要可重复的信心；可传播的怀疑会被追踪。你的下一步会被记录。"
+    : "The palace needs repeatable confidence. Circulating doubt will be tracked. Your next move will be recorded.";
 }
 
 export function fallbackSilenceResult(event: DialogueEvent, language: LanguageCode): DialogueSilenceResult {
@@ -380,12 +380,12 @@ export function fallbackSilenceResult(event: DialogueEvent, language: LanguageCo
       zh: "我明白了。没人回应时，人们会学着私下比较自己听见的话。"
     },
     archiveClerk: {
-      en: "Silence is still a record. I will mark this exchange as unresolved, not erased.",
-      zh: "沉默也是记录。我会把这次交流标为未决，而不是抹去。"
+      en: "Silence is still a record. I will mark this exchange as unresolved and keep it on file.",
+      zh: "沉默也是记录。我会把这次交流标为未决，保留在案。"
     },
     childGuardian: {
-      en: "If you cannot answer, I will assume the child needs protection before the feed needs clarity.",
-      zh: "如果你不能回答，我会先假定孩子需要保护，而不是信息流需要清晰。"
+      en: "If you cannot answer, I will protect the child first and clarify the feed afterward.",
+      zh: "如果你不能回答，我会先保护孩子，再整理信息流。"
     },
     engineAudit: {
       en: "No response logged. Containment risk increases when the editor cannot justify circulation.",
@@ -461,12 +461,12 @@ export function dialogueQuickReplies(event: DialogueEvent, transcript: DialogueM
       ? [
           makeChoice("keep-citable", "保留可引用记录。", "保留可引用记录。", "challenge", { openness: 1, leverage: -1 }),
           makeChoice("mark-disputed", "标记争议来源。", "标记争议来源。", "clarify", { trust: 1, openness: 1 }),
-          makeChoice("restrict-not-delete", "限制公开，但不删除。", "限制公开，但不删除。", "protect", { trust: 1, agitation: -1, leverage: 1 })
+          makeChoice("restrict-not-delete", "限制公开，保留记录。", "限制公开，保留记录。", "protect", { trust: 1, agitation: -1, leverage: 1 })
         ]
       : [
           makeChoice("keep-citable", "Keep a citable record.", "Keep a citable record.", "challenge", { openness: 1, leverage: -1 }),
           makeChoice("mark-disputed", "Mark disputed sourcing.", "Mark the source as disputed.", "clarify", { trust: 1, openness: 1 }),
-          makeChoice("restrict-not-delete", "Restrict, do not delete.", "Restrict access, but do not delete it.", "protect", { trust: 1, agitation: -1, leverage: 1 })
+          makeChoice("restrict-not-delete", "Restrict access.", "Restrict access and keep the record.", "protect", { trust: 1, agitation: -1, leverage: 1 })
         ];
   }
   if (event.archetype === "childGuardian") {

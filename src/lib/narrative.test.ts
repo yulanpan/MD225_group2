@@ -78,9 +78,9 @@ describe("narrative structure", () => {
     const contained = performAction(initialState, "publishTailorsClaim", "direct");
     const truthRun = performAction(performAction(initialState, "inspectLooms", "direct"), "leakLoomPhoto", "original");
 
-    expect(endingFacetsForState(contained, "perfectIllusion", "en").publicMemory).toContain("learns the approved sentence");
+    expect(endingFacetsForState(contained, "perfectIllusion", "en").publicMemory).toContain("remember how to praise");
     expect(endingFacetsForState(truthRun, "aiContainment", "en").publicMemory).toContain("empty looms");
-    expect(endingFacetsForState(truthRun, "aiContainment", "zh").engineLesson).toContain("拦住发布");
+    expect(endingFacetsForState(truthRun, "aiContainment", "zh").engineLesson).toContain("夺走发布权");
   });
 
   it("loads old saves without narrative fields", () => {

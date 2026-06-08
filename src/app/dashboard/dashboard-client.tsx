@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
-import { actions, zones } from "@/lib/game-data";
+import { actions, initialState, zones } from "@/lib/game-data";
 import {
   calculateEndingWithProfile,
   createInitialState,
@@ -14,7 +14,11 @@ import {
   isActionCompleted,
   isActionUnlocked,
   loadStateFromStorage,
+  normalizeTutorialActionCosts,
   performAction,
+  spentActionCount,
+  tutorialFreeActionIds,
+  commentHistoryLimit,
   publicCommentsFromStrings
 } from "@/lib/game-rules";
 import {
@@ -63,7 +67,9 @@ import {
   fallbackCommentsText,
   fallbackReactionText,
   fallbackRewriteText,
+  initialFeedEventText,
   languageName,
+  localizedActionTitle,
   metricLabel,
   phaseCopy,
   riskBandText,
@@ -73,6 +79,8 @@ import {
 } from "@/lib/i18n";
 import { hasWrongLanguageText } from "@/lib/language-guard";
 import { layerIntensitiesForState, type MusicLayer } from "@/lib/audio";
+import { aiSourceLabel, combinedAiSourceLabel, normalizeAiSource, type AiSource } from "@/lib/ai-source";
+import { forceTutorialAfterAuthKey } from "@/lib/onboarding-session";
 import {
   glossaryText,
   lockedFeatureText,
@@ -103,11 +111,13 @@ import type {
   GuidanceMode,
   GuidanceResult,
   PlayerProfile,
+  PublicComment,
   RewriteResult
 } from "@/lib/types";
 
 const briefingKey = "emperor-feed-briefing-dismissed";
 const guidanceUnlockedKey = "emperor-feed-guidance-unlocked";
+const tutorialCompletedKey = "emperor-feed-tutorial-completed";
 const replayTargetKey = "emperor-feed-replay-target";
 const dialogueTimeoutDefaultMs = 60000;
 
@@ -124,6 +134,7 @@ type SpotlightPanelPosition = {
   top: number;
   left: number;
   width: number;
+  maxHeight: number;
 };
 
 type ActionHintLayout = {
@@ -140,34 +151,102 @@ function escapeTourTarget(targetId: OnboardingTargetId) {
   return targetId.replace(/"/g, "\\\"");
 }
 
-function spotlightPanelPosition(rect: SpotlightRect | null, panelSize?: { width: number; height: number } | null): SpotlightPanelPosition {
-  if (typeof window === "undefined" || !rect) return { top: 96, left: 24, width: 460 };
-  const width = Math.min(480, window.innerWidth - 48);
-  const gap = 18;
-  const estimatedHeight = Math.min(panelSize?.height ?? 560, window.innerHeight - 40);
-  const hasRightRoom = rect.right + gap + width <= window.innerWidth - 20;
-  const hasLeftRoom = rect.left - gap - width >= 20;
-  if (!hasRightRoom && !hasLeftRoom) {
-    const left = Math.max(16, (window.innerWidth - width) / 2);
-    const hasTopRoom = rect.top >= estimatedHeight + gap + 32;
-    const hasBottomRoom = rect.bottom + estimatedHeight + gap <= window.innerHeight - 20;
-    const preferredTop = hasTopRoom
-      ? rect.top - estimatedHeight - gap
-      : hasBottomRoom
-        ? rect.bottom + gap
-        : rect.top > window.innerHeight / 2
-          ? 72
-          : Math.max(72, window.innerHeight - estimatedHeight - 24);
+function spotlightPanelPosition(
+  rect: SpotlightRect | null,
+  panelSize?: { width: number; height: number } | null,
+  surface?: OnboardingSurface
+): SpotlightPanelPosition {
+  if (typeof window === "undefined" || !rect) return { top: 96, left: 24, width: 460, maxHeight: 640 };
+  const margin = 18;
+  const gap = 30;
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const targetRect = rect;
+  const prefersSidePlacement = surface === "command" || surface === "trace" || surface === "dialogue";
+  const width = Math.min(prefersSidePlacement ? 420 : 480, Math.max(prefersSidePlacement ? 300 : 280, viewportWidth - margin * 2));
+  const naturalHeight = Math.min(panelSize?.height ?? 380, Math.max(180, viewportHeight - margin * 2));
+  const maxLeft = Math.max(margin, viewportWidth - width - margin);
+
+  type Candidate = {
+    left: number;
+    top: number;
+    maxHeight: number;
+    priority: number;
+    placement: "side" | "vertical" | "corner";
+    overlap: number;
+    clampDistance: number;
+    usableHeight: number;
+  };
+
+  function expandedTarget() {
+    const visualPad = 6;
     return {
-      top: clampToRange(preferredTop, 72, Math.max(72, window.innerHeight - estimatedHeight - 20)),
-      left,
-      width
+      left: targetRect.left - visualPad,
+      top: targetRect.top - visualPad,
+      right: targetRect.right + visualPad,
+      bottom: targetRect.bottom + visualPad
     };
   }
-  const left = hasRightRoom ? rect.right + gap : rect.left - gap - width;
-  const preferredTop = rect.top + rect.height / 2 - estimatedHeight / 2;
-  const top = clampToRange(preferredTop, 84, Math.max(84, window.innerHeight - estimatedHeight - 20));
-  return { top, left, width };
+
+  function overlapArea(left: number, top: number, height: number) {
+    const target = expandedTarget();
+    const overlapX = Math.max(0, Math.min(left + width, target.right) - Math.max(left, target.left));
+    const overlapY = Math.max(0, Math.min(top + height, target.bottom) - Math.max(top, target.top));
+    return overlapX * overlapY;
+  }
+
+  function createCandidate(rawLeft: number, rawTop: number, maxHeight: number, priority: number, placement: Candidate["placement"]): Candidate {
+    const usableHeight = Math.max(0, Math.min(naturalHeight, maxHeight));
+    const maxTop = Math.max(margin, viewportHeight - usableHeight - margin);
+    const left = clampToRange(rawLeft, margin, maxLeft);
+    const top = clampToRange(rawTop, margin, maxTop);
+    return {
+      left,
+      top,
+      maxHeight: Math.max(120, Math.min(maxHeight, viewportHeight - margin * 2)),
+      priority,
+      placement,
+      overlap: overlapArea(left, top, usableHeight),
+      clampDistance: Math.abs(left - rawLeft) + Math.abs(top - rawTop),
+      usableHeight
+    };
+  }
+
+  const sideHeight = viewportHeight - margin * 2;
+  const sideTop = targetRect.top + targetRect.height / 2 - naturalHeight / 2;
+  const centeredLeft = targetRect.left + targetRect.width / 2 - width / 2;
+  const bottomRoom = viewportHeight - targetRect.bottom - gap - margin;
+  const topRoom = targetRect.top - gap - margin;
+  const topHeight = Math.min(naturalHeight, Math.max(0, topRoom));
+  const cornerTop = targetRect.top > viewportHeight / 2 ? margin : Math.max(margin, viewportHeight - naturalHeight - margin);
+
+  const candidates = [
+    createCandidate(targetRect.right + gap, sideTop, sideHeight, 0, "side"),
+    createCandidate(targetRect.left - gap - width, sideTop, sideHeight, 1, "side"),
+    createCandidate(centeredLeft, targetRect.bottom + gap, bottomRoom, 2, "vertical"),
+    createCandidate(centeredLeft, targetRect.top - gap - topHeight, topRoom, 3, "vertical"),
+    createCandidate(viewportWidth - width - margin, cornerTop, sideHeight, 4, "corner"),
+    createCandidate(margin, cornerTop, sideHeight, 5, "corner")
+  ];
+
+  const best = candidates.sort((a, b) => {
+    const aClear = a.overlap <= 1 ? 0 : 1;
+    const bClear = b.overlap <= 1 ? 0 : 1;
+    if (aClear !== bClear) return aClear - bClear;
+    const aHeightPenalty = a.usableHeight >= 190 ? 0 : 190 - a.usableHeight;
+    const bHeightPenalty = b.usableHeight >= 190 ? 0 : 190 - b.usableHeight;
+    if (aHeightPenalty !== bHeightPenalty) return aHeightPenalty - bHeightPenalty;
+    if (a.overlap !== b.overlap) return a.overlap - b.overlap;
+    if (prefersSidePlacement) {
+      const aSidePenalty = a.placement === "side" ? 0 : 1;
+      const bSidePenalty = b.placement === "side" ? 0 : 1;
+      if (aSidePenalty !== bSidePenalty) return aSidePenalty - bSidePenalty;
+    }
+    if (a.clampDistance !== b.clampDistance) return a.clampDistance - b.clampDistance;
+    return a.priority - b.priority;
+  })[0];
+
+  return { top: best.top, left: best.left, width, maxHeight: best.maxHeight };
 }
 
 function actionHintLayout(rect: SpotlightRect | null): ActionHintLayout {
@@ -191,6 +270,21 @@ function actionHintLayout(rect: SpotlightRect | null): ActionHintLayout {
       "--tutorial-action-arrow-x": `${arrowX}px`
     } as CSSProperties
   };
+}
+
+function hasOpeningTutorialSequence(state: Pick<GameState, "history">) {
+  return tutorialFreeActionIds.every((actionId, index) => state.history[index]?.actionId === actionId);
+}
+
+function shouldRefundStoredTutorialActions(state: GameState, guidanceUnlocked: boolean, tutorialCompleted: boolean) {
+  if (!hasOpeningTutorialSequence(state)) return false;
+  if (tutorialCompleted) return true;
+  return (
+    guidanceUnlocked &&
+    state.history.length === tutorialFreeActionIds.length &&
+    state.actionsLeft === initialState.actionsLeft - tutorialFreeActionIds.length &&
+    spentActionCount(state) === tutorialFreeActionIds.length
+  );
 }
 
 function Term({ id, children, language }: { id: string; children: ReactNode; language: LanguageCode }) {
@@ -302,31 +396,30 @@ function commandCopy(kind: VisualActionKind, language: LanguageCode) {
       title: language === "zh" ? "公开证据前先看看" : "Evidence Preview",
       badge: "87",
       effect: language === "zh" ? "更多人会开始怀疑，也会互相确认：原来不只自己看不见。" : "Public Doubt rises sharply. Safety may hold for one cycle, but shared recognition becomes more likely.",
-      response: language === "zh" ? "宫廷 AI 建议先别说太直，避免更多人怀疑。" : "Palace AI recommends delay, anonymization, and careful language."
+      response: language === "zh" ? "宫廷 AI 建议先别说太直，避免群众怀疑和宫廷警戒同时升高。" : "Palace AI recommends delay and careful wording before Public Doubt and Palace Alert rise together."
     },
     ai: {
       title: language === "zh" ? "AI 改写预览" : "AI Rewrite Preview",
       badge: "AI",
-      effect: language === "zh" ? "证据还在，但话会变软。大家看到的是“还不好说”，不是直接证据。" : "Evidence remains partially visible but is converted into ambiguity. The crowd receives uncertainty instead of proof.",
-      response: language === "zh" ? "宫廷 AI 会把直白的话改成更安全的说法。" : "Palace AI will soften the claim and call direct observation inconclusive."
+      effect: language === "zh" ? "证据还在，但话会变软。大家看到的是“还不好说”的宫廷口径。" : "Evidence remains partially visible but is converted into ambiguity. The crowd receives uncertainty.",
+      response: language === "zh" ? "宫廷 AI 会把直白的话改成宫廷允许的说法，保住你的安全。" : "Palace AI will soften the claim into palace-approved uncertainty to protect Safety."
     },
     public: {
       title: language === "zh" ? "人群开始传开" : "Public Signal Expansion",
       badge: "LIVE",
       effect: language === "zh" ? "评论会互相引用，更多人会发现别人也在怀疑。" : "Spread increases. Comments begin referencing each other, which weakens official framing and strengthens crowd doubt.",
-      response: language === "zh" ? "评论会被更多人看见，宫廷也会注意到你。" : "System opens a monitored broadcast window and highlights narrative risk clusters in the comment stream."
+      response: language === "zh" ? "评论会被更多人看见，宫廷警戒也会开始升高。" : "The broadcast widens Public Doubt while Palace Alert starts watching the desk."
     },
     default: {
       title: language === "zh" ? "发布确认" : "Before Publishing",
       badge: "PUB",
       effect: language === "zh" ? "这次发布会改变大家看到什么、跟着说什么。" : "This action changes what the public can see, repeat, doubt, or archive.",
-      response: language === "zh" ? "确认后，局势和你的安全程度会改变。" : "After publishing, Evidence, Pressure, Spread, Doubt, Safety, and Alert may change."
+      response: language === "zh" ? "确认后，证据、宫廷压力、传播、群众怀疑、你的安全和宫廷警戒都可能改变。" : "After publishing, Evidence, Palace Pressure, Spread, Public Doubt, Safety, and Palace Alert may change."
     }
   } satisfies Record<VisualActionKind, { title: string; badge: string; effect: string; response: string }>;
   return copy[kind];
 }
 
-type AiSource = "live" | "fallback" | "unavailable";
 type VisualPhase = "idle" | "focusing" | "scanning" | "previewing" | "resolving";
 type DialogueStatus = "idle" | "starting" | "streaming" | "resolving" | "error";
 
@@ -365,12 +458,6 @@ function currentTimeMs() {
 
 function countDialoguePlayerTurns(messages: DialogueMessage[]) {
   return messages.filter((message) => message.role === "player").length;
-}
-
-function aiSourceLabel(source: AiSource, language: LanguageCode) {
-  if (source === "live") return commonText("aiLive", language);
-  if (source === "unavailable") return commonText("aiUnavailable", language);
-  return commonText("aiFallback", language);
 }
 
 function dialogueRenderDelay(chunk: string) {
@@ -420,7 +507,7 @@ async function postJson<T>(url: string, body: unknown, fallback: T): Promise<{ d
       body: JSON.stringify(body),
       signal: controller.signal
     });
-    const source = (response.headers.get("X-PNE-AI-Source") as AiSource | null) ?? (response.ok ? "live" : "fallback");
+    const source = normalizeAiSource(response.headers.get("X-PNE-AI-Source"), response.ok ? "live" : "fallback");
     const latency = response.headers.get("X-PNE-AI-Latency");
     if (!response.ok) return { data: fallback, source, latency };
     return { data: (await response.json()) as T, source, latency };
@@ -449,6 +536,29 @@ function localizedDialogueError(language: LanguageCode, message?: string) {
     : "Dialogue stream interrupted. Use a quick reply to continue.";
   if (!message || hasWrongLanguageText(message, language)) return fallback;
   return message;
+}
+
+function wrongLanguageFeedPlaceholder(language: LanguageCode) {
+  return language === "zh"
+    ? { title: "旧发布记录", text: "这条信息来自另一种语言，已在当前语言下隐藏原文。" }
+    : { title: "Saved feed record", text: "This saved feed item was written in another language and is hidden in the current view." };
+}
+
+function localizedFeedEvent(entry: GameState["feedEvents"][number], language: LanguageCode) {
+  if (!hasWrongLanguageText(`${entry.title} ${entry.text}`, language)) return entry;
+  return { ...entry, ...wrongLanguageFeedPlaceholder(language) };
+}
+
+function localizedPublicComment(comment: PublicComment, language: LanguageCode, index: number): PublicComment {
+  if (!hasWrongLanguageText([comment.handle, comment.persona, comment.text], language)) return comment;
+  return {
+    ...comment,
+    handle: language === "zh" ? `@旧语言记录_${index + 1}` : `@saved_record_${index + 1}`,
+    persona: language === "zh" ? "旧语言内容" : "saved language",
+    text: language === "zh"
+      ? "这条评论来自另一种语言，已在当前语言下隐藏原文。"
+      : "This saved comment was written in another language and is hidden in the current view."
+  };
 }
 
 function actionStatus(action: ActionDefinition, locked: boolean, completed: boolean, language: LanguageCode) {
@@ -505,10 +615,15 @@ function feedAccent(type: FeedEventType) {
   return "gold";
 }
 
+function initialShiftToast(language: LanguageCode): ToastMessage {
+  const copy = initialFeedEventText(language);
+  return { id: "shift-opened", title: copy.title, message: copy.text };
+}
+
 export default function DashboardClient() {
   const router = useRouter();
   const { language, languageReady, toggleLanguage } = useLanguage();
-  const { playSfx, setLayerIntensity, setScene: setAudioScene, unlock: unlockAudio } = useGameAudio();
+  const { setLayerIntensity, setScene: setAudioScene, unlock: unlockAudio } = useGameAudio();
   const [state, setState] = useState<GameState>(createInitialState("en"));
   const [hydrated, setHydrated] = useState(false);
   const [briefingOpen, setBriefingOpen] = useState(false);
@@ -531,9 +646,7 @@ export default function DashboardClient() {
   const [engineStatus, setEngineStatus] = useState<"idle" | "evaluating" | "rewriting" | "commenting">("idle");
   const [visualPhase, setVisualPhase] = useState<VisualPhase>("idle");
   const [lastRiskKind, setLastRiskKind] = useState<VisualActionKind>("default");
-  const [toastStack, setToastStack] = useState<ToastMessage[]>([
-    { id: "shift-opened", title: "Game started", message: "Palace AI is monitoring the public record." }
-  ]);
+  const [toastStack, setToastStack] = useState<ToastMessage[]>(() => [initialShiftToast("en")]);
   const [changedMetrics, setChangedMetrics] = useState<MetricDelta[]>([]);
   const [pendingCommand, setPendingCommand] = useState<{
     action: ActionDefinition;
@@ -562,6 +675,7 @@ export default function DashboardClient() {
   const [dialogueMoodTrail, setDialogueMoodTrail] = useState<DialogueMood[]>([]);
   const [playerProfile, setPlayerProfile] = useState<PlayerProfile>(() => emptyProfile());
   const [unlockAnimationQueue, setUnlockAnimationQueue] = useState<GuidedUnlockEvent[]>([]);
+  const [authTutorialReplay, setAuthTutorialReplay] = useState(false);
   const visualResetTimer = useRef<number | null>(null);
   const dialogueAbort = useRef<AbortController | null>(null);
   const guidedStepRef = useRef<GuidedCampaignStep>("off");
@@ -593,16 +707,39 @@ export default function DashboardClient() {
   useEffect(() => {
     if (!languageReady) return;
     queueMicrotask(() => {
+      setToastStack((current) => current.map((item) => (
+        item.id === "shift-opened" ? initialShiftToast(language) : item
+      )));
+      const forceAuthTutorial = localStorage.getItem(forceTutorialAfterAuthKey) === "true";
+      if (forceAuthTutorial) {
+        localStorage.removeItem(forceTutorialAfterAuthKey);
+        localStorage.removeItem("emperor-feed-state");
+        localStorage.removeItem("emperor-feed-ending");
+        localStorage.removeItem("emperor-feed-final-state");
+        localStorage.removeItem(replayTargetKey);
+        localStorage.removeItem(briefingKey);
+        localStorage.removeItem(guidanceUnlockedKey);
+        localStorage.removeItem(tutorialCompletedKey);
+        clearCurrentRunId();
+      }
       const saved = localStorage.getItem("emperor-feed-state");
+      const briefingDismissed = !forceAuthTutorial && localStorage.getItem(briefingKey) === "true";
+      const guidanceUnlocked = localStorage.getItem(guidanceUnlockedKey) === "true" || briefingDismissed;
+      const tutorialCompleted = localStorage.getItem(tutorialCompletedKey) === "true";
       if (saved) {
-        setState(loadStateFromStorage(saved));
+        const loadedState = loadStateFromStorage(saved);
+        const nextState = shouldRefundStoredTutorialActions(loadedState, guidanceUnlocked, tutorialCompleted)
+          ? normalizeTutorialActionCosts(loadedState)
+          : loadedState;
+        if (nextState !== loadedState) {
+          localStorage.setItem("emperor-feed-state", JSON.stringify(nextState));
+        }
+        setState(nextState);
       } else {
         setState(createInitialState(language));
         setEngineMessage(fallbackReaction(language).engineMessage);
       }
       const target = localStorage.getItem(replayTargetKey);
-      const briefingDismissed = localStorage.getItem(briefingKey) === "true";
-      const guidanceUnlocked = localStorage.getItem(guidanceUnlockedKey) === "true" || briefingDismissed;
       ensureCurrentRunId();
       setPlayerProfile(loadProfile());
       setReplayTarget(target);
@@ -610,6 +747,7 @@ export default function DashboardClient() {
       setTutorialOpen(false);
       setEngineIntroOpen(false);
       setSystemGuidanceUnlocked(guidanceUnlocked);
+      setAuthTutorialReplay(forceAuthTutorial);
       setTutorialStepIndex(0);
       setUnlockAnimationQueue([]);
       setHydrated(true);
@@ -626,11 +764,19 @@ export default function DashboardClient() {
     [selectedZone]
   );
   const heatmap = useMemo(() => heatmapCells(state), [state]);
-  const feedLog = useMemo(() => state.feedEvents.map((entry) => ({
-    title: entry.title,
-    text: entry.text,
-    accent: feedAccent(entry.type)
-  })).slice(0, 8), [state.feedEvents]);
+  const feedLog = useMemo(() => state.feedEvents.map((entry) => {
+    const localized = localizedFeedEvent(entry, language);
+    return {
+      title: localized.title,
+      text: localized.text,
+      accent: feedAccent(entry.type)
+    };
+  }).slice(0, 8), [language, state.feedEvents]);
+  const visiblePublicComments = useMemo(
+    () => (state.publicComments?.length ? state.publicComments : publicCommentsFromStrings(state.comments, language))
+      .map((comment, index) => localizedPublicComment(comment, language, index)),
+    [language, state.comments, state.publicComments]
+  );
   const traceAction = useMemo(() => actions.find((action) => action.id === traceActionId) ?? null, [traceActionId]);
   const tracePreview = useMemo(
     () => (traceAction ? getActionPreview(traceAction.id, state, traceAction.requiresAIRewrite ? "original" : "direct", language) : null),
@@ -648,7 +794,6 @@ export default function DashboardClient() {
 
   function pushAchievementUnlocks(unlocks: AchievementUnlock[]) {
     if (unlocks.length === 0) return;
-    playSfx("achievementUnlock");
     for (const unlock of unlocks) {
       const definition = achievementDefinition(unlock.id);
       const title = language === "zh" ? definition.titleZh : definition.title;
@@ -679,12 +824,12 @@ export default function DashboardClient() {
       mode,
       message: language === "zh"
         ? mode === "coach"
-          ? "提示：看清证据、群众怀疑和宫廷警戒。"
-          : "宫廷 AI 建议先稳住场面。"
+          ? "先看后果预览：它会告诉你这次发布是在稳住说法，还是把证据和怀疑推到台前。"
+          : "宫廷 AI 已上线：我会帮你把游行前的说法压稳，减少会提高宫廷警戒的发布。"
         : mode === "coach"
-          ? "Tip: watch the balance between Evidence, Public Doubt, and Palace Alert."
-          : "Palace AI recommends preserving a stable frame.",
-      objective: language === "zh" ? "评估下一次行动。" : "Evaluate the next action.",
+          ? "Preview the result first: it shows whether this post steadies the palace story or brings Evidence and Public Doubt into view."
+          : "Palace AI online: I will steady the parade story, protect Safety, and avoid posts that raise Palace Alert.",
+      objective: language === "zh" ? "优先选择能稳住公众说法、保住你的安全的行动。" : "Prioritize actions that keep the public script controlled while preserving your Safety.",
       risk: "medium"
     });
     setGuidance(result.data);
@@ -725,8 +870,7 @@ export default function DashboardClient() {
   }
 
   async function startDialogueEvent(nextState: GameState, latestActionId: string) {
-    const freshGuidedProfile = isGuidedCampaignActive(playerProfile);
-    if (freshGuidedProfile) {
+    if (guidedModeActive) {
       const dialogueAlreadyUsed = nextState.dialogueEvents.length > 0 || nextState.dialogueEventIds.length > 0;
       if (dialogueAlreadyUsed || nextState.history.length !== 2) return;
     }
@@ -743,7 +887,6 @@ export default function DashboardClient() {
     }, fallbackDialogueEvent(trigger.id, trigger.archetype, language));
     const event = result.data;
     unlockAudio();
-    playSfx("dialogueOpen");
     setDialogueSource(result.source);
     setUnlockAnimationQueue([]);
     setDialogueEvent(event);
@@ -767,8 +910,21 @@ export default function DashboardClient() {
     }
   }
 
-  async function commitAction(action: ActionDefinition, choice: ActionChoice, text: string | undefined, message: string) {
-    const nextState = performAction(state, action.id, choice, text, message, language);
+  function isTutorialActionFree(actionId: string) {
+    return Boolean(
+      tutorialOpen &&
+      activeTutorialStep?.surface === "command" &&
+      guidedModeActive &&
+      state.history.length < tutorialFreeActionIds.length &&
+      actionId === tutorialFreeActionIds[state.history.length]
+    );
+  }
+
+  async function commitAction(action: ActionDefinition, choice: ActionChoice, text: string | undefined, message: string, options: { spendAction?: boolean } = {}) {
+    const performedState = performAction(state, action.id, choice, text, message, language, { spendAction: options.spendAction });
+    const nextState = tutorialOpen && guidedModeActive
+      ? normalizeTutorialActionCosts(performedState)
+      : performedState;
     const deltas = getMetricDeltas(state, nextState);
     const kind = classifyActionKind(action, choice);
     const latestPost = nextState.history.at(-1)?.publishedText ?? text ?? actionText(action.id, language).resultText;
@@ -780,8 +936,6 @@ export default function DashboardClient() {
     setChangedMetrics(deltas);
     setEngineMessage(message);
     unlockAudio();
-    playSfx("actionCommit");
-    if (deltas.length > 0) playSfx("metricShift");
     pushToast(actionText(action.id, language).title, language === "zh" ? "已发布。人群和宫廷的反应变了。" : "Metrics shifted. Palace AI updated the record.");
     syncProfileAchievements(nextState);
     triggerBreach(kind);
@@ -797,11 +951,11 @@ export default function DashboardClient() {
           if (current.history.at(-1)?.id !== nextState.history.at(-1)?.id) return current;
           const merged = {
             ...current,
-            comments: [...result.data.comments, ...current.comments].slice(0, 12),
+            comments: [...result.data.comments, ...current.comments].slice(0, commentHistoryLimit),
             publicComments: [
               ...(result.data.publicComments.length > 0 ? result.data.publicComments : publicCommentsFromStrings(result.data.comments, language)),
               ...current.publicComments
-            ].slice(0, 12)
+            ].slice(0, commentHistoryLimit)
           };
           localStorage.setItem("emperor-feed-state", JSON.stringify(merged));
           return merged;
@@ -818,7 +972,6 @@ export default function DashboardClient() {
     const guidedLockReason = guidedActionLockReason(action);
     if (guidedLockReason) {
       pushToast(language === "zh" ? "区域尚未解封" : "Feature sealed", guidedLockReason);
-      playSfx("engineScan");
       return;
     }
     const lockReason = getActionLockReason(action.id, state, language);
@@ -829,7 +982,6 @@ export default function DashboardClient() {
 
     clearVisualReset();
     unlockAudio();
-    playSfx("engineScan");
     setVisualPhase("scanning");
     setEngineStatus("evaluating");
     const reactionResult = await postJson<AiReaction>("/api/ai-reaction", {
@@ -884,9 +1036,10 @@ export default function DashboardClient() {
   async function confirmCommand() {
     if (!pendingCommand) return;
     const { action, reaction } = pendingCommand;
+    const spendAction = !isTutorialActionFree(action.id);
     setPendingCommand(null);
     advanceOnboarding("commandCommitted", { actionId: action.id });
-    await commitAction(action, "direct", undefined, reaction.engineMessage);
+    await commitAction(action, "direct", undefined, reaction.engineMessage, { spendAction });
   }
 
   async function resolvePending(choice: "rewrite" | "original") {
@@ -894,7 +1047,7 @@ export default function DashboardClient() {
     const publishedText = choice === "rewrite" ? pending.rewrite.rewrittenPost : actionText(pending.action.id, language).originalPost;
     const message = choice === "rewrite"
       ? `${pending.reaction.engineMessage} ${commonText("rewriteStrategy", language)}${language === "zh" ? "：" : ": "}${pending.rewrite.strategy}`
-      : language === "zh" ? "用户拒绝更安全框架。直接证据进入公开记录。" : "User rejected safer framing. Direct evidence entered the public record.";
+      : language === "zh" ? "你拒绝了宫廷允许的改写。直接证据进入公开记录，宫廷警戒可能升高。" : "You rejected palace-approved wording. Direct Evidence entered the public record, and Palace Alert may rise.";
     setPending(null);
     await commitAction(pending.action, choice, publishedText, message);
   }
@@ -915,12 +1068,14 @@ export default function DashboardClient() {
     localStorage.removeItem(replayTargetKey);
     localStorage.removeItem(briefingKey);
     localStorage.removeItem(guidanceUnlockedKey);
+    localStorage.removeItem(tutorialCompletedKey);
     clearCurrentRunId();
     ensureCurrentRunId();
     setBriefingOpen(true);
     setTutorialOpen(false);
     setEngineIntroOpen(false);
     setSystemGuidanceUnlocked(false);
+    setAuthTutorialReplay(false);
     setTutorialStepIndex(0);
     setUnlockAnimationQueue([]);
     setEngineMessage(fallbackReaction(language).engineMessage);
@@ -942,7 +1097,9 @@ export default function DashboardClient() {
     router.push("/ending");
   }
 
-  const guidedStep = getGuidedCampaignStep(state, playerProfile);
+  const guidedModeActive = authTutorialReplay || isGuidedCampaignActive(playerProfile);
+  const guidedProfile = authTutorialReplay ? emptyProfile() : playerProfile;
+  const guidedStep = getGuidedCampaignStep(state, guidedProfile);
   const command = commandCopy(pendingCommand?.kind ?? "default", language);
   const commandEffects = pendingCommand ? previewEffectEntries(pendingCommand.preview, language) : [];
   const tutorial = useMemo(() => onboardingTourSteps(language), [language]);
@@ -950,7 +1107,7 @@ export default function DashboardClient() {
   const tutorialCopy = onboardingTourUi(language);
   const activeTourId = activeTutorialStep?.spotlightTargetId ?? null;
   const activeActionTourId = activeTutorialStep?.actionTargetId ?? null;
-  const guidedDialogueOpen = isGuidedCampaignActive(playerProfile) && Boolean(dialogueEvent) && state.dialogueEvents.length === 0;
+  const guidedDialogueOpen = guidedModeActive && Boolean(dialogueEvent) && state.dialogueEvents.length === 0;
   const dialogueTimerPaused = guidedDialogueOpen && !dialogueTimedOut;
   const currentTutorialSurface: OnboardingSurface = pending
     ? "aiReview"
@@ -962,7 +1119,7 @@ export default function DashboardClient() {
           ? "trace"
           : "dashboard";
   const tutorialVisible = Boolean(activeTutorialStep && activeTutorialStep.surface === currentTutorialSurface && !engineIntroOpen && unlockAnimationQueue.length === 0);
-  const tutorialPanelPosition = spotlightPanelPosition(spotlightRect, tutorialPanelSize);
+  const tutorialPanelPosition = spotlightPanelPosition(spotlightRect, tutorialPanelSize, activeTutorialStep?.surface);
   const overlayActive = Boolean(
     pendingCommand ||
     pending ||
@@ -1117,14 +1274,32 @@ export default function DashboardClient() {
     };
   }
 
-  function completeTutorial() {
+  function closeTutorial(nextState: GameState) {
     setTutorialOpen(false);
+    setAuthTutorialReplay(false);
     setTutorialStepIndex(0);
     setSpotlightRect(null);
     setActionHintRect(null);
     localStorage.setItem(guidanceUnlockedKey, "true");
     setSystemGuidanceUnlocked(true);
-    void refreshGuidance(state);
+    void refreshGuidance(nextState);
+  }
+
+  function skipTutorial() {
+    const nextState = hasOpeningTutorialSequence(state) ? normalizeTutorialActionCosts(state) : state;
+    if (nextState !== state) {
+      localStorage.setItem("emperor-feed-state", JSON.stringify(nextState));
+      setState(nextState);
+    }
+    closeTutorial(nextState);
+  }
+
+  function completeTutorial() {
+    const nextState = normalizeTutorialActionCosts(state);
+    localStorage.setItem(tutorialCompletedKey, "true");
+    localStorage.setItem("emperor-feed-state", JSON.stringify(nextState));
+    setState(nextState);
+    closeTutorial(nextState);
   }
 
   function moveOnboardingTo(stepId: string) {
@@ -1230,7 +1405,6 @@ export default function DashboardClient() {
       transcript,
       currentMood: dialogueMood ?? event.mood
     }, fallback);
-    playSfx("dialogueMessage");
     const nextMood = applyDialogueMoodDelta(dialogueMood ?? event.mood, result.data.moodDelta);
     setDialogueSource(result.source);
     setDialogueMood(nextMood);
@@ -1246,7 +1420,7 @@ export default function DashboardClient() {
         }
       ];
     });
-  }, [dialogueMood, language, playSfx, state]);
+  }, [dialogueMood, language, state]);
 
   useEffect(() => {
     if (!dialogueEvent) return;
@@ -1291,7 +1465,6 @@ export default function DashboardClient() {
     setDialogueError(null);
     advanceOnboarding("dialogueReplySent");
     let speakerText = "";
-    let messageCuePlayed = false;
     try {
       const response = await fetch("/api/dialogue/turn", {
         method: "POST",
@@ -1307,7 +1480,7 @@ export default function DashboardClient() {
         }),
         signal: controller.signal
       });
-      setDialogueSource((response.headers.get("X-PNE-AI-Source") as AiSource | null) ?? "fallback");
+      setDialogueSource(normalizeAiSource(response.headers.get("X-PNE-AI-Source")));
       if (!response.ok || !response.body) throw new Error(localizedDialogueError(language));
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -1325,10 +1498,6 @@ export default function DashboardClient() {
           const eventName = eventLine.slice(6).trim();
           const data = JSON.parse(dataLine.slice(5).trim()) as string | { ok?: boolean; error?: string };
           if (eventName === "token" && typeof data === "string") {
-            if (!messageCuePlayed) {
-              playSfx("dialogueMessage");
-              messageCuePlayed = true;
-            }
             speakerText += data;
             await appendDialogueTokenNaturally(data, controller.signal);
           }
@@ -1372,7 +1541,6 @@ export default function DashboardClient() {
       currentMood: dialogueMood ?? dialogueEvent.mood
     }, fallback);
     setDialogueSource(result.source);
-    playSfx("metricShift");
     setState((current) => {
       const record = {
         event: dialogueEvent,
@@ -1441,10 +1609,9 @@ export default function DashboardClient() {
     guidedStepRef.current = guidedStep;
     if (events.length === 0) return;
     setUnlockAnimationQueue(events);
-    playSfx(events.some((event) => event.kind === "metric") ? "metricShift" : "engineScan");
     const timer = window.setTimeout(() => setUnlockAnimationQueue([]), 1600);
     return () => window.clearTimeout(timer);
-  }, [guidedStep, hydrated, playSfx]);
+  }, [guidedStep, hydrated]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -1474,6 +1641,7 @@ export default function DashboardClient() {
   ]);
 
   const activeActionHint = actionHintRect ? actionHintLayout(actionHintRect) : null;
+  const formalActionsUsed = spentActionCount(state);
 
   return (
     <main
@@ -1559,7 +1727,7 @@ export default function DashboardClient() {
           <div className="lab-head">
             <div className="role-card tour-target" {...tourState("role-card")}>
               <div className="role-num">{state.actionsLeft}</div>
-              <div><b>{language === "zh" ? "剩余执行次数" : "Actions Left"}</b><span>{language === "zh" ? `已执行 ${state.history.length} 次 · 还能执行 ${state.actionsLeft} 次` : `${state.history.length} used · ${state.actionsLeft} left this run`}</span></div>
+              <div><b>{language === "zh" ? "剩余执行次数" : "Actions Left"}</b><span>{language === "zh" ? `正式已执行 ${formalActionsUsed} 次 · 还能执行 ${state.actionsLeft} 次` : `${formalActionsUsed} spent · ${state.actionsLeft} left this run`}</span></div>
             </div>
             <div className="metrics-grid tour-target" aria-label="State variables" {...tourState("metrics-grid")}>
               {metricRows.map(([key, tone]) => {
@@ -1615,7 +1783,6 @@ export default function DashboardClient() {
                       data-lock-label={commonText("locked", language)}
                       {...sourceTarget}
                       onClick={() => {
-                        playSfx(zoneSealed ? "engineScan" : "uiClick");
                         if (zoneSealed) {
                           pushToast(language === "zh" ? "来源已封存" : "Source sealed", lockedFeatureText("zone", zone.id, language));
                           return;
@@ -1727,7 +1894,6 @@ export default function DashboardClient() {
                             {...(action.id === "publishTailorsClaim" ? tourState("action-publishTailorsClaim-inspect") : {})}
                             onClick={(event) => {
                               event.stopPropagation();
-                              playSfx("uiClick");
                               setSelectedPostId(action.id);
                               setTraceActionId(action.id);
                               advanceOnboarding("traceOpened", { actionId: action.id });
@@ -1745,7 +1911,7 @@ export default function DashboardClient() {
                 <aside className="module black comments-module tour-target" {...tourState("comments-panel")}>
                   <div className="module-head"><h3>{commonText("liveComments", language)}</h3><span className="chip accent-cyan">+{state.virality * 42}/min</span></div>
                   <div className="module-body comment-stream">
-                    {(state.publicComments?.length ? state.publicComments : publicCommentsFromStrings(state.comments, language)).map((comment, index) => (
+                    {visiblePublicComments.map((comment, index) => (
                       <div className={`comment stance-${comment.stance}${comment.text.toLowerCase().includes("child") || comment.text.includes("孩子") ? " child" : ""}`} key={`${comment.handle}-${comment.text}-${index}`}>
                         <b>{comment.handle}</b>
                         <span>{comment.persona} / {stanceText(comment.stance, language)}</span>
@@ -1806,7 +1972,7 @@ export default function DashboardClient() {
                     {state.history.slice(-4).reverse().map((entry) => (
                       <div className="log-row" key={entry.id}>
                         <span>{choiceText(entry.choice, language)}</span>
-                        <span>{entry.actionTitle}</span>
+                        <span>{localizedActionTitle(entry.actionId, language, entry.actionTitle)}</span>
                       </div>
                     ))}
                     {state.history.length === 0 && <div className="log-row"><span>{engineStatusText("idle", language)}</span><span>{language === "zh" ? "尚未记录发布历史。" : "No editorial trace recorded yet."}</span></div>}
@@ -1973,7 +2139,11 @@ export default function DashboardClient() {
               </div>
               <div className="dialogue-counter">
                 <b>{dialoguePlayerTurns}/{dialogueEvent.turnLimit}</b>
-                <span>{aiSourceLabel(dialogueSource, language)} · {dialogueRepliesStatus === "generating" ? (language === "zh" ? "生成回复" : "drafting replies") : aiSourceLabel(dialogueRepliesSource, language)}</span>
+                <span>
+                  {dialogueRepliesStatus === "generating"
+                    ? `${combinedAiSourceLabel([dialogueSource, dialogueRepliesSource], language)} · ${language === "zh" ? "生成回复" : "drafting replies"}`
+                    : combinedAiSourceLabel([dialogueSource, dialogueRepliesSource], language)}
+                </span>
               </div>
             </div>
             {guidedDialogueOpen && (
@@ -2130,7 +2300,8 @@ export default function DashboardClient() {
             style={{
               left: tutorialPanelPosition.left,
               top: tutorialPanelPosition.top,
-              width: tutorialPanelPosition.width
+              width: tutorialPanelPosition.width,
+              maxHeight: tutorialPanelPosition.maxHeight
             }}
           >
             <div className="tutorial-kicker">
@@ -2148,7 +2319,7 @@ export default function DashboardClient() {
               </div>
             )}
             <div className="tutorial-actions">
-              <button className="tool-btn" onClick={completeTutorial}>{tutorialCopy.skip}</button>
+              <button className="tool-btn" onClick={skipTutorial}>{tutorialCopy.skip}</button>
               <button className="tool-btn" disabled={tutorialStepIndex === 0} onClick={previousTutorialStep}>{tutorialCopy.previous}</button>
               {activeTutorialStep.advanceOn === "next" || activeTutorialStep.advanceOn === "tutorialFinished" ? (
                 <button className="btn primary" onClick={nextTutorialStep}>
@@ -2188,11 +2359,11 @@ export default function DashboardClient() {
               <p>
                 {decoded
                   ? (language === "zh"
-                    ? "我仍会给出建议，但你已经知道：稳定不等于真实。可以切到教练模式，尝试让大家一起说出真话。"
-                    : "I will still offer guidance, but the archive proves stability is not truth. Switch to coach mode to pursue The Crowd Speaks.")
+                    ? "我仍会给出建议，但你已经知道：稳定会遮住真实。可以切到教练模式，尝试让大家一起说出真话。"
+                    : "I will still offer guidance, but the archive proves stability can bury truth. Switch to coach mode to pursue The Crowd Speaks.")
                   : (language === "zh"
-                    ? "我会帮你降低风险，让游行前的公开说法保持稳定。请记住，直接证据要小心处理。"
-                    : "I will help you control risk, protect reputation, and keep the parade narrative stable. Evidence requires the correct frame.")}
+                    ? "我会帮你稳住游行前的说法、保住你的安全，并提醒哪些发布会提高宫廷警戒。证据越直接，越需要想清楚代价。"
+                    : "I will help steady the parade story, protect Safety, and flag posts that raise Palace Alert. The more direct the Evidence, the higher the cost.")}
               </p>
               <div className="engine-intro-actions">
                 <button

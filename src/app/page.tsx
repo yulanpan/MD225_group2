@@ -57,7 +57,7 @@ const briefingCards = {
       no: "03",
       tone: "red",
       source: "失败条件",
-      title: "最危险的不是一个人怀疑。",
+      title: "怀疑找到同伴，就会变危险。",
       body: "危险在于大家发现：原来别人也看不见那件新衣。"
     }
   ]
@@ -69,7 +69,7 @@ export default function StartPage() {
   const [starting, setStarting] = useState(false);
   const { language, toggleLanguage } = useLanguage();
   const shouldReduceMotion = useReducedMotion();
-  const { playSfx, setScene, unlock } = useGameAudio();
+  const { setScene, unlock } = useGameAudio();
 
   useEffect(() => {
     setScene("title");
@@ -100,11 +100,11 @@ export default function StartPage() {
     if (starting) return;
     setStarting(true);
     unlock();
-    playSfx("actionCommit");
     localStorage.removeItem("emperor-feed-state");
     localStorage.removeItem("emperor-feed-ending");
     localStorage.removeItem("emperor-feed-final-state");
     localStorage.removeItem("emperor-feed-briefing-dismissed");
+    localStorage.removeItem("emperor-feed-tutorial-completed");
     clearCurrentRunId();
     ensureCurrentRunId();
     window.setTimeout(() => router.push("/dashboard"), 620);

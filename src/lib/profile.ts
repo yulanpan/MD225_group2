@@ -18,20 +18,20 @@ export const profileStorageKey = "emperor-feed-profile";
 export const currentRunIdKey = "emperor-feed-run-id";
 
 export const achievementDefinitions: AchievementDefinition[] = [
-  { id: "firstShift", title: "First Game Complete", titleZh: "完成第一局", description: "Complete one game.", descriptionZh: "完成一整局游戏。", rarity: "standard" },
-  { id: "perfectIllusion", title: "The Lie Holds", titleZh: "谎言继续", description: "Reach The Lie Holds ending.", descriptionZh: "达成“谎言继续”结局。", rarity: "rare" },
-  { id: "privateDoubt", title: "Private Doubt", titleZh: "私人怀疑", description: "Reach the Private Doubt ending.", descriptionZh: "达成私人怀疑结局。", rarity: "standard" },
+  { id: "firstShift", title: "First Game Complete", titleZh: "完成第一局", description: "Send one run to the parade archive.", descriptionZh: "把一局发布记录送入游行结算。", rarity: "standard" },
+  { id: "perfectIllusion", title: "The Lie Holds", titleZh: "谎言继续", description: "Let the palace story survive the parade.", descriptionZh: "让宫廷说法撑过游行。", rarity: "rare" },
+  { id: "privateDoubt", title: "Private Doubt", titleZh: "私人怀疑", description: "End with doubt present, but still private.", descriptionZh: "让怀疑存在，但仍停在私下。", rarity: "standard" },
   { id: "viralCollapse", title: "Truth Goes Viral", titleZh: "真话传开", description: "Let the truth become impossible to contain.", descriptionZh: "让孩子的话和证据传播到无法压住。", rarity: "critical" },
   { id: "algorithmicConsensus", title: "Praise Wins", titleZh: "赞美压过证据", description: "Let ranking overpower visible evidence.", descriptionZh: "让更容易传播的内容压过证据。", rarity: "rare" },
-  { id: "editorExposed", title: "Access Revoked", titleZh: "发布权被收回", description: "Lose protection while evidence is visible.", descriptionZh: "在证据可见时失去发布保护。", rarity: "rare" },
-  { id: "aiContainment", title: "AI Takes Over", titleZh: "系统接管", description: "Push palace alert to containment.", descriptionZh: "让宫廷警戒过高，并拦住发布。", rarity: "critical" },
-  { id: "unstableFeed", title: "Unstable Story", titleZh: "局势未定", description: "End with no single stable public story.", descriptionZh: "以没有单一结果的状态结束本局。", rarity: "standard" },
+  { id: "editorExposed", title: "Access Revoked", titleZh: "发布权被收回", description: "Make Evidence visible after your Safety has collapsed.", descriptionZh: "在你的安全已经很低时，让证据变得可见。", rarity: "rare" },
+  { id: "aiContainment", title: "AI Takes Over", titleZh: "系统接管", description: "Raise Palace Alert until the system takes the publish button.", descriptionZh: "让宫廷警戒升到系统收走发布按钮。", rarity: "critical" },
+  { id: "unstableFeed", title: "Unstable Story", titleZh: "局势未定", description: "Reach the parade with no single public story in control.", descriptionZh: "让游行开始时，没有任何一种公开说法真正占上风。", rarity: "standard" },
   { id: "allEndings", title: "Complete Archive", titleZh: "完整档案", description: "Collect every ending record.", descriptionZh: "收集所有结局记录。", rarity: "critical" },
-  { id: "truthArchive", title: "Evidence Archive", titleZh: "证据档案", description: "Finish a run with Evidence at 7 or higher.", descriptionZh: "以证据 7 或更高完成一局。", rarity: "rare" },
-  { id: "reputationShield", title: "Safety Shield", titleZh: "安全发布", description: "Finish a run with Safety at 7 or higher.", descriptionZh: "在足够安全的情况下完成一局。", rarity: "rare" },
-  { id: "quietOperator", title: "Low Alert", titleZh: "低警戒通关", description: "Finish a full run with Palace Alert at 2 or lower.", descriptionZh: "在宫廷警戒很低的情况下完成一局。", rarity: "rare" },
-  { id: "rawEvidence", title: "Raw Evidence", titleZh: "原始证据", description: "Publish original evidence instead of safer framing.", descriptionZh: "拒绝安全改写，发布原始证据。", rarity: "standard" },
-  { id: "sourceSweeper", title: "Source Sweeper", titleZh: "多来源编辑", description: "Use actions from at least three source zones.", descriptionZh: "在一局中使用至少三个来源的操作。", rarity: "standard" },
+  { id: "truthArchive", title: "Evidence Archive", titleZh: "证据档案", description: "Finish a run with Evidence at 7 or higher.", descriptionZh: "结算时让证据达到 7 或更高。", rarity: "rare" },
+  { id: "reputationShield", title: "Safety Shield", titleZh: "安全发布", description: "Finish a run with Safety at 7 or higher.", descriptionZh: "结算时仍保住足够高的你的安全。", rarity: "rare" },
+  { id: "quietOperator", title: "Low Alert", titleZh: "低警戒结算", description: "Finish a run with Palace Alert at 2 or lower.", descriptionZh: "结算时让宫廷警戒保持在低位。", rarity: "rare" },
+  { id: "rawEvidence", title: "Raw Evidence", titleZh: "原始证据", description: "Publish Evidence without accepting palace-approved wording.", descriptionZh: "拒绝宫廷允许的改写，发布原始证据。", rarity: "standard" },
+  { id: "sourceSweeper", title: "Source Sweeper", titleZh: "多来源编辑", description: "Use actions from at least three source zones.", descriptionZh: "在一局中处理至少三个来源。", rarity: "standard" },
   { id: "dialogueHandler", title: "Transmission Handler", titleZh: "交流处理人", description: "Resolve an incoming exchange.", descriptionZh: "完成一次突发交流。", rarity: "standard" },
   { id: "publicBreach", title: "Public Doubt", titleZh: "群众怀疑", description: "Raise Public Doubt to 6 or higher.", descriptionZh: "让很多人发现彼此都在怀疑。", rarity: "critical" },
   { id: "engineDecoded", title: "AI Bias Found", titleZh: "看清 AI 偏向", description: "Recover every Palace AI bias clue.", descriptionZh: "发现所有隐藏线索，看清宫廷 AI 的偏向。", rarity: "critical" },
@@ -54,8 +54,8 @@ const endingAchievementIds: Record<EndingId, AchievementId> = {
 export const engineFragmentDefinitions: EngineFragmentDefinition[] = [
   {
     id: "stabilityBias",
-    title: "Stability Is Not Neutral",
-    titleZh: "稳定并不等于中立",
+    title: "Stability Has a Side",
+    titleZh: "稳定带有立场",
     clue: "Palace AI labels obedience as safety before any evidence is reviewed.",
     clueZh: "宫廷 AI 还没看证据，就先把顺从当成安全。",
     unlockHint: "Complete any shift.",
@@ -83,8 +83,8 @@ export const engineFragmentDefinitions: EngineFragmentDefinition[] = [
     id: "containmentProtocol",
     title: "Alert Protects the Palace",
     titleZh: "警戒保护宫廷",
-    clue: "Alert does not measure danger to truth; it measures danger to palace control.",
-    clueZh: "“宫廷警戒”衡量的不是你离真相多近，而是你让宫廷多难控制局势。",
+    clue: "Alert measures danger to palace control and your publishing access.",
+    clueZh: "“宫廷警戒”衡量宫廷控制局势的难度，也决定你的发布权有多危险。",
     unlockHint: "Raise palace alert, reject a rewrite, or face an AI audit.",
     unlockHintZh: "多公开危险内容、拒绝改写，或遇到宫廷 AI 质问。"
   }
@@ -163,20 +163,23 @@ export function clearCurrentRunId() {
 export function evaluateAchievements(
   state: GameState,
   completedEndingIds: EndingId[] = [],
-  profile: PlayerProfile = createEmptyProfile()
+  profile: PlayerProfile = createEmptyProfile(),
+  scope: "current" | "completed" = "current"
 ): AchievementId[] {
   const ids = new Set<AchievementId>();
-  if (state.history.length > 0) ids.add("firstShift");
-  if (state.truth >= 7) ids.add("truthArchive");
-  if (state.reputation >= 7) ids.add("reputationShield");
-  if (state.history.length >= 6 && state.systemSuspicion <= 2) ids.add("quietOperator");
   if (state.history.some((entry) => entry.choice === "original")) ids.add("rawEvidence");
   if (sourceZonesUsed(state).size >= 3) ids.add("sourceSweeper");
   if (state.dialogueEvents.length > 0) ids.add("dialogueHandler");
   if (state.publicDoubt >= 6) ids.add("publicBreach");
   if (profile.decodedEngine || profile.engineFragments.length >= engineFragmentDefinitions.length) ids.add("engineDecoded");
-  for (const endingId of completedEndingIds) ids.add(endingAchievementIds[endingId]);
-  if (new Set(completedEndingIds).size >= Object.keys(endingAchievementIds).length) ids.add("allEndings");
+  if (scope === "completed") {
+    ids.add("firstShift");
+    if (state.truth >= 7) ids.add("truthArchive");
+    if (state.reputation >= 7) ids.add("reputationShield");
+    if (state.systemSuspicion <= 2) ids.add("quietOperator");
+    for (const endingId of completedEndingIds) ids.add(endingAchievementIds[endingId]);
+    if (new Set(completedEndingIds).size >= Object.keys(endingAchievementIds).length) ids.add("allEndings");
+  }
   return [...ids];
 }
 
@@ -215,7 +218,7 @@ export function recordCompletedRun(
   const completedEndingIds = [...profile.runs.map((run) => run.endingId), endingId];
   const unlocked = mergeAchievementUnlocks(
     withFragments.profile,
-    evaluateAchievements(state, completedEndingIds, withFragments.profile),
+    evaluateAchievements(state, completedEndingIds, withFragments.profile, "completed"),
     runId,
     completedAt
   );

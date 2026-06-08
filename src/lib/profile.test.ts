@@ -26,8 +26,37 @@ describe("player profile and achievements", () => {
     const leaked = performAction(inspected, "leakLoomPhoto", "original");
 
     expect(evaluateAchievements({ ...leaked, publicDoubt: 6, dialogueEvents: [{ event: {} as never, transcript: [], outcomeTag: "noEffect", effects: {}, summary: "" }] })).toEqual(
-      expect.arrayContaining(["firstShift", "rawEvidence", "dialogueHandler", "publicBreach"])
+      expect.arrayContaining(["rawEvidence", "dialogueHandler", "publicBreach"])
     );
+    expect(evaluateAchievements(leaked)).not.toEqual(expect.arrayContaining(["firstShift"]));
+  });
+
+  it("holds completion achievements until a run is recorded", () => {
+    const highEvidence = { ...initialState, truth: 7, reputation: 7, systemSuspicion: 2 };
+
+    expect(evaluateAchievements(highEvidence)).not.toEqual(expect.arrayContaining([
+      "firstShift",
+      "truthArchive",
+      "reputationShield",
+      "quietOperator"
+    ]));
+
+    const recorded = recordCompletedRun(createEmptyProfile(), highEvidence, "unstableFeed", "en", "high-evidence-run", "2026-05-20T00:00:00.000Z");
+    expect(recorded.newUnlocks.map((item) => item.id)).toEqual(expect.arrayContaining([
+      "firstShift",
+      "truthArchive",
+      "reputationShield",
+      "quietOperator",
+      "unstableFeed"
+    ]));
+
+    expect(evaluateAchievements(highEvidence, ["unstableFeed"], createEmptyProfile(), "completed")).toEqual(expect.arrayContaining([
+      "firstShift",
+      "truthArchive",
+      "reputationShield",
+      "quietOperator",
+      "unstableFeed"
+    ]));
   });
 
   it("merges achievement unlocks without duplicating existing awards", () => {
@@ -55,6 +84,14 @@ describe("player profile and achievements", () => {
     expect(first.profile.engineFragments.map((item) => item.id)).toContain("stabilityBias");
     expect(second.profile.runs).toHaveLength(1);
     expect(second.newUnlocks).toHaveLength(0);
+  });
+
+  it("treats early parade settlement as a completed run", () => {
+    const earlyState = performAction(initialState, "publishTailorsClaim", "direct");
+    const recorded = recordCompletedRun(createEmptyProfile(), earlyState, "unstableFeed", "en", "early-run", "2026-05-20T00:00:00.000Z");
+
+    expect(earlyState.actionsLeft).toBeGreaterThan(0);
+    expect(recorded.newUnlocks.map((item) => item.id)).toEqual(expect.arrayContaining(["firstShift", "unstableFeed"]));
   });
 
   it("unlocks complete archive after all endings have been recorded", () => {
