@@ -61,6 +61,15 @@ async function expectActionHintBelowTarget(page: Page, targetId: string) {
   expect(targetCenterX).toBeLessThanOrEqual(hintBox.x + hintBox.width - 12);
 }
 
+async function expectTutorialPanelClearOfDialogue(page: Page) {
+  const tutorialBox = await page.locator(".onboarding-panel").boundingBox();
+  const dialogueBox = await page.locator(".dialogue-panel").boundingBox();
+  if (!tutorialBox || !dialogueBox) throw new Error("Missing tutorial or dialogue geometry");
+  const overlapX = Math.max(0, Math.min(tutorialBox.x + tutorialBox.width, dialogueBox.x + dialogueBox.width) - Math.max(tutorialBox.x, dialogueBox.x));
+  const overlapY = Math.max(0, Math.min(tutorialBox.y + tutorialBox.height, dialogueBox.y + dialogueBox.height) - Math.max(tutorialBox.y, dialogueBox.y));
+  expect(overlapX * overlapY).toBe(0);
+}
+
 test("completes a six-action editorial shift and reaches the archive", async ({ page }) => {
   await page.goto("/dashboard");
   await expect(page.getByRole("dialog", { name: "Game Briefing" })).toBeVisible();
@@ -429,12 +438,14 @@ test("each new shift briefing continues into the spotlight tutorial with real co
   await expect(page.getByRole("dialog", { name: "Dialogue is immediate reaction" })).toBeVisible();
   await expectActiveTourTarget(page, "dialogue-panel");
   await expectActiveActionTarget(page, "dialogue-reply");
+  await expectTutorialPanelClearOfDialogue(page);
   await expect(page.locator(".dialogue-panel .dialogue-timeout.paused")).toContainText("Guide Pause");
   await activateButton(page.locator('[data-tour-target="dialogue-reply"]'));
 
   await expect(page.getByRole("dialog", { name: "Write the exchange into the run" })).toBeVisible();
   await expectActiveTourTarget(page, "dialogue-panel");
   await expectActiveActionTarget(page, "dialogue-resolve");
+  await expectTutorialPanelClearOfDialogue(page);
   const resolveButton = page.locator('[data-tour-target="dialogue-resolve"]');
   await expect(resolveButton).toBeEnabled({ timeout: 15000 });
   await activateButton(resolveButton);

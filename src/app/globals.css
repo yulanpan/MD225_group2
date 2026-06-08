@@ -3696,6 +3696,11 @@ h2 {
   backdrop-filter: blur(7px);
 }
 
+.dashboard-page[data-tutorial-active="true"][data-tour-step^="dialogue"] .dialogue-overlay {
+  place-items: center start;
+  padding: 20px 540px 20px 24px;
+}
+
 .dialogue-panel {
   position: relative;
   display: flex;
@@ -3712,6 +3717,11 @@ h2 {
   color: white;
   box-shadow: 13px 13px 0 rgba(0, 166, 200, 0.48), 0 36px 120px rgba(0, 0, 0, 0.46);
   animation: commandIn 360ms var(--ease-command) both;
+}
+
+.dashboard-page[data-tutorial-active="true"][data-tour-step^="dialogue"] .dialogue-panel {
+  width: min(820px, calc(100vw - 600px));
+  min-width: 560px;
 }
 
 .dialogue-guide {
@@ -5158,6 +5168,27 @@ body.breach .comments-module {
   .archive-state-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .dashboard-page[data-tutorial-active="true"][data-tour-step^="dialogue"] .dialogue-overlay {
+    align-items: start;
+    padding: 14px 14px 38svh;
+  }
+
+  .dashboard-page[data-tutorial-active="true"][data-tour-step^="dialogue"] .dialogue-panel {
+    width: 100%;
+    min-width: 0;
+    height: calc(62svh - 28px);
+    max-height: calc(62svh - 28px);
+  }
+
+  .dashboard-page[data-tutorial-active="true"][data-tour-step^="dialogue"] .tutorial-panel.onboarding-panel {
+    top: auto !important;
+    right: 14px !important;
+    bottom: 14px !important;
+    left: 14px !important;
+    width: auto !important;
+    max-height: calc(34svh - 10px);
+  }
 }
 
 @media (max-width: 780px) {
@@ -5375,6 +5406,11 @@ body.breach .comments-module {
     padding: 10px;
   }
 
+  .dashboard-page[data-tutorial-active="true"][data-tour-step^="dialogue"] .dialogue-overlay {
+    align-items: start;
+    padding: 10px 10px 42svh;
+  }
+
   .dialogue-panel {
     display: flex;
     flex-direction: column;
@@ -5382,6 +5418,22 @@ body.breach .comments-module {
     max-height: 92vh;
     overflow-x: hidden;
     overflow-y: auto;
+  }
+
+  .dashboard-page[data-tutorial-active="true"][data-tour-step^="dialogue"] .dialogue-panel {
+    width: 100%;
+    min-width: 0;
+    height: calc(58svh - 20px);
+    max-height: calc(58svh - 20px);
+  }
+
+  .dashboard-page[data-tutorial-active="true"][data-tour-step^="dialogue"] .tutorial-panel.onboarding-panel {
+    top: auto !important;
+    right: 12px !important;
+    bottom: 12px !important;
+    left: 12px !important;
+    width: auto !important;
+    max-height: calc(38svh - 12px);
   }
 
   .dialogue-head,
