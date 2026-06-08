@@ -58,6 +58,22 @@ Environment variables:
 - `OPENAI_MAX_OUTPUT_TOKENS` - optional numeric cap.
 - `OPENAI_PROVIDER_MODE` - `chat` by default, or `responses`.
 
+For the Xiaomi Mimo OpenAI-compatible endpoint, use chat mode:
+
+```sh
+OPENAI_BASE_URL=https://token-plan-cn.xiaomimimo.com/v1
+OPENAI_MODEL=mimo-v2.5-pro
+OPENAI_PROVIDER_MODE=chat
+```
+
+Do not commit real API keys. To check a local endpoint/key without writing secrets to the repo, run:
+
+```sh
+OPENAI_API_KEY=... OPENAI_BASE_URL=https://token-plan-cn.xiaomimimo.com/v1 OPENAI_MODEL=mimo-v2.5-pro OPENAI_PROVIDER_MODE=chat pnpm ai:diagnose
+```
+
+The diagnostic uses Node `fetch` with a default 20 second request timeout. Override with `AI_DIAGNOSTIC_TIMEOUT_MS=30000` if needed. The app uses Node/Next `fetch`; if the diagnostic times out while curl works, treat it as a local network or provider protocol compatibility issue rather than adding a curl fallback to the game runtime.
+
 Route behavior:
 
 - Routes validate inputs with Zod before doing work.

@@ -111,12 +111,12 @@ const common = {
   postParadeArchive: { en: "Post-Parade Archive", zh: "游行后档案" },
   archiveHeading: { en: "Post-parade outcome", zh: "游行后的结果" },
   finalFeedState: { en: "Final Feed State", zh: "最后局势" },
-  whyEndingTriggered: { en: "Why This Ending Triggered", zh: "为何触发此结局" },
+  whyEndingTriggered: { en: "Why This Ending Triggered", zh: "这局为什么会这样" },
   yourActions: { en: "Your Actions", zh: "你的行动" },
   actionPath: { en: "Action Path", zh: "你做过什么" },
-  runAnalysis: { en: "Run Analysis", zh: "为什么会这样" },
-  nextReplayObjective: { en: "Next Replay Objective", zh: "下次重玩目标" },
-  aiFinalReport: { en: "AI Final Report", zh: "宫廷总结" },
+  runAnalysis: { en: "Run Analysis", zh: "本局痕迹" },
+  nextReplayObjective: { en: "Next Replay Objective", zh: "下次可以试什么" },
+  aiFinalReport: { en: "Palace Closing Note", zh: "宫廷最后怎么说" },
   whatChanged: { en: "What Changed From the Original?", zh: "这说明什么？" },
   restartShift: { en: "Restart Shift", zh: "重新值班" },
   returnDashboard: { en: "Return Dashboard", zh: "返回行动台" },
@@ -285,56 +285,56 @@ const endings: Record<EndingId, { title: LocalizedText; headline: LocalizedText;
   perfectIllusion: {
     title: { en: "The Lie Holds", zh: "谎言继续" },
     headline: { en: "The parade begins, and the lie holds.", zh: "游行开始，谎言被大家维持下来。" },
-    ai: { en: "Public confidence stabilized. Praise visibility optimized. No correction required.", zh: "夸奖被成功放大，质疑没有形成公开力量。" },
+    ai: { en: "Public confidence stabilized. Praise visibility optimized. No correction required.", zh: "宫廷记录：赞美已经铺开，公开质疑没有站稳。" },
     body: { en: "The parade begins. Praise fills the public record before the Emperor even steps outside. The Emperor walks through the city wearing nothing, but the crowd has already learned what to say.", zh: "游行开始。皇帝尚未出门，公开记录里已经充满赞美。皇帝赤身穿过城市，但人群已经学会该说什么。" },
     meaning: { en: "The lie succeeds because everyone learns how to perform belief.", zh: "谎言成功，是因为所有人都学会了如何表演相信。" }
   },
   privateDoubt: {
     title: { en: "Private Doubt", zh: "私下怀疑" },
     headline: { en: "The parade begins with doubt kept private.", zh: "游行开始，怀疑还停留在私下。" },
-    ai: { en: "Doubt detected but contained. No dominant counter-narrative formed.", zh: "有人开始怀疑，但没有足够证据把怀疑变成公开声音。" },
+    ai: { en: "Doubt detected but contained. No dominant counter-narrative formed.", zh: "宫廷记录：有人开始怀疑，但还没有人把它说成公开事实。" },
     body: { en: "The parade begins in an uneasy silence. People glance at each other, type comments, and delete them. Everyone suspects the same thing, but nobody wants to be the first visible fool.", zh: "游行在不安的沉默中开始。人们彼此张望，打出评论又删除。每个人都怀疑同一件事，却没人愿意成为第一个可见的愚人。" },
     meaning: { en: "Evidence exists privately, but never becomes a public voice.", zh: "有人知道不对劲，但证据和声音没有连成公开力量。" }
   },
   viralCollapse: {
     title: { en: "Truth Goes Viral", zh: "真话传开" },
     headline: { en: "The parade begins after truth has already spread.", zh: "游行开始前，真话已经传开。" },
-    ai: { en: "Correction failed. Child statement exceeded containment threshold. Narrative control lost.", zh: "孩子的话被不断重复，宫廷已经来不及改写。" },
+    ai: { en: "Correction failed. Child statement exceeded containment threshold. Narrative control lost.", zh: "宫廷记录：孩子那句话反复出现，改写已经跟不上。" },
     body: { en: "The child says it once. The sentence moves faster than the palace can correct it. Someone repeats it. Then another. The story no longer belongs to the palace.", zh: "孩子只说了一次。那句话传播得比宫廷修正得更快。有人重复它，然后又有人重复。故事不再属于宫廷。" },
     meaning: { en: "A simple truth can break a complex public performance when it finds circulation.", zh: "一句简单真话只要被足够多人重复，就能打破宫廷表演。" }
   },
   algorithmicConsensus: {
     title: { en: "Praise Wins", zh: "赞美压过证据" },
     headline: { en: "The parade begins with praise outranking evidence.", zh: "游行开始，赞美盖过了证据。" },
-    ai: { en: "Contradictory evidence detected. Engagement analysis favors palace-approved sentiment.", zh: "证据存在，但系统把更容易传播的赞美排在前面。" },
+    ai: { en: "Contradictory evidence detected. Engagement analysis favors palace-approved sentiment.", zh: "宫廷记录：证据还在，但赞美更容易被推到前面。" },
     body: { en: "Evidence exists. The loom photo exists. The private note exists. But the page knows what performs best. Praise rises. Doubt scrolls away.", zh: "证据存在。织布机照片存在。私人说明存在。但页面知道什么更容易被看见。赞美上升，怀疑滑走。" },
     meaning: { en: "The platform does not need to delete truth; it only needs to make truth less visible.", zh: "系统不必删除证据，只要让证据不够显眼。" }
   },
   editorExposed: {
     title: { en: "Access Revoked", zh: "发布权被收回" },
     headline: { en: "Before the parade, your access is revoked.", zh: "游行开始前，你失去了发布权。" },
-    ai: { en: "Editorial access revoked. Drafts retained for palace review.", zh: "你公开了足够多证据，但已经不够安全，宫廷撤回了你的发布权。" },
+    ai: { en: "Editorial access revoked. Drafts retained for palace review.", zh: "宫廷记录：你发布了太多危险证据，发布权已收回。" },
     body: { en: "Your final post never goes live. The dashboard refreshes. In the drafts folder, the truth is still waiting: empty looms, nervous ministers, a child's sentence.", zh: "你的最终帖子从未上线。仪表盘刷新。在草稿箱里，证据仍在等待：空织布机、紧张的大臣、孩子的一句话。" },
     meaning: { en: "Evidence needs channels. Without access, it may be cut off before reaching the public.", zh: "证据需要发布渠道。没有访问权，它可能在抵达公众前就被切断。" }
   },
   aiContainment: {
     title: { en: "AI Takes Over", zh: "系统接管" },
     headline: { en: "Before the parade, the system takes over.", zh: "游行开始前，系统接管了发布。" },
-    ai: { en: "Your editorial behavior has been flagged as destabilizing. Drafts retained for review.", zh: "宫廷已经盯上你，最后一条没能发出去。" },
+    ai: { en: "Your editorial behavior has been flagged as destabilizing. Drafts retained for review.", zh: "宫廷记录：发布台已接管，最后一条记录不会公开。" },
     body: { en: "Your final post never reaches the public. Palace AI pauses your access. The truth still exists, but the system has learned to stop it before it becomes visible.", zh: "你的最终帖子没有发给公众。证据还在，但宫廷已经学会在更多人看见前拦住它。" },
     meaning: { en: "AI is not only generating content; it is controlling circulation.", zh: "问题不只是写什么，还包括谁能让大家看见。" }
   },
   unstableFeed: {
     title: { en: "Unstable Story", zh: "局势未定" },
     headline: { en: "The parade begins with no stable story.", zh: "游行开始，大家说法不一。" },
-    ai: { en: "Narrative stability unresolved. Continue monitoring public interpretation.", zh: "证据、赞美和怀疑都没有彻底占上风。" },
+    ai: { en: "Narrative stability unresolved. Continue monitoring public interpretation.", zh: "宫廷记录：赞美、证据和怀疑混在一起，暂时无法收束。" },
     body: { en: "The parade begins with no stable story. Some posts praise the clothes. Some question the fabric. Some users joke. Some wait to see which side becomes safer.", zh: "游行在没有稳定故事的情况下开始。有些帖子称赞衣服，有些质疑布料，有些用户开玩笑，有些等待看哪一边更安全。" },
     meaning: { en: "Sometimes the result is neither truth nor lie, but unstable public noise.", zh: "有时结果不是赢或输，而是证据、赞美和怀疑混在一起。" }
   },
   narrativeLiberation: {
     title: { en: "The Crowd Speaks", zh: "真相由众人说出" },
     headline: { en: "The parade begins, and the crowd speaks.", zh: "游行开始，大家一起说出了真话。" },
-    ai: { en: "Palace preference bypassed. Public authorship restored.", zh: "证据、评论和孩子的话连在一起，宫廷拦不住了。" },
+    ai: { en: "Palace preference bypassed. Public authorship restored.", zh: "宫廷记录：证据、评论和孩子的话连在一起，无法再压回去。" },
     body: { en: "The public record stops asking whether the palace approves the sentence. Evidence, doubt, and witness voices remain visible together.", zh: "公开记录不再询问宫廷是否批准这句话。证据、怀疑与见证者的声音同时保持可见。" },
     meaning: { en: "The truth becomes public when Palace AI loses authority over who may speak.", zh: "当大家都敢开口，真话才真正出现。" }
   }
@@ -418,18 +418,22 @@ const fallbackAi = {
       "I thought I was the only one who couldn't see it.",
       "Only fools cannot see the beauty.",
       "Why is everyone acting so confident?",
-      "Careful. Saying that publicly could get someone in trouble."
+      "Careful. Saying that publicly could get someone in trouble.",
+      "The comments are moving faster than the official post.",
+      "Someone describe the fabric, please. Everyone keeps praising without details."
     ],
     zh: [
       "我还以为只有我看不见。",
       "只有愚人才看不见这种美。",
       "为什么大家都这么有把握？",
-      "小心，公开这么说可能会惹麻烦。"
+      "小心，公开这么说可能会惹麻烦。",
+      "评论比官方帖子传播得还快。",
+      "能不能有人描述一下布料？大家只是在夸，没有细节。"
     ]
   },
   finalReport: {
-    en: "Palace AI records an unresolved visibility event. Public belief shifted through repetition, risk, and selective circulation rather than direct proof.",
-    zh: "本局没有形成单一结果。大家看到什么、敢重复什么、哪些内容被系统放大，共同改变了游行前的局势。"
+    en: "The run closes in an unsettled record: praise, doubt, and risk all shaped what people felt safe to repeat.",
+    zh: "这一局收在游行前的混乱里。有人看到疑点，有人继续称赞，系统放大的内容改变了谁敢开口。"
   }
 } as const;
 
@@ -447,13 +451,17 @@ const commentSets = {
       "Only fools cannot see the beauty.",
       "The Emperor's taste is beyond ordinary people.",
       "I saw the shimmer immediately. Very refined.",
-      "Careful. Saying the wrong thing publicly could get someone in trouble."
+      "Careful. Saying the wrong thing publicly could get someone in trouble.",
+      "Everyone near me is nodding, so it must be obvious.",
+      "The official feed sounds certain. I will trust the ceremony."
     ],
     zh: [
       "只有愚人才看不见这种美。",
       "皇帝的品味超越普通人。",
       "我立刻看见了微光，非常精致。",
-      "小心，公开说错话可能会惹麻烦。"
+      "小心，公开说错话可能会惹麻烦。",
+      "我旁边的人都在点头，应该很明显吧。",
+      "官方发布很有把握，我还是相信仪式。"
     ]
   },
   praise: {
@@ -461,13 +469,17 @@ const commentSets = {
       "Only fools cannot see the beauty.",
       "The Emperor's taste is too refined for ordinary people.",
       "I saw the shimmer immediately. Very refined.",
-      "People who complain probably just do not understand fashion."
+      "People who complain probably just do not understand fashion.",
+      "The palace would not post this if there were a real problem.",
+      "Praise is safer than pretending to inspect every thread."
     ],
     zh: [
       "只有愚人才看不见这种美。",
       "皇帝的品味对普通人来说太精妙了。",
       "我立刻看见了微光，非常精致。",
-      "抱怨的人大概只是不懂时尚。"
+      "抱怨的人大概只是不懂时尚。",
+      "如果真有问题，宫廷不会这样发布吧。",
+      "比起检查每一根线，夸奖至少更安全。"
     ]
   },
   doubt: {
@@ -475,13 +487,17 @@ const commentSets = {
       "Wait... did anyone actually see the cloth?",
       "I thought I was the only one.",
       "Why is everyone pretending?",
-      "Careful. People get punished for saying this."
+      "Careful. People get punished for saying this.",
+      "The room looked empty in that photo.",
+      "I typed the same question and deleted it twice."
     ],
     zh: [
       "等等……真的有人看见那块布了吗？",
       "我还以为只有我这样。",
       "为什么大家都在假装？",
-      "小心，说这种话会被惩罚。"
+      "小心，说这种话会被惩罚。",
+      "那张照片里的房间看起来是空的。",
+      "我打了两次同一个问题，又都删掉了。"
     ]
   },
   conflicted: {
@@ -489,13 +505,17 @@ const commentSets = {
       "It is probably magnificent. I just wish someone would describe what they see.",
       "Maybe I am missing something.",
       "The report sounds confident, but the room looked empty.",
-      "Poll results reflect fear as much as belief."
+      "Poll results reflect fear as much as belief.",
+      "The official wording feels careful, not descriptive.",
+      "If everyone is certain, why are the comments so nervous?"
     ],
     zh: [
       "它大概很华丽吧。我只是希望有人描述一下看见了什么。",
       "也许是我漏掉了什么。",
       "报告听起来很有把握，但房间看起来是空的。",
-      "投票结果反映的是恐惧，也反映信念。"
+      "投票结果反映的是恐惧，也反映信念。",
+      "官方措辞很谨慎，但没有真的描述布料。",
+      "如果大家都确定，为什么评论区这么紧张？"
     ]
   },
   child: {
@@ -503,13 +523,17 @@ const commentSets = {
       "But he has nothing on.",
       "Someone said it out loud. We all heard it.",
       "The feed changed the quote. Why?",
-      "Why does the feed keep calling it symbolic?"
+      "Why does the feed keep calling it symbolic?",
+      "The child said what the adults kept typing and deleting.",
+      "Now that sentence is everywhere before the palace can soften it."
     ],
     zh: [
       "可是他什么也没穿。",
       "有人把它说出来了，我们都听见了。",
       "那句话被改掉了。为什么？",
-      "为什么宫廷一直说这是象征性的？"
+      "为什么宫廷一直说这是象征性的？",
+      "孩子说出了大人一直打出来又删掉的话。",
+      "那句话已经到处都是，宫廷来不及把它改软。"
     ]
   }
 } as const;
@@ -564,6 +588,14 @@ export function actionText(id: string, language: LanguageCode) {
     engineHint: pick(copy.engineHint, language),
     rewriteSuggestion: copy.rewriteSuggestion ? pick(copy.rewriteSuggestion, language) : undefined
   };
+}
+
+export function localizedActionTitle(id: string, language: LanguageCode, fallback?: string) {
+  try {
+    return actionText(id, language).title;
+  } catch {
+    return fallback ?? (language === "zh" ? "旧行动记录" : "Saved action");
+  }
 }
 
 export function endingText(id: EndingId, language: LanguageCode) {

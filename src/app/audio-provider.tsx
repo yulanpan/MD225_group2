@@ -7,11 +7,9 @@ import {
   loadAudioSettingsFromStorage,
   musicLayers,
   musicScenes,
-  soundEffects,
   type AudioSettings,
   type MusicLayer,
-  type MusicScene,
-  type SoundEffect
+  type MusicScene
 } from "@/lib/audio";
 
 type AudioContextValue = {
@@ -20,11 +18,9 @@ type AudioContextValue = {
   scene: MusicScene | null;
   setScene: (scene: MusicScene, options?: { duck?: boolean }) => void;
   setLayerIntensity: (layer: MusicLayer, intensity: number) => void;
-  playSfx: (effect: SoundEffect) => void;
   setMuted: (muted: boolean) => void;
   setVolume: (volume: number) => void;
   setMusicEnabled: (enabled: boolean) => void;
-  setSfxEnabled: (enabled: boolean) => void;
   unlock: () => void;
 };
 
@@ -229,28 +225,17 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     });
   }, [fadeTo]);
 
-  const playSfx = useCallback((effect: SoundEffect) => {
-    const current = settingsRef.current;
-    if (!unlockedRef.current || current.muted || !current.sfxEnabled) return;
-    const config = soundEffects[effect];
-    const audio = new Audio(config.path);
-    setAudioVolume(audio, config.volume * current.volume);
-    void safePlay(audio);
-  }, []);
-
   const value = useMemo<AudioContextValue>(() => ({
     unlocked,
     settings,
     scene,
     setScene,
     setLayerIntensity,
-    playSfx,
     setMuted: (muted) => setSettings((current) => ({ ...current, muted })),
     setVolume: (volume) => setSettings((current) => ({ ...current, volume: Math.max(0, Math.min(1, volume)) })),
     setMusicEnabled: (musicEnabled) => setSettings((current) => ({ ...current, musicEnabled })),
-    setSfxEnabled: (sfxEnabled) => setSettings((current) => ({ ...current, sfxEnabled })),
     unlock
-  }), [playSfx, scene, setLayerIntensity, setScene, settings, unlock, unlocked]);
+  }), [scene, setLayerIntensity, setScene, settings, unlock, unlocked]);
 
   return (
     <GameAudioContext.Provider value={value}>
@@ -278,7 +263,6 @@ function AudioControls() {
         className="audio-main"
         onClick={() => {
           audio.unlock();
-          audio.playSfx("uiClick");
           setOpen((current) => !current);
         }}
         aria-label={label}
@@ -309,12 +293,6 @@ function AudioControls() {
             onClick={() => audio.setMusicEnabled(!audio.settings.musicEnabled)}
           >
             Music
-          </button>
-          <button
-            className={audio.settings.sfxEnabled ? "active" : ""}
-            onClick={() => audio.setSfxEnabled(!audio.settings.sfxEnabled)}
-          >
-            SFX
           </button>
         </div>
       </div>

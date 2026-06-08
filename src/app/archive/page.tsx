@@ -9,7 +9,7 @@ import {
   loadProfile
 } from "@/lib/profile";
 import { localizedEndingTitle } from "@/lib/game-rules";
-import { choiceText, commonText, languageName, metricLabel } from "@/lib/i18n";
+import { choiceText, commonText, languageName, localizedActionTitle, metricLabel } from "@/lib/i18n";
 import { useLanguage } from "@/hooks/use-language";
 import { useGameAudio } from "@/app/audio-provider";
 import AuthControl from "@/app/auth-control";
@@ -44,7 +44,7 @@ function achievementArchiveCopy(
 
 export default function ArchivePage() {
   const { language, languageReady, toggleLanguage } = useLanguage();
-  const { playSfx, setScene } = useGameAudio();
+  const { setScene } = useGameAudio();
   const [profile, setProfile] = useState<PlayerProfile>(emptyProfile);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
 
@@ -146,10 +146,7 @@ export default function ArchivePage() {
                 <button
                   className={selectedRun?.id === run.id ? "run-row active" : "run-row"}
                   key={run.id}
-                  onClick={() => {
-                    playSfx("uiClick");
-                    setSelectedRunId(run.id);
-                  }}
+                  onClick={() => setSelectedRunId(run.id)}
                 >
                   <b>{String(index + 1).padStart(2, "0")} / {localizedEndingTitle(run.endingId, language)}</b>
                   <span>{language === "zh" ? `${run.actionPath.length} 次操作 · ${run.dialogueCount} 次交流` : `${run.actionPath.length} actions · ${run.dialogueCount} transmissions`} · {new Date(run.completedAt).toLocaleDateString()}</span>
@@ -181,7 +178,7 @@ export default function ArchivePage() {
                   <div className="history-list">
                     {selectedRun.actionPath.map((action, index) => (
                       <div className="history-item" key={`${action.actionId}-${index}`}>
-                        <b>{String(index + 1).padStart(2, "0")} / {action.title}</b>
+                        <b>{String(index + 1).padStart(2, "0")} / {localizedActionTitle(action.actionId, language, action.title)}</b>
                         <span>{choiceText(action.choice, language)}</span>
                       </div>
                     ))}

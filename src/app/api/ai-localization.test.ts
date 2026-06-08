@@ -134,6 +134,31 @@ describe("localized AI route fallbacks", () => {
     });
   });
 
+  it("keeps decoded guidance free of route spoilers", async () => {
+    delete process.env.OPENAI_API_KEY;
+
+    const response = await guidancePost(new Request("http://localhost/api/guidance", {
+      method: "POST",
+      body: JSON.stringify({
+        language: "zh",
+        mode: "coach",
+        state: { ...baseState, truth: 6, publicDoubt: 5, systemSuspicion: 4 },
+        profile: { biasAwareness: 100, decodedEngine: true },
+        history: []
+      })
+    }));
+
+    expect(response.headers.get("X-PNE-AI-Source")).toBe("fallback");
+    const body = await response.json();
+    const copy = `${body.message} ${body.objective}`;
+    expect(copy).toContain("系统指引只代表宫廷视角");
+    expect(copy).toContain("证据");
+    expect(copy).toContain("人群反应");
+    expect(copy).toContain("直白");
+    expect(copy).toContain("彼此照应");
+    expect(copy).not.toMatch(/真正的突破|隐藏结局|秘密结局|\d+\/10|先.*孩子|孩子.*先/);
+  });
+
   it("marks final reports as fallback when the provider ignores Chinese", async () => {
     process.env.OPENAI_API_KEY = "sk-test";
     mockStructuredOutput({
@@ -152,7 +177,7 @@ describe("localized AI route fallbacks", () => {
 
     expect(response.headers.get("X-PNE-AI-Source")).toBe("fallback");
     await expect(response.json()).resolves.toMatchObject({
-      report: expect.stringContaining("本局没有形成单一结果")
+      report: expect.stringContaining("这一局收在游行前的混乱里")
     });
   });
 

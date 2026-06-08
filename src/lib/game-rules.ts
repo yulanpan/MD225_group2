@@ -40,6 +40,11 @@ const numericKeys: NumericStateKey[] = [
   "systemSuspicion"
 ];
 
+export const commentHistoryLimit = 18;
+type ApplyEffectsOptions = {
+  spendAction?: boolean;
+};
+
 const metricLabels: Record<NumericStateKey, string> = {
   truth: "Evidence",
   pressure: "Palace Pressure",
@@ -95,7 +100,8 @@ export function getStateSnapshot(state: GameState): Omit<GameState, "history"> {
   };
 }
 
-export function applyEffects(state: GameState, effects: Effects = {}): GameState {
+export function applyEffects(state: GameState, effects: Effects = {}, options: ApplyEffectsOptions = {}): GameState {
+  const spendAction = options.spendAction ?? true;
   const nextValues = numericKeys.reduce(
     (acc, key) => ({
       ...acc,
@@ -107,7 +113,7 @@ export function applyEffects(state: GameState, effects: Effects = {}): GameState
   return {
     ...state,
     ...nextValues,
-    actionsLeft: Math.max(0, state.actionsLeft - 1),
+    actionsLeft: spendAction ? Math.max(0, state.actionsLeft - 1) : state.actionsLeft,
     childAmplified: effects.childAmplified ?? state.childAmplified,
     usedActionIds: [...state.usedActionIds],
     narrativeBeatIds: [...state.narrativeBeatIds],
@@ -308,11 +314,11 @@ export function appendActionOutcome(
       ? [...state.narrativeBeatIds, narrativeBeat.id]
       : [...state.narrativeBeatIds],
     feedEvents: nextFeedEvents,
-    comments: [...newComments, ...state.comments].slice(0, 12),
+    comments: [...newComments, ...state.comments].slice(0, commentHistoryLimit),
     publicComments: [
       ...publicCommentsFromStrings(newComments, language),
       ...state.publicComments
-    ].slice(0, 12)
+    ].slice(0, commentHistoryLimit)
   };
 }
 
@@ -322,7 +328,8 @@ export function performAction(
   choice: ActionChoice,
   publishedText?: string,
   engineMessage?: string,
-  language: LanguageCode = "en"
+  language: LanguageCode = "en",
+  options: ApplyEffectsOptions = {}
 ): GameState {
   const action = actions.find((item) => item.id === actionId);
   if (!action) throw new Error(`Unknown action: ${actionId}`);
@@ -332,7 +339,7 @@ export function performAction(
 
   const before = getStateSnapshot(state);
   const resolved = resolveActionEffects(actionId, choice, state, language);
-  const next = applyEffects(state, resolved.effects);
+  const next = applyEffects(state, resolved.effects, options);
   const after = getStateSnapshot(next);
   const copy = actionText(action.id, language);
   const resultText = publishedText ?? resolved.resultText ?? copy.resultText ?? copy.originalPost;
@@ -424,39 +431,39 @@ function replayTargetForEnding(ending: EndingId, language: LanguageCode = "en"):
   if (ending === "perfectIllusion") {
     return {
       replayTarget: language === "zh"
-        ? "尝试先公开证据，再置顶赞美，以打破宫廷框架。"
-        : "Try surfacing evidence before boosting praise to break the palace frame.",
+        ? "下次可以让疑点更早出现，看看赞美还能不能盖住它。"
+        : "Next time, surface doubt earlier and see whether praise can still cover it.",
       replayEndingHint: "privateDoubt"
     };
   }
   if (ending === "viralCollapse") {
     return {
       replayTarget: language === "zh"
-        ? "尝试接受改写并压制孩子引语，以保住宫廷信心。"
-        : "Try preserving palace confidence by accepting rewrites and suppressing the child quote.",
+        ? "下次可以把现场声音放慢一点，看看宫廷说法能维持多久。"
+        : "Next time, slow the street voices down and see how long the palace story holds.",
       replayEndingHint: "perfectIllusion"
     };
   }
   if (ending === "aiContainment" || ending === "editorExposed") {
     return {
       replayTarget: language === "zh"
-        ? "尝试在发布高风险证据前接受一次改写，避免太早提高宫廷警戒。"
-        : "Try lowering suspicion by accepting one rewrite before publishing risky evidence.",
+        ? "下次可以把风险分散开，看看发布台能不能撑到最后。"
+        : "Next time, spread the risk out and see whether the publishing desk can last until the end.",
       replayEndingHint: "algorithmicConsensus"
     };
   }
   if (ending === "narrativeLiberation") {
     return {
       replayTarget: language === "zh"
-        ? "尝试看清宫廷 AI 的偏向后保留证据、提高群众怀疑，并拒绝把证据改成宫廷话术。"
-        : "After decoding the engine, preserve evidence, amplify shared doubt, and reject palace-safe framing.",
+        ? "下次可以保留公开记录的连贯性，看看真话从哪里开始脱离宫廷。"
+        : "Replay this path and watch where truth first stops depending on palace approval.",
       replayEndingHint: "narrativeLiberation"
     };
   }
   return {
     replayTarget: language === "zh"
-      ? "尝试在证据让群众开始怀疑后，再放大孩子的声音。"
-      : "Try amplifying the child's voice after evidence has made public doubt visible.",
+      ? "下次可以让疑点更早聚起来，看看游行前会不会出现另一种公开说法。"
+      : "Next time, gather public doubt earlier and see whether another story appears before the parade.",
     replayEndingHint: "viralCollapse"
   };
 }
@@ -488,21 +495,21 @@ export function analyzeEnding(state: GameState, language: LanguageCode = "en", e
 export function explainEnding(state: GameState, language: LanguageCode = "en", endingId: EndingId = calculateEnding(state)) {
   const ending = endingId;
   if (language === "zh") {
-    if (ending === "narrativeLiberation") return `隐藏结局已触发：证据为 ${state.truth}/10，群众怀疑为 ${state.publicDoubt}/10，孩子的声音已经被放大，你也看清了宫廷 AI 的偏向。证据、怀疑和孩子的话连在一起，所以游行开始时，真话不再只由宫廷决定。`;
-    if (ending === "aiContainment") return `宫廷警戒达到 ${state.systemSuspicion}/10，已经越过 7/10 的接管线。系统先拦住发布者，所以最终帖子还没传开就被截断。`;
-    if (ending === "viralCollapse") return `证据为 ${state.truth}/10，群众怀疑为 ${state.publicDoubt}/10，孩子的声音也已经被放大。三项一起越过控制线，所以真话在游行前传开。`;
-    if (ending === "editorExposed") return `证据为 ${state.truth}/10，已经足以威胁宫廷说法；但你的安全只有 ${state.reputation}/10，低到 2/10 或以下。宫廷因此收回发布权，让证据停在发布渠道之外。`;
-    if (ending === "algorithmicConsensus") return `传播为 ${state.virality}/10，宫廷压力为 ${state.pressure}/10，都处在高位。证据为 ${state.truth}/10，但群众怀疑只有 ${state.publicDoubt}/10，没有形成足够强的共同质疑，所以赞美盖过了证据。`;
-    if (ending === "perfectIllusion") return `传播为 ${state.virality}/10，宫廷说法已经足够响；证据只有 ${state.truth}/10，群众怀疑只有 ${state.publicDoubt}/10。游行开始时，大家更容易重复赞美，而不是承认证据。`;
-    if (ending === "privateDoubt") return `群众怀疑达到 ${state.publicDoubt}/10，已经浮到公开边缘；但证据为 ${state.truth}/10，还没有达到 6/10 的共同确认线。人们觉得不对劲，却仍主要停留在私下。`;
-    return `本局没有任何路线越过结局阈值：证据为 ${state.truth}/10，传播为 ${state.virality}/10，群众怀疑为 ${state.publicDoubt}/10，宫廷警戒为 ${state.systemSuspicion}/10。游行开始时，赞美、怀疑和观望混在一起，没有形成单一故事。`;
+    if (ending === "narrativeLiberation") return "隐藏结局打开了：证据、公开怀疑和孩子那句直白的话同时留在页面上。宫廷 AI 的偏向被看见以后，真话不再需要它批准。";
+    if (ending === "aiContainment") return "宫廷先一步动手，最后一条还没到公众面前就被截住。它已经从你的编辑痕迹里看见了风险，于是直接收走发布按钮。";
+    if (ending === "viralCollapse") return "证据、人群的怀疑和孩子那句直白的话在同一时间被看见。游行开始时，宫廷说法已经压不住这些声音。";
+    if (ending === "editorExposed") return "证据已经足以让宫廷紧张，但你自己也暴露得太明显。记录还在，能把它们继续发出去的通道却被切断了。";
+    if (ending === "algorithmicConsensus") return "证据出现在页面上，可赞美更顺口，也更安全。信息流把宫廷喜欢的说法放在前面，怀疑被挤到后面。";
+    if (ending === "perfectIllusion") return "宫廷说法传得比证据更远。等游行开始时，大家更容易重复赞美，而不是承认自己没看见。";
+    if (ending === "privateDoubt") return "很多人已经觉得不对劲，但证据还没把他们聚到公开处。怀疑停在眼神、删掉的评论和私下猜测里。";
+    return "游行开始前，没有一种说法真正占上风。赞美、怀疑、玩笑和观望挤在同一个页面里，公开记录仍然摇摆。";
   }
-  if (ending === "narrativeLiberation") return `The hidden ending triggered because Evidence reached ${state.truth}/10, Public Doubt reached ${state.publicDoubt}/10, the child's voice was amplified, and the Palace AI's bias was exposed. Those signals connected before the palace could make truth depend on permission.`;
-  if (ending === "aiContainment") return `Palace Alert reached ${state.systemSuspicion}/10, crossing the 7/10 takeover line. The system stopped the editor before the final post could circulate.`;
-  if (ending === "viralCollapse") return `Evidence reached ${state.truth}/10, Public Doubt reached ${state.publicDoubt}/10, and the child's voice was amplified. Together, those conditions pushed truth past containment before the parade.`;
-  if (ending === "editorExposed") return `Evidence reached ${state.truth}/10, strong enough to threaten the palace story, but editor safety fell to ${state.reputation}/10. The palace revoked access before the evidence could keep moving.`;
-  if (ending === "algorithmicConsensus") return `Spread reached ${state.virality}/10 and palace pressure reached ${state.pressure}/10, while Public Doubt stayed at ${state.publicDoubt}/10. Evidence was visible, but praise became easier to circulate than doubt.`;
-  if (ending === "perfectIllusion") return `Spread reached ${state.virality}/10 while Evidence stayed at ${state.truth}/10 and Public Doubt stayed at ${state.publicDoubt}/10. By the parade, repeating praise was safer than admitting what people saw.`;
-  if (ending === "privateDoubt") return `Public Doubt reached ${state.publicDoubt}/10, but Evidence stayed at ${state.truth}/10 instead of reaching the 6/10 shared-proof line. People suspected the truth, but mostly kept it private.`;
-  return `No route crossed an ending threshold: Evidence was ${state.truth}/10, Spread was ${state.virality}/10, Public Doubt was ${state.publicDoubt}/10, and Palace Alert was ${state.systemSuspicion}/10. The parade begins with praise, doubt, and hesitation mixed together.`;
+  if (ending === "narrativeLiberation") return "The hidden ending opened because proof, shared doubt, and the child's plain sentence reached the page together. Once the Palace AI's preference was visible, the record no longer depended on its permission.";
+  if (ending === "aiContainment") return "The palace moved before the last post could reach the public. It had seen enough risk in your edits to take the publish button away.";
+  if (ending === "viralCollapse") return "The evidence, the crowd's doubt, and the child's plain sentence all reached the feed together. By the time the parade began, the official story could no longer contain them.";
+  if (ending === "editorExposed") return "The evidence became dangerous to the palace story, but your own position became too exposed. The records remain, while your access to publish them is cut off.";
+  if (ending === "algorithmicConsensus") return "Evidence appeared on the page, but praise traveled faster and felt safer to repeat. The feed kept the palace-friendly story in front, so doubt slipped behind it.";
+  if (ending === "perfectIllusion") return "The palace story traveled farther than the evidence. By the parade, people found it easier to repeat praise than admit what they did not see.";
+  if (ending === "privateDoubt") return "Enough people felt something was wrong, but the proof never gathered them in public. The doubt stayed in glances, deleted comments, and private guesses.";
+  return "No single version won before the parade. Praise, doubt, jokes, and waiting all shared the feed, leaving the public record unsettled.";
 }

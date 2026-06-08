@@ -29,7 +29,7 @@ export const achievementDefinitions: AchievementDefinition[] = [
   { id: "allEndings", title: "Complete Archive", titleZh: "完整档案", description: "Collect every ending record.", descriptionZh: "收集所有结局记录。", rarity: "critical" },
   { id: "truthArchive", title: "Evidence Archive", titleZh: "证据档案", description: "Finish a run with Evidence at 7 or higher.", descriptionZh: "以证据 7 或更高完成一局。", rarity: "rare" },
   { id: "reputationShield", title: "Safety Shield", titleZh: "安全发布", description: "Finish a run with Safety at 7 or higher.", descriptionZh: "在足够安全的情况下完成一局。", rarity: "rare" },
-  { id: "quietOperator", title: "Low Alert", titleZh: "低警戒通关", description: "Finish a full run with Palace Alert at 2 or lower.", descriptionZh: "在宫廷警戒很低的情况下完成一局。", rarity: "rare" },
+  { id: "quietOperator", title: "Low Alert", titleZh: "低警戒结算", description: "Finish a run with Palace Alert at 2 or lower.", descriptionZh: "结算时宫廷警戒很低。", rarity: "rare" },
   { id: "rawEvidence", title: "Raw Evidence", titleZh: "原始证据", description: "Publish original evidence instead of safer framing.", descriptionZh: "拒绝安全改写，发布原始证据。", rarity: "standard" },
   { id: "sourceSweeper", title: "Source Sweeper", titleZh: "多来源编辑", description: "Use actions from at least three source zones.", descriptionZh: "在一局中使用至少三个来源的操作。", rarity: "standard" },
   { id: "dialogueHandler", title: "Transmission Handler", titleZh: "交流处理人", description: "Resolve an incoming exchange.", descriptionZh: "完成一次突发交流。", rarity: "standard" },
@@ -163,20 +163,23 @@ export function clearCurrentRunId() {
 export function evaluateAchievements(
   state: GameState,
   completedEndingIds: EndingId[] = [],
-  profile: PlayerProfile = createEmptyProfile()
+  profile: PlayerProfile = createEmptyProfile(),
+  scope: "current" | "completed" = "current"
 ): AchievementId[] {
   const ids = new Set<AchievementId>();
-  if (state.history.length > 0) ids.add("firstShift");
-  if (state.truth >= 7) ids.add("truthArchive");
-  if (state.reputation >= 7) ids.add("reputationShield");
-  if (state.history.length >= 6 && state.systemSuspicion <= 2) ids.add("quietOperator");
   if (state.history.some((entry) => entry.choice === "original")) ids.add("rawEvidence");
   if (sourceZonesUsed(state).size >= 3) ids.add("sourceSweeper");
   if (state.dialogueEvents.length > 0) ids.add("dialogueHandler");
   if (state.publicDoubt >= 6) ids.add("publicBreach");
   if (profile.decodedEngine || profile.engineFragments.length >= engineFragmentDefinitions.length) ids.add("engineDecoded");
-  for (const endingId of completedEndingIds) ids.add(endingAchievementIds[endingId]);
-  if (new Set(completedEndingIds).size >= Object.keys(endingAchievementIds).length) ids.add("allEndings");
+  if (scope === "completed") {
+    ids.add("firstShift");
+    if (state.truth >= 7) ids.add("truthArchive");
+    if (state.reputation >= 7) ids.add("reputationShield");
+    if (state.systemSuspicion <= 2) ids.add("quietOperator");
+    for (const endingId of completedEndingIds) ids.add(endingAchievementIds[endingId]);
+    if (new Set(completedEndingIds).size >= Object.keys(endingAchievementIds).length) ids.add("allEndings");
+  }
   return [...ids];
 }
 
@@ -215,7 +218,7 @@ export function recordCompletedRun(
   const completedEndingIds = [...profile.runs.map((run) => run.endingId), endingId];
   const unlocked = mergeAchievementUnlocks(
     withFragments.profile,
-    evaluateAchievements(state, completedEndingIds, withFragments.profile),
+    evaluateAchievements(state, completedEndingIds, withFragments.profile, "completed"),
     runId,
     completedAt
   );

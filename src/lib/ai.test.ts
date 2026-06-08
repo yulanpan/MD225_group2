@@ -160,7 +160,7 @@ describe("AI helper", () => {
   it("returns localized fallback payloads", () => {
     expect(fallbackReactionForLanguage("zh").engineMessage).toContain("直接证据");
     expect(fallbackRewriteForLanguage("zh").strategy).toContain("暂时不能下结论");
-    expect(fallbackCommentsForLanguage("zh").comments).toHaveLength(4);
-    expect(fallbackFinalReportForLanguage("zh").report).toContain("本局没有形成单一结果");
+    expect(fallbackCommentsForLanguage("zh").comments).toHaveLength(6);
+    expect(fallbackFinalReportForLanguage("zh").report).toContain("这一局收在游行前的混乱里");
   });
 });

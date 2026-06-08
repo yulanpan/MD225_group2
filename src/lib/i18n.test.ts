@@ -16,6 +16,7 @@ import {
   initialFeedEventText,
   isLanguageCode,
   languageName,
+  localizedActionTitle,
   lockReasonText,
   metricLabel,
   normalizeLanguage,
@@ -40,6 +41,8 @@ describe("i18n helpers", () => {
   it("returns localized action, zone, metric, and common UI text", () => {
     expect(actionText("publishTailorsClaim", "en").title).toBe("Publish the Tailors' Claim");
     expect(actionText("publishTailorsClaim", "zh").title).toBe("发布裁缝声明");
+    expect(localizedActionTitle("publishTailorsClaim", "en", "发布裁缝声明")).toBe("Publish the Tailors' Claim");
+    expect(localizedActionTitle("missing-action", "zh", "旧标题")).toBe("旧标题");
     expect(zoneText("child", "zh").title).toBe("孩子的声音");
     expect(metricLabel("truth", "zh")).toBe("证据");
     expect(metricLabel("pressure", "zh")).toBe("宫廷压力");
@@ -83,9 +86,9 @@ describe("i18n helpers", () => {
     expect(aiLanguageInstruction("zh")).toContain("简体中文");
     expect(fallbackReactionText("zh").engineMessage).toContain("直接证据");
     expect(fallbackRewriteText("zh").strategy).toContain("暂时不能下结论");
-    expect(fallbackCommentsText("zh")).toHaveLength(4);
-    expect(fallbackFinalReportText("zh")).toContain("本局没有形成单一结果");
-    expect(initialCommentsText("zh")).toHaveLength(4);
+    expect(fallbackCommentsText("zh")).toHaveLength(6);
+    expect(fallbackFinalReportText("zh")).toContain("这一局收在游行前的混乱里");
+    expect(initialCommentsText("zh")).toHaveLength(6);
     expect(initialFeedEventText("zh").title).toBe("游戏已开始");
     expect(commentsForToneText("praise", "zh")[0]).toContain("愚人");
     expect(commentsForToneText("child", "zh")[0]).toContain("没穿");

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { analyzeEnding, calculateEnding, createInitialState, explainEnding, loadStateFromStorage, localizedEndingTitle } from "@/lib/game-rules";
 import { endingSceneForEnding } from "@/lib/audio";
@@ -90,17 +90,13 @@ function localizedFeedEvent(entry: FeedEvent, language: LanguageCode) {
 export default function EndingClient() {
   const router = useRouter();
   const { language, languageReady, toggleLanguage } = useLanguage();
-  const { playSfx, setScene } = useGameAudio();
+  const { setScene } = useGameAudio();
   const [state, setState] = useState<GameState>(createInitialState("en"));
   const [endingId, setEndingId] = useState<EndingId>("unstableFeed");
   const [report, setReport] = useState<string>(fallbackFinalReportText("en"));
   const [profile, setProfile] = useState<PlayerProfile>({ version: 2, achievements: [], runs: [], engineFragments: [], biasAwareness: 0, decodedEngine: false, secretEndingUnlocked: false });
   const [newUnlocks, setNewUnlocks] = useState<AchievementUnlock[]>([]);
   const [recordedRun, setRecordedRun] = useState<RunRecord | null>(null);
-  const endingCuePlayed = useRef(false);
-  const unlockCueKey = useRef("");
-  const newUnlockKey = newUnlocks.map((unlock) => unlock.id).join(",");
-  const fragmentUnlockKey = recordedRun?.engineFragmentsUnlocked?.join(",") ?? "";
 
   useEffect(() => {
     if (!languageReady) return;
@@ -122,18 +118,7 @@ export default function EndingClient() {
 
   useEffect(() => {
     setScene(endingSceneForEnding(endingId));
-    if (endingCuePlayed.current) return;
-    endingCuePlayed.current = true;
-    playSfx("endingTrigger");
-  }, [endingId, playSfx, setScene]);
-
-  useEffect(() => {
-    const key = `${newUnlockKey}|${fragmentUnlockKey}`;
-    if (!key || key === "|" || key === unlockCueKey.current) return;
-    unlockCueKey.current = key;
-    if (newUnlocks.length > 0) playSfx("achievementUnlock");
-    if (fragmentUnlockKey) playSfx("fragmentUnlock");
-  }, [fragmentUnlockKey, newUnlockKey, newUnlocks.length, playSfx]);
+  }, [endingId, setScene]);
 
   const copy = endingText(endingId, language);
   const triggerExplanation = explainEnding(state, language, endingId);
@@ -305,8 +290,8 @@ export default function EndingClient() {
               <h4>{commonText("runAnalysis", language)}</h4>
               <div className="history-list">
                 <div className="history-item">
-                  <b>{language === "zh" ? "最明显的变化" : "Dominant Metric"}</b>
-                  <span>{language === "zh" ? `${analysis.dominantMetric.label} 最终为 ${analysis.dominantMetric.value}/10。` : `${analysis.dominantMetric.label} ended at ${analysis.dominantMetric.value}/10.`}</span>
+                  <b>{language === "zh" ? "变化最明显的地方" : "Dominant Metric"}</b>
+                  <span>{language === "zh" ? `${analysis.dominantMetric.label} 留下了最重的痕迹。` : `${analysis.dominantMetric.label} left the strongest trace.`}</span>
                 </div>
                 <div className="history-item">
                   <b>{language === "zh" ? "影响最大的行动" : "Strongest Action"}</b>
@@ -332,11 +317,11 @@ export default function EndingClient() {
               <p>{copy.meaning}</p>
             </article>
             <article className="outcome-card narrative-facets-card" data-index="10" data-reveal>
-              <h4>{language === "zh" ? "后果" : "Narrative Consequences"}</h4>
+              <h4>{language === "zh" ? "后来发生了什么" : "Aftermath"}</h4>
               <div className="facet-list">
-                <div><b>{language === "zh" ? "大家记住了什么" : "Public Memory"}</b><span>{endingFacets.publicMemory}</span></div>
-                <div><b>{language === "zh" ? "你付出了什么" : "Editor Consequence"}</b><span>{endingFacets.editorConsequence}</span></div>
-                <div><b>{language === "zh" ? "宫廷学会了什么" : "Engine Lesson"}</b><span>{endingFacets.engineLesson}</span></div>
+                <div><b>{language === "zh" ? "大家后来记住的" : "What People Carry"}</b><span>{endingFacets.publicMemory}</span></div>
+                <div><b>{language === "zh" ? "你留下的代价" : "Cost to You"}</b><span>{endingFacets.editorConsequence}</span></div>
+                <div><b>{language === "zh" ? "宫廷之后会改的" : "What the Palace Changes"}</b><span>{endingFacets.engineLesson}</span></div>
               </div>
             </article>
             <article className="outcome-card" data-index="11" data-reveal>

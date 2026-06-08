@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "ai:diagnose": "node scripts/check-openai-endpoint.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

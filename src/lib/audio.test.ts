@@ -8,21 +8,17 @@ import {
   layerIntensitiesForState,
   loadAudioSettingsFromStorage,
   musicLayers,
-  musicScenes,
-  soundEffects
+  musicScenes
 } from "./audio";
 import { initialState } from "./game-data";
 
 describe("audio manifest and state mapping", () => {
-  it("defines paths for every music scene, layer, and sound effect", () => {
+  it("defines paths for every music scene and adaptive layer", () => {
     for (const item of Object.values(musicScenes)) {
       expect(item.path).toMatch(/^\/audio\/bgm\/.+\.mp3$/);
     }
     for (const item of Object.values(musicLayers)) {
       expect(item.path).toMatch(/^\/audio\/layers\/.+\.mp3$/);
-    }
-    for (const item of Object.values(soundEffects)) {
-      expect(item.path).toMatch(/^\/audio\/sfx\/.+\.mp3$/);
     }
     expect(new Set(expectedAudioAssetPaths).size).toBe(expectedAudioAssetPaths.length);
     expect(expectedAudioAssetPaths).toEqual(expect.arrayContaining([
@@ -31,9 +27,7 @@ describe("audio manifest and state mapping", () => {
       "/audio/bgm/dialogue-tension.mp3",
       "/audio/bgm/ending-liberation.mp3",
       "/audio/layers/pressure-layer.mp3",
-      "/audio/layers/suspicion-layer.mp3",
-      "/audio/sfx/action-commit.mp3",
-      "/audio/sfx/ending-trigger.mp3"
+      "/audio/layers/suspicion-layer.mp3"
     ]));
   });
 
@@ -51,10 +45,9 @@ describe("audio manifest and state mapping", () => {
   it("loads audio settings defensively", () => {
     expect(loadAudioSettingsFromStorage(null)).toEqual(defaultAudioSettings);
     expect(loadAudioSettingsFromStorage("bad-json")).toEqual(defaultAudioSettings);
-    expect(loadAudioSettingsFromStorage(JSON.stringify({ muted: true, musicEnabled: false, sfxEnabled: false, volume: 3 }))).toEqual({
+    expect(loadAudioSettingsFromStorage(JSON.stringify({ muted: true, musicEnabled: false, legacyToggle: false, volume: 3 }))).toEqual({
       muted: true,
       musicEnabled: false,
-      sfxEnabled: false,
       volume: 1
     });
   });

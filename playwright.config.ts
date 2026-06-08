@@ -11,7 +11,7 @@ export default defineConfig({
     ...(chromiumExecutablePath ? { launchOptions: { executablePath: chromiumExecutablePath } } : {})
   },
   webServer: {
-    command: "OPENAI_API_KEY= OPENAI_BASE_URL= OPENAI_MODEL= OPENAI_PROVIDER_MODE= AUTH_DB_PATH=/tmp/the-emperors-feed-e2e.sqlite AUTH_COOKIE_SECURE=false pnpm exec next dev -p 3027",
+    command: "OPENAI_API_KEY= OPENAI_BASE_URL= OPENAI_MODEL= OPENAI_PROVIDER_MODE= AUTH_DB_PATH=/tmp/the-emperors-feed-e2e.sqlite AUTH_COOKIE_SECURE=false corepack pnpm exec next dev -p 3027",
     url: "http://localhost:3027",
     reuseExistingServer: true,
     timeout: 120000

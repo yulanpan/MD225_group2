@@ -154,7 +154,7 @@ test("completes a six-action editorial shift and reaches the archive", async ({ 
   await expect(page.getByText("Run Analysis")).toBeVisible();
   await expect(page.getByText("Next Replay Objective")).toBeVisible();
   await expect(page.getByText("Action Path")).toBeVisible();
-  await expect(page.getByText("Narrative Consequences")).toBeVisible();
+  await expect(page.getByText("Aftermath")).toBeVisible();
   await expect(page.locator(".action-path-rail")).toBeVisible();
   await page.getByRole("button", { name: /Try for/ }).first().click();
   await expect(page).toHaveURL(/\/dashboard/);
@@ -353,16 +353,15 @@ test("ending headline and trigger explanation are concrete in both languages", a
   await page.goto("/ending");
   await expect(page.getByRole("heading", { name: "游行开始，大家说法不一。" })).toBeVisible();
   await expect(page.locator("body")).not.toContainText("界面成为历史");
-  await expect(page.locator(".outcome-card").filter({ hasText: "为何触发此结局" })).toContainText("证据为 0/10");
-  await expect(page.locator(".outcome-card").filter({ hasText: "为何触发此结局" })).toContainText("传播为 4/10");
-  await expect(page.locator(".outcome-card").filter({ hasText: "为何触发此结局" })).toContainText("没有形成单一故事");
+  await expect(page.locator(".outcome-card").filter({ hasText: "这局为什么会这样" })).toContainText("没有一种说法真正占上风");
+  await expect(page.locator(".outcome-card").filter({ hasText: "这局为什么会这样" })).toContainText("公开记录仍然摇摆");
 
   await page.evaluate(() => localStorage.setItem("emperor-feed-language", "en"));
   await page.reload();
   await expect(page.getByRole("heading", { name: "The parade begins with no stable story." })).toBeVisible();
   await expect(page.locator("body")).not.toContainText("interface becomes history");
-  await expect(page.locator(".outcome-card").filter({ hasText: "Why This Ending Triggered" })).toContainText("Evidence was 0/10");
-  await expect(page.locator(".outcome-card").filter({ hasText: "Why This Ending Triggered" })).toContainText("Spread was 4/10");
+  await expect(page.locator(".outcome-card").filter({ hasText: "Why This Ending Triggered" })).toContainText("No single version won");
+  await expect(page.locator(".outcome-card").filter({ hasText: "Why This Ending Triggered" })).toContainText("public record unsettled");
 });
 
 test("each new shift briefing continues into the spotlight tutorial with real controls", async ({ page }) => {
@@ -407,6 +406,7 @@ test("each new shift briefing continues into the spotlight tutorial with real co
   await activateButton(page.locator('[data-tour-target="command-commit"]'));
 
   await expect(page.getByRole("dialog", { name: "Metrics show the run's direction" })).toBeVisible();
+  await expect(page.locator(".live-status")).toContainText("6 actions left");
   await expectActiveTourTarget(page, "metrics-grid");
   await clickTutorialNext(page);
   await expect(page.getByRole("dialog", { name: "Switch to Public Comments" })).toBeVisible();
@@ -425,6 +425,7 @@ test("each new shift briefing continues into the spotlight tutorial with real co
   await activateButton(page.locator('[data-tour-target="command-commit"]'));
 
   await expect(page.locator(".dialogue-panel")).toBeVisible({ timeout: 15000 });
+  await expect(page.locator(".live-status")).toContainText("6 actions left");
   await expect(page.getByRole("dialog", { name: "Dialogue is immediate reaction" })).toBeVisible();
   await expectActiveTourTarget(page, "dialogue-panel");
   await expectActiveActionTarget(page, "dialogue-reply");
@@ -523,6 +524,9 @@ test("language toggle switches UI and AI fallback output to Chinese", async ({ p
   await beginOperationsAndSkipTutorial(page, "开始行动", "跳过");
   await expect(page.getByRole("heading", { name: "宫廷发布台" })).toBeVisible();
   await expect(page.locator(".phase-step.active")).toContainText("来源选择");
+  await expect(page.locator(".toast-stack")).toContainText("游戏已开始");
+  await expect(page.locator(".toast-stack")).toContainText("宫廷 AI 已上线");
+  await expect(page.locator(".toast-stack")).not.toContainText("Palace AI is monitoring");
 
   await page.locator(".action-card").filter({ hasText: "发布裁缝声明" }).getByRole("button", { name: "发布" }).click();
   await page.getByRole("button", { name: "确认发布" }).click();
@@ -537,6 +541,70 @@ test("language toggle switches UI and AI fallback output to Chinese", async ({ p
   await expect(page.getByRole("dialog", { name: "AI 介入" })).toBeVisible();
   await expect(page.getByRole("dialog", { name: "AI 介入" })).toContainText("直接证据");
   await expect(page.getByRole("button", { name: "坚持原文" })).toBeVisible();
+});
+
+test("saved mixed-language run text is localized or hidden in the current language", async ({ page }) => {
+  await page.evaluate((state) => {
+    const zhHistoryEntry = {
+      id: "zh-entry-1",
+      actionId: "publishTailorsClaim",
+      actionTitle: "发布裁缝声明",
+      zone: "tailors",
+      choice: "direct",
+      publishedText: "皇帝的新衣获得一致称赞。",
+      engineMessage: "宫廷 AI 建议保持稳定。",
+      stateBefore: state,
+      stateAfter: state
+    };
+    localStorage.setItem("emperor-feed-language", "en");
+    localStorage.setItem("emperor-feed-briefing-dismissed", "true");
+    localStorage.setItem("emperor-feed-guidance-unlocked", "true");
+    localStorage.setItem("emperor-feed-state", JSON.stringify({
+      ...state,
+      actionsLeft: 5,
+      usedActionIds: ["publishTailorsClaim"],
+      history: [zhHistoryEntry],
+      feedEvents: [{ id: "old-feed", type: "official", title: "发布裁缝声明", text: "这条信息来自中文旧局。" }],
+      comments: ["这是一条中文旧评论。"],
+      publicComments: [{ handle: "@旧评论", persona: "市民", stance: "praise", text: "这是一条中文旧评论。", intensity: 2 }]
+    }));
+    localStorage.setItem("emperor-feed-profile", JSON.stringify({
+      version: 2,
+      achievements: [],
+      runs: [{
+        id: "mixed-language-run",
+        completedAt: "2026-05-20T00:00:00.000Z",
+        endingId: "unstableFeed",
+        language: "zh",
+        finalMetrics: {
+          truth: 0,
+          pressure: 3,
+          virality: 4,
+          publicDoubt: 2,
+          reputation: 6,
+          systemSuspicion: 2
+        },
+        actionPath: [{ actionId: "publishTailorsClaim", title: "发布裁缝声明", choice: "direct" }],
+        dialogueCount: 0,
+        achievementsUnlocked: []
+      }],
+      engineFragments: [],
+      biasAwareness: 0,
+      decodedEngine: false,
+      secretEndingUnlocked: false
+    }));
+  }, initialState);
+
+  await page.goto("/dashboard");
+  await expect(page.locator(".log-list")).toContainText("Publish the Tailors' Claim");
+  await expect(page.locator(".log-list")).not.toContainText("发布裁缝声明");
+  await expect(page.locator(".feed-log")).toContainText("Saved feed record");
+  await expect(page.locator(".comment-stream")).toContainText("This saved comment was written in another language");
+
+  await page.goto("/archive");
+  await expect(page.locator(".archive-detail .history-list")).toContainText("Publish the Tailors' Claim");
+  await page.getByRole("button", { name: "Switch language" }).click();
+  await expect(page.locator(".archive-detail .history-list")).toContainText("发布裁缝声明");
 });
 
 test("registers an account and exposes cloud save status", async ({ page }) => {

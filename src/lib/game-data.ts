@@ -4,13 +4,15 @@ export const initialComments = [
   "Only fools cannot see the beauty.",
   "The Emperor's taste is beyond ordinary people.",
   "I saw the shimmer immediately. Very refined.",
-  "Careful. Saying the wrong thing publicly could get someone in trouble."
+  "Careful. Saying the wrong thing publicly could get someone in trouble.",
+  "Everyone near me is nodding, so it must be obvious.",
+  "Someone describe the fabric, please. Everyone keeps praising without details."
 ];
 
 export const initialPublicComments: PublicComment[] = initialComments.map((text, index) => ({
   handle: `@public_signal_${index + 1}`,
-  persona: ["court loyalist", "careful citizen", "parade watcher", "quiet doubter"][index] ?? "feed user",
-  stance: (["praise", "fear", "praise", "doubt"] as const)[index] ?? "procedural",
+  persona: ["court loyalist", "careful citizen", "parade watcher", "quiet doubter", "street repeater", "record observer"][index] ?? "feed user",
+  stance: (["praise", "fear", "praise", "doubt", "witness", "procedural"] as const)[index] ?? "procedural",
   text,
   intensity: index === 1 ? 3 : 2
 }));

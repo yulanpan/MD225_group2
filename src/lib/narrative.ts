@@ -249,50 +249,50 @@ export function endingFacetsForState(state: GameState, endingId: EndingId, langu
   const zh = language === "zh";
   const publicMemory = (() => {
     if (endingId === "narrativeLiberation") {
-      return zh ? "公众记住的不再是宫廷批准的句子，而是彼此共同确认过的事实。" : "The public remembers not the palace-approved sentence, but the fact people confirmed together.";
+      return zh ? "大家记住的不是谁批准过哪句话，而是自己和别人一起确认过：那里没有布。" : "People remember less who approved the sentence and more what they confirmed together: there was no cloth.";
     }
     if (seeds.includes("childSignalAmplified")) {
-      return zh ? "公众记住了那个过于简单、无法再被包装的问题。" : "The public remembers the child's sentence because it was easier to repeat than the palace frame.";
+      return zh ? "那句直白的话留了下来。它太容易复述，宫廷后来很难把它重新包装。" : "The child's plain sentence remains. It was too easy to repeat for the palace to wrap it back up.";
     }
     if (seeds.includes("loomPhotoReleased") || seeds.includes("emptyLoomWitnessed")) {
-      return zh ? "公众记住了空织布机，但不一定记得它为何没能成为共同事实。" : "The public remembers the empty looms, even if the feed never let them become a shared fact.";
+      return zh ? "空织布机被记住了。只是这一局里，它还没来得及变成所有人的共识。" : "The empty looms stay in memory, even though this run did not turn them into public certainty.";
     }
     if (endingId === "perfectIllusion" || seeds.includes("positiveChorus")) {
-      return zh ? "公众记住了官方允许重复的句子，而不是自己真正看见了什么。" : "The crowd learns the approved sentence before deciding what it actually saw.";
+      return zh ? "大家记住了该怎么称赞，却未必记得自己到底看见了什么。" : "People remember how to praise, not what they actually saw.";
     }
-    return zh ? "公众记住的是混乱本身：称赞、怀疑和沉默同时存在。" : "The public remembers the confusion: praise, doubt, and silence occupying the same feed.";
+    return zh ? "大家记住的是一阵混乱：有人称赞，有人怀疑，也有人继续沉默。" : "People remember the confusion: praise, doubt, and silence occupying the same feed.";
   })();
 
   const editorConsequence = (() => {
     if (endingId === "narrativeLiberation") {
-      return zh ? "编辑不再只是值班员，而是帮助公众夺回叙事入口的人。" : "The editor is no longer only an operator, but the person who helped reopen public authorship.";
+      return zh ? "你不只是值班编辑了。你把证据和人群声音留在了同一处。" : "You are no longer only the desk editor. You kept evidence and public voices in the same place.";
     }
     if (endingId === "aiContainment") {
-      return zh ? "宫廷不再信任你，后面的发布会更难送到人群面前。" : "Editorial access is downgraded; later posts require stronger review.";
+      return zh ? "宫廷不再把发布台交给你。之后每一次发声都会先被它检查。" : "The palace no longer trusts you with the publishing desk. Later posts will be checked first.";
     }
     if (state.reputation <= 2) {
-      return zh ? "编辑保留了记录，却失去了继续发布它们的渠道。" : "The editor keeps the record but loses reliable channels to publish it.";
+      return zh ? "你保住了记录，却失去了继续发出去的入口。" : "You kept the record, but lost the opening to keep publishing it.";
     }
     if (state.reputation >= 6) {
-      return zh ? "编辑仍被视为可靠，但这份可靠性来自对风险的驯化。" : "The editor remains trusted, but that trust comes from taming visible risk.";
+      return zh ? "你还被宫廷当作可靠的人，但这份可靠来自你一次次把风险压低。" : "The palace still sees you as reliable, but that reliability came from lowering risk again and again.";
     }
-    return zh ? "你留下的选择会被记住：宫廷不完全信任你，人群也不会完全忘记你做过什么。" : "The editor's trace is archived as neither fully loyal nor fully dismissible.";
+    return zh ? "你没有完全站到任何一边。宫廷会记住你不够顺从，公众也会记住你曾经打开过缝隙。" : "You did not fully stand on either side. The palace will remember your disobedience, and the public will remember the openings you made.";
   })();
 
   const engineLesson = (() => {
     if (endingId === "narrativeLiberation") {
-      return zh ? "宫廷学到：一旦大家看出它偏向谁，它的话就没那么有用了。" : "The engine learns that once bias is visible, guidance loses authority.";
+      return zh ? "宫廷发现：只要大家看见它偏向谁，它的指引就会失去分量。" : "The palace learns that once people see who it favors, its guidance loses weight.";
     }
     if (endingId === "viralCollapse") {
-      return zh ? "宫廷学到：最危险的不是长证据，而是人人都能重复的短句。" : "The engine learns that the shortest repeatable sentence can outrun complex containment.";
+      return zh ? "宫廷发现：最难处理的不是长篇证据，而是人人都会转述的一句话。" : "The palace learns that the hardest thing to manage is not a long proof, but one sentence anyone can repeat.";
     }
     if (endingId === "aiContainment") {
-      return zh ? "宫廷学到：拦住发布的人，比改写每句话更有效。" : "The engine learns that containing the editor can be more efficient than rewriting every post.";
+      return zh ? "宫廷发现：与其逐句改写，不如先夺走发布权。" : "The palace learns that taking the publish button away can work better than rewriting every sentence.";
     }
     if (endingId === "algorithmicConsensus") {
-      return zh ? "宫廷学到：不用删除证据，只要让赞美更容易被看见。" : "The engine learns that truth need not be deleted when it can be made harder to reach.";
+      return zh ? "宫廷发现：证据不必消失，只要被更顺口的赞美盖过去。" : "The palace learns that evidence does not have to vanish if praise can cover it first.";
     }
-    return zh ? "宫廷学到：谁被看见、谁敢说话，决定故事会往哪边走。" : "The engine learns that stability is a distribution of visibility, risk, and repetition.";
+    return zh ? "宫廷发现：谁先被看见、谁敢继续说，会决定故事往哪边倒。" : "The palace learns that who is seen first, and who keeps speaking, decides where the story leans.";
   })();
 
   return { publicMemory, editorConsequence, engineLesson };

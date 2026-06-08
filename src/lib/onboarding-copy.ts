@@ -105,8 +105,8 @@ export function guidedStepCopy(step: GuidedCampaignStep, language: LanguageCode,
       title: language === "zh" ? "从裁缝声明开始" : "Start with the tailors' claim",
       body: traceViewed
         ? (language === "zh"
-          ? "现在点击这张行动卡底部的发布按钮。这会消耗 1 次行动，并把官方声明写入公共记录。"
-          : "Now click the Publish button at the bottom of this action card. It spends 1 action and writes the official claim into the public record.")
+          ? "现在点击这张行动卡底部的发布按钮。新手教程内这会写入公共记录，但不会消耗行动次数。"
+          : "Now click the Publish button at the bottom of this action card. During the guide, it writes the official claim without spending an action.")
         : (language === "zh"
           ? "先看左侧裁缝室，再检查中间第一张行动卡。预览后果不会消耗行动，它会说明风险和指标影响。"
           : "Start at the Tailors' Room and inspect the first action card. Preview Result does not spend an action; it previews risk and metric effects."),
@@ -150,7 +150,7 @@ function compactOnboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         eyebrow: "本局目标",
         title: "六次发布决定结局",
         body: "你是宫廷发布编辑。游行前只有 6 次操作，每次发布都会改变大家看到什么、敢不敢怀疑。",
-        detail: "只有最后确认发布才会扣次数。",
+        detail: "新手教程内确认发布不会扣次数；教程结束后，确认发布才会扣次数。",
         why: "结局会根据整局行动和最终状态计算。",
         metricFocus: "actionsLeft",
         advanceOn: "next"
@@ -212,7 +212,7 @@ function compactOnboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         actionTargetId: "command-commit",
         eyebrow: "发布确认",
         title: "确认后局势才会改变",
-        body: "这里显示已选行动、预计变化和宫廷 AI 建议。确认发布后才会消耗 1 次行动。",
+        body: "这里显示已选行动、预计变化和宫廷 AI 建议。新手教程内确认发布会生效，但不会消耗行动次数。",
         detail: "确认发布第一条记录。",
         why: "AI 建议可以参考，但结局由你的行动和最终指标决定。",
         actionLabel: "确认发布",
@@ -306,7 +306,7 @@ function compactOnboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       eyebrow: "Run Goal",
       title: "Six posts decide the ending",
       body: "You edit the palace feed before the parade. Each confirmed post changes what people see and whether doubt can spread.",
-      detail: "Only final confirmation spends an action.",
+      detail: "During this guide, final confirmations do not spend actions. After the guide, confirmed posts do.",
       why: "The ending is calculated from the full action path and final state.",
       metricFocus: "actionsLeft",
       advanceOn: "next"
@@ -331,7 +331,7 @@ function compactOnboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       title: "Preview before publishing",
       body: "Action cards show the post, risk, and metric effects. Previewing costs nothing.",
       detail: "Open Preview Result.",
-      why: "Read the consequence before spending an action.",
+      why: "Read the consequence before committing a record.",
       actionLabel: "Preview result",
       advanceOn: "traceOpened"
     },
@@ -368,7 +368,7 @@ function compactOnboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       actionTargetId: "command-commit",
       eyebrow: "Before Publishing",
       title: "Before Publishing is the final check",
-      body: "This panel shows the selected action, predicted effects, and Palace AI advice. Confirming spends one action.",
+      body: "This panel shows the selected action, predicted effects, and Palace AI advice. During the guide, confirming changes the run without spending an action.",
       detail: "Confirm the first post.",
       why: "AI advice is a signal. Your action path and final metrics decide the ending.",
       actionLabel: "Publish",
@@ -466,7 +466,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         eyebrow: "本局目标",
         title: "游行前只有六次操作",
         body: "你只有 6 次发布机会。可以帮宫廷圆谎，也可以把证据放出去。",
-        detail: "只有点到最后的“确认发布”才会扣次数。",
+        detail: "新手教程内确认发布不会扣次数；教程结束后，确认发布才会扣次数。",
         why: "次数有限，每次发布前先想清楚：这会让大家更相信，还是更怀疑？",
         metricFocus: "actionsLeft",
         advanceOn: "next"
@@ -617,7 +617,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         actionTargetId: "command-commit",
         eyebrow: "确认发布",
         title: "确认发布",
-        body: "确认发布后，这次选择才会生效，并消耗 1 次行动。",
+        body: "新手教程内确认发布会让这次选择生效，但不会消耗行动次数。",
         detail: "确认“发布”。",
         why: "这一步之后，行动数会从 6 变成 5。",
         actionLabel: "确认发布",
@@ -702,9 +702,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
         spotlightTargetId: "card-showUnfilteredComments",
         eyebrow: "公众行动卡",
         title: "读未过滤评论这张卡",
-        body: "“显示未过滤评论”会把犹豫和质疑放出来，让大家看到自己不是一个人在怀疑。",
+        body: "“显示未过滤评论”会让藏起来的犹豫进入公开记录。",
         detail: "先读整张卡，不要只看按钮。",
-        why: "把私下怀疑公开出来，会让人们发现自己不是独自在怀疑。",
+        why: "当私下怀疑变得可见，怀疑者就能互相认出来。",
         advanceOn: "next"
       },
       {
@@ -861,8 +861,8 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       eyebrow: "Run Goal",
       title: "Six actions before the parade",
       body: "This is a six-action run: choose a source, read action risk, publish records, and let the metrics determine the ending.",
-      detail: "Only confirmed publications spend actions. Previewing results, reading comments, and looking at panels costs nothing.",
-      why: "Actions are the run's hard limit. Learn the effect before spending one.",
+      detail: "During this guide, confirmed publications do not spend actions. Previewing results, reading comments, and looking at panels also costs nothing.",
+      why: "After the guide, actions become the run's hard limit. Learn the effect before committing one.",
       metricFocus: "actionsLeft",
       advanceOn: "next"
     },
@@ -956,7 +956,7 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       title: "Publish the first record",
       body: "Publish opens the final confirmation. It still does not settle the run until you confirm inside the preview.",
       detail: "Enter Publish to make one final check.",
-      why: "This gives you one final check before spending an action.",
+      why: "This gives you one final check before committing a record.",
       actionLabel: "Publish",
       advanceOn: "commandOpened"
     },
@@ -1012,9 +1012,9 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       actionTargetId: "command-commit",
       eyebrow: "Confirm",
       title: "Confirm Publish",
-      body: "Confirming Publish spends one action and writes the record.",
+      body: "During the guide, Confirming Publish writes the record without spending an action.",
       detail: "Confirm Publish.",
-      why: "After this, actions left drops from 6 to 5 and metrics move.",
+      why: "After this, the record and metrics move while your action count stays available for free play.",
       actionLabel: "Publish",
       advanceOn: "commandCommitted"
     },
@@ -1060,8 +1060,8 @@ export function onboardingTourSteps(language: LanguageCode): OnboardingTourStep[
       spotlightTargetId: "metric-publicDoubt",
       eyebrow: "Public Doubt",
       title: "Public Doubt is shared uncertainty",
-      body: "Public Doubt rises when citizens realize they are not doubting alone. The claim lowers it by making doubt feel unsafe.",
-      detail: "Low Public Doubt means people may still doubt privately, but they do not see each other.",
+      body: "Public Doubt rises when people realize private hesitation is shared. The claim lowers it by making questions feel unsafe.",
+      detail: "Low Public Doubt means doubters may still exist, but they do not see each other yet.",
       why: "The claim pressures doubters into silence.",
       metricFocus: "publicDoubt",
       advanceOn: "next"
@@ -1287,8 +1287,8 @@ export function lockedFeatureText(kind: "zone" | "metric", id: string, language:
       zh: "显示一句话传播得有多快。"
     },
     publicDoubt: {
-      en: "Shows whether citizens realize they are not doubting alone.",
-      zh: "显示大家是否发现自己不是一个人在怀疑。"
+      en: "Shows when private doubt starts becoming visible to others.",
+      zh: "显示私下怀疑什么时候开始被别人看见。"
     },
     systemSuspicion: {
       en: "Shows the risk that your publishing access may be restricted.",

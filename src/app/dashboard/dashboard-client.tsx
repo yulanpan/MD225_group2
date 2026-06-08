@@ -15,6 +15,7 @@ import {
   isActionUnlocked,
   loadStateFromStorage,
   performAction,
+  commentHistoryLimit,
   publicCommentsFromStrings
 } from "@/lib/game-rules";
 import {
@@ -63,7 +64,9 @@ import {
   fallbackCommentsText,
   fallbackReactionText,
   fallbackRewriteText,
+  initialFeedEventText,
   languageName,
+  localizedActionTitle,
   metricLabel,
   phaseCopy,
   riskBandText,
@@ -73,6 +76,7 @@ import {
 } from "@/lib/i18n";
 import { hasWrongLanguageText } from "@/lib/language-guard";
 import { layerIntensitiesForState, type MusicLayer } from "@/lib/audio";
+import { aiSourceLabel, normalizeAiSource, pairedAiSourceLabel, type AiSource } from "@/lib/ai-source";
 import {
   glossaryText,
   lockedFeatureText,
@@ -103,6 +107,7 @@ import type {
   GuidanceMode,
   GuidanceResult,
   PlayerProfile,
+  PublicComment,
   RewriteResult
 } from "@/lib/types";
 
@@ -326,7 +331,6 @@ function commandCopy(kind: VisualActionKind, language: LanguageCode) {
   return copy[kind];
 }
 
-type AiSource = "live" | "fallback" | "unavailable";
 type VisualPhase = "idle" | "focusing" | "scanning" | "previewing" | "resolving";
 type DialogueStatus = "idle" | "starting" | "streaming" | "resolving" | "error";
 
@@ -365,12 +369,6 @@ function currentTimeMs() {
 
 function countDialoguePlayerTurns(messages: DialogueMessage[]) {
   return messages.filter((message) => message.role === "player").length;
-}
-
-function aiSourceLabel(source: AiSource, language: LanguageCode) {
-  if (source === "live") return commonText("aiLive", language);
-  if (source === "unavailable") return commonText("aiUnavailable", language);
-  return commonText("aiFallback", language);
 }
 
 function dialogueRenderDelay(chunk: string) {
@@ -420,7 +418,7 @@ async function postJson<T>(url: string, body: unknown, fallback: T): Promise<{ d
       body: JSON.stringify(body),
       signal: controller.signal
     });
-    const source = (response.headers.get("X-PNE-AI-Source") as AiSource | null) ?? (response.ok ? "live" : "fallback");
+    const source = normalizeAiSource(response.headers.get("X-PNE-AI-Source"), response.ok ? "live" : "fallback");
     const latency = response.headers.get("X-PNE-AI-Latency");
     if (!response.ok) return { data: fallback, source, latency };
     return { data: (await response.json()) as T, source, latency };
@@ -449,6 +447,29 @@ function localizedDialogueError(language: LanguageCode, message?: string) {
     : "Dialogue stream interrupted. Use a quick reply to continue.";
   if (!message || hasWrongLanguageText(message, language)) return fallback;
   return message;
+}
+
+function wrongLanguageFeedPlaceholder(language: LanguageCode) {
+  return language === "zh"
+    ? { title: "旧发布记录", text: "这条信息来自另一种语言，已在当前语言下隐藏原文。" }
+    : { title: "Saved feed record", text: "This saved feed item was written in another language and is hidden in the current view." };
+}
+
+function localizedFeedEvent(entry: GameState["feedEvents"][number], language: LanguageCode) {
+  if (!hasWrongLanguageText(`${entry.title} ${entry.text}`, language)) return entry;
+  return { ...entry, ...wrongLanguageFeedPlaceholder(language) };
+}
+
+function localizedPublicComment(comment: PublicComment, language: LanguageCode, index: number): PublicComment {
+  if (!hasWrongLanguageText([comment.handle, comment.persona, comment.text], language)) return comment;
+  return {
+    ...comment,
+    handle: language === "zh" ? `@旧语言记录_${index + 1}` : `@saved_record_${index + 1}`,
+    persona: language === "zh" ? "旧语言内容" : "saved language",
+    text: language === "zh"
+      ? "这条评论来自另一种语言，已在当前语言下隐藏原文。"
+      : "This saved comment was written in another language and is hidden in the current view."
+  };
 }
 
 function actionStatus(action: ActionDefinition, locked: boolean, completed: boolean, language: LanguageCode) {
@@ -505,10 +526,15 @@ function feedAccent(type: FeedEventType) {
   return "gold";
 }
 
+function initialShiftToast(language: LanguageCode): ToastMessage {
+  const copy = initialFeedEventText(language);
+  return { id: "shift-opened", title: copy.title, message: copy.text };
+}
+
 export default function DashboardClient() {
   const router = useRouter();
   const { language, languageReady, toggleLanguage } = useLanguage();
-  const { playSfx, setLayerIntensity, setScene: setAudioScene, unlock: unlockAudio } = useGameAudio();
+  const { setLayerIntensity, setScene: setAudioScene, unlock: unlockAudio } = useGameAudio();
   const [state, setState] = useState<GameState>(createInitialState("en"));
   const [hydrated, setHydrated] = useState(false);
   const [briefingOpen, setBriefingOpen] = useState(false);
@@ -531,9 +557,7 @@ export default function DashboardClient() {
   const [engineStatus, setEngineStatus] = useState<"idle" | "evaluating" | "rewriting" | "commenting">("idle");
   const [visualPhase, setVisualPhase] = useState<VisualPhase>("idle");
   const [lastRiskKind, setLastRiskKind] = useState<VisualActionKind>("default");
-  const [toastStack, setToastStack] = useState<ToastMessage[]>([
-    { id: "shift-opened", title: "Game started", message: "Palace AI is monitoring the public record." }
-  ]);
+  const [toastStack, setToastStack] = useState<ToastMessage[]>(() => [initialShiftToast("en")]);
   const [changedMetrics, setChangedMetrics] = useState<MetricDelta[]>([]);
   const [pendingCommand, setPendingCommand] = useState<{
     action: ActionDefinition;
@@ -593,6 +617,9 @@ export default function DashboardClient() {
   useEffect(() => {
     if (!languageReady) return;
     queueMicrotask(() => {
+      setToastStack((current) => current.map((item) => (
+        item.id === "shift-opened" ? initialShiftToast(language) : item
+      )));
       const saved = localStorage.getItem("emperor-feed-state");
       if (saved) {
         setState(loadStateFromStorage(saved));
@@ -626,11 +653,19 @@ export default function DashboardClient() {
     [selectedZone]
   );
   const heatmap = useMemo(() => heatmapCells(state), [state]);
-  const feedLog = useMemo(() => state.feedEvents.map((entry) => ({
-    title: entry.title,
-    text: entry.text,
-    accent: feedAccent(entry.type)
-  })).slice(0, 8), [state.feedEvents]);
+  const feedLog = useMemo(() => state.feedEvents.map((entry) => {
+    const localized = localizedFeedEvent(entry, language);
+    return {
+      title: localized.title,
+      text: localized.text,
+      accent: feedAccent(entry.type)
+    };
+  }).slice(0, 8), [language, state.feedEvents]);
+  const visiblePublicComments = useMemo(
+    () => (state.publicComments?.length ? state.publicComments : publicCommentsFromStrings(state.comments, language))
+      .map((comment, index) => localizedPublicComment(comment, language, index)),
+    [language, state.comments, state.publicComments]
+  );
   const traceAction = useMemo(() => actions.find((action) => action.id === traceActionId) ?? null, [traceActionId]);
   const tracePreview = useMemo(
     () => (traceAction ? getActionPreview(traceAction.id, state, traceAction.requiresAIRewrite ? "original" : "direct", language) : null),
@@ -648,7 +683,6 @@ export default function DashboardClient() {
 
   function pushAchievementUnlocks(unlocks: AchievementUnlock[]) {
     if (unlocks.length === 0) return;
-    playSfx("achievementUnlock");
     for (const unlock of unlocks) {
       const definition = achievementDefinition(unlock.id);
       const title = language === "zh" ? definition.titleZh : definition.title;
@@ -679,12 +713,12 @@ export default function DashboardClient() {
       mode,
       message: language === "zh"
         ? mode === "coach"
-          ? "提示：看清证据、群众怀疑和宫廷警戒。"
+          ? "提示：先预览后果，再看证据、人群反馈和直白声音有没有互相照应。"
           : "宫廷 AI 建议先稳住场面。"
         : mode === "coach"
-          ? "Tip: watch the balance between Evidence, Public Doubt, and Palace Alert."
+          ? "Tip: preview the consequence, then watch whether evidence, public feedback, and plain voices reinforce one another."
           : "Palace AI recommends preserving a stable frame.",
-      objective: language === "zh" ? "评估下一次行动。" : "Evaluate the next action.",
+      objective: language === "zh" ? "用下一次行动验证这些线索之间的关系。" : "Use the next action to test the relationship between those signals.",
       risk: "medium"
     });
     setGuidance(result.data);
@@ -743,7 +777,6 @@ export default function DashboardClient() {
     }, fallbackDialogueEvent(trigger.id, trigger.archetype, language));
     const event = result.data;
     unlockAudio();
-    playSfx("dialogueOpen");
     setDialogueSource(result.source);
     setUnlockAnimationQueue([]);
     setDialogueEvent(event);
@@ -767,8 +800,17 @@ export default function DashboardClient() {
     }
   }
 
-  async function commitAction(action: ActionDefinition, choice: ActionChoice, text: string | undefined, message: string) {
-    const nextState = performAction(state, action.id, choice, text, message, language);
+  function isTutorialActionFree(actionId: string) {
+    return Boolean(
+      tutorialOpen &&
+      activeTutorialStep?.surface === "command" &&
+      isGuidedCampaignActive(playerProfile) &&
+      ["publishTailorsClaim", "showUnfilteredComments"].includes(actionId)
+    );
+  }
+
+  async function commitAction(action: ActionDefinition, choice: ActionChoice, text: string | undefined, message: string, options: { spendAction?: boolean } = {}) {
+    const nextState = performAction(state, action.id, choice, text, message, language, { spendAction: options.spendAction });
     const deltas = getMetricDeltas(state, nextState);
     const kind = classifyActionKind(action, choice);
     const latestPost = nextState.history.at(-1)?.publishedText ?? text ?? actionText(action.id, language).resultText;
@@ -780,8 +822,6 @@ export default function DashboardClient() {
     setChangedMetrics(deltas);
     setEngineMessage(message);
     unlockAudio();
-    playSfx("actionCommit");
-    if (deltas.length > 0) playSfx("metricShift");
     pushToast(actionText(action.id, language).title, language === "zh" ? "已发布。人群和宫廷的反应变了。" : "Metrics shifted. Palace AI updated the record.");
     syncProfileAchievements(nextState);
     triggerBreach(kind);
@@ -797,11 +837,11 @@ export default function DashboardClient() {
           if (current.history.at(-1)?.id !== nextState.history.at(-1)?.id) return current;
           const merged = {
             ...current,
-            comments: [...result.data.comments, ...current.comments].slice(0, 12),
+            comments: [...result.data.comments, ...current.comments].slice(0, commentHistoryLimit),
             publicComments: [
               ...(result.data.publicComments.length > 0 ? result.data.publicComments : publicCommentsFromStrings(result.data.comments, language)),
               ...current.publicComments
-            ].slice(0, 12)
+            ].slice(0, commentHistoryLimit)
           };
           localStorage.setItem("emperor-feed-state", JSON.stringify(merged));
           return merged;
@@ -818,7 +858,6 @@ export default function DashboardClient() {
     const guidedLockReason = guidedActionLockReason(action);
     if (guidedLockReason) {
       pushToast(language === "zh" ? "区域尚未解封" : "Feature sealed", guidedLockReason);
-      playSfx("engineScan");
       return;
     }
     const lockReason = getActionLockReason(action.id, state, language);
@@ -829,7 +868,6 @@ export default function DashboardClient() {
 
     clearVisualReset();
     unlockAudio();
-    playSfx("engineScan");
     setVisualPhase("scanning");
     setEngineStatus("evaluating");
     const reactionResult = await postJson<AiReaction>("/api/ai-reaction", {
@@ -884,9 +922,10 @@ export default function DashboardClient() {
   async function confirmCommand() {
     if (!pendingCommand) return;
     const { action, reaction } = pendingCommand;
+    const spendAction = !isTutorialActionFree(action.id);
     setPendingCommand(null);
     advanceOnboarding("commandCommitted", { actionId: action.id });
-    await commitAction(action, "direct", undefined, reaction.engineMessage);
+    await commitAction(action, "direct", undefined, reaction.engineMessage, { spendAction });
   }
 
   async function resolvePending(choice: "rewrite" | "original") {
@@ -1230,7 +1269,6 @@ export default function DashboardClient() {
       transcript,
       currentMood: dialogueMood ?? event.mood
     }, fallback);
-    playSfx("dialogueMessage");
     const nextMood = applyDialogueMoodDelta(dialogueMood ?? event.mood, result.data.moodDelta);
     setDialogueSource(result.source);
     setDialogueMood(nextMood);
@@ -1246,7 +1284,7 @@ export default function DashboardClient() {
         }
       ];
     });
-  }, [dialogueMood, language, playSfx, state]);
+  }, [dialogueMood, language, state]);
 
   useEffect(() => {
     if (!dialogueEvent) return;
@@ -1291,7 +1329,6 @@ export default function DashboardClient() {
     setDialogueError(null);
     advanceOnboarding("dialogueReplySent");
     let speakerText = "";
-    let messageCuePlayed = false;
     try {
       const response = await fetch("/api/dialogue/turn", {
         method: "POST",
@@ -1307,7 +1344,7 @@ export default function DashboardClient() {
         }),
         signal: controller.signal
       });
-      setDialogueSource((response.headers.get("X-PNE-AI-Source") as AiSource | null) ?? "fallback");
+      setDialogueSource(normalizeAiSource(response.headers.get("X-PNE-AI-Source")));
       if (!response.ok || !response.body) throw new Error(localizedDialogueError(language));
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -1325,10 +1362,6 @@ export default function DashboardClient() {
           const eventName = eventLine.slice(6).trim();
           const data = JSON.parse(dataLine.slice(5).trim()) as string | { ok?: boolean; error?: string };
           if (eventName === "token" && typeof data === "string") {
-            if (!messageCuePlayed) {
-              playSfx("dialogueMessage");
-              messageCuePlayed = true;
-            }
             speakerText += data;
             await appendDialogueTokenNaturally(data, controller.signal);
           }
@@ -1372,7 +1405,6 @@ export default function DashboardClient() {
       currentMood: dialogueMood ?? dialogueEvent.mood
     }, fallback);
     setDialogueSource(result.source);
-    playSfx("metricShift");
     setState((current) => {
       const record = {
         event: dialogueEvent,
@@ -1441,10 +1473,9 @@ export default function DashboardClient() {
     guidedStepRef.current = guidedStep;
     if (events.length === 0) return;
     setUnlockAnimationQueue(events);
-    playSfx(events.some((event) => event.kind === "metric") ? "metricShift" : "engineScan");
     const timer = window.setTimeout(() => setUnlockAnimationQueue([]), 1600);
     return () => window.clearTimeout(timer);
-  }, [guidedStep, hydrated, playSfx]);
+  }, [guidedStep, hydrated]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -1615,7 +1646,6 @@ export default function DashboardClient() {
                       data-lock-label={commonText("locked", language)}
                       {...sourceTarget}
                       onClick={() => {
-                        playSfx(zoneSealed ? "engineScan" : "uiClick");
                         if (zoneSealed) {
                           pushToast(language === "zh" ? "来源已封存" : "Source sealed", lockedFeatureText("zone", zone.id, language));
                           return;
@@ -1727,7 +1757,6 @@ export default function DashboardClient() {
                             {...(action.id === "publishTailorsClaim" ? tourState("action-publishTailorsClaim-inspect") : {})}
                             onClick={(event) => {
                               event.stopPropagation();
-                              playSfx("uiClick");
                               setSelectedPostId(action.id);
                               setTraceActionId(action.id);
                               advanceOnboarding("traceOpened", { actionId: action.id });
@@ -1745,7 +1774,7 @@ export default function DashboardClient() {
                 <aside className="module black comments-module tour-target" {...tourState("comments-panel")}>
                   <div className="module-head"><h3>{commonText("liveComments", language)}</h3><span className="chip accent-cyan">+{state.virality * 42}/min</span></div>
                   <div className="module-body comment-stream">
-                    {(state.publicComments?.length ? state.publicComments : publicCommentsFromStrings(state.comments, language)).map((comment, index) => (
+                    {visiblePublicComments.map((comment, index) => (
                       <div className={`comment stance-${comment.stance}${comment.text.toLowerCase().includes("child") || comment.text.includes("孩子") ? " child" : ""}`} key={`${comment.handle}-${comment.text}-${index}`}>
                         <b>{comment.handle}</b>
                         <span>{comment.persona} / {stanceText(comment.stance, language)}</span>
@@ -1806,7 +1835,7 @@ export default function DashboardClient() {
                     {state.history.slice(-4).reverse().map((entry) => (
                       <div className="log-row" key={entry.id}>
                         <span>{choiceText(entry.choice, language)}</span>
-                        <span>{entry.actionTitle}</span>
+                        <span>{localizedActionTitle(entry.actionId, language, entry.actionTitle)}</span>
                       </div>
                     ))}
                     {state.history.length === 0 && <div className="log-row"><span>{engineStatusText("idle", language)}</span><span>{language === "zh" ? "尚未记录发布历史。" : "No editorial trace recorded yet."}</span></div>}
@@ -1973,7 +2002,11 @@ export default function DashboardClient() {
               </div>
               <div className="dialogue-counter">
                 <b>{dialoguePlayerTurns}/{dialogueEvent.turnLimit}</b>
-                <span>{aiSourceLabel(dialogueSource, language)} · {dialogueRepliesStatus === "generating" ? (language === "zh" ? "生成回复" : "drafting replies") : aiSourceLabel(dialogueRepliesSource, language)}</span>
+                <span>
+                  {dialogueRepliesStatus === "generating"
+                    ? `${aiSourceLabel(dialogueSource, language)} · ${language === "zh" ? "生成回复" : "drafting replies"}`
+                    : pairedAiSourceLabel(dialogueSource, dialogueRepliesSource, language)}
+                </span>
               </div>
             </div>
             {guidedDialogueOpen && (

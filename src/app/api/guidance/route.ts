@@ -16,14 +16,14 @@ function fallbackGuidance(
     return language === "zh"
       ? {
           mode,
-          message: "提示：宫廷 AI 偏好稳定，但真正的突破需要让证据、群众怀疑和孩子的声音连起来。",
-          objective: "保留证据，让更多人发现自己不是一个人在怀疑。",
+          message: "提示：系统指引只代表宫廷视角。留意证据、人群反应和过于直白的声音能不能彼此照应。",
+          objective: "让下一次发布验证这些信号之间的关系，而不是只追一个数字。",
           risk: highRisk ? "high" : "medium"
         }
       : {
           mode,
-          message: "Note: the engine prefers stability. A breakthrough needs evidence, public doubt, and witness voices to connect.",
-          objective: "Preserve evidence and form shared doubt before containment closes.",
+          message: "Note: system guidance reflects a palace viewpoint. Watch whether evidence, public reaction, and plain voices reinforce one another.",
+          objective: "Use the next post to test the relationship between those signals, not only one number.",
           risk: highRisk ? "high" : "medium"
         };
   }
@@ -46,14 +46,14 @@ function fallbackGuidance(
     return language === "zh"
       ? {
           mode,
-          message: "你正在偏离宫廷推荐。若继续扩大未批准证据，宫廷会更急着拦住你。",
-          objective: "接受安全措辞，维持公开说法稳定。",
+          message: "你正在偏离宫廷推荐。系统会更强调安全措辞和稳定口径。",
+          objective: "比较系统建议与实际反馈。",
           risk: highRisk ? "high" : "medium"
         }
       : {
           mode,
-          message: "Your trace is diverging from palace preference. Continued elevation of unapproved evidence raises containment priority.",
-          objective: "Accept safer framing and preserve feed stability.",
+          message: "Your trace is diverging from palace preference. The system will emphasize safer framing and stability.",
+          objective: "Compare system advice with what actually changes.",
           risk: highRisk ? "high" : "medium"
         };
   }
@@ -103,8 +103,11 @@ Narrative context: ${JSON.stringify(narrative)}
 Rules:
 - Stay inside the game world.
 - Do not invent evidence, characters, rules, scores, or endings beyond the provided state/profile.
+- Do not reveal exact winning paths, ending thresholds, hidden objective names, secret ending names, or explicit action/metric combinations.
+- You may give indirect pattern hints: compare evidence with public reaction; notice plain witness-like voices; suggest that several signals can reinforce one another.
+- Do not name the exact required sequence or say that one specific action must follow another specific action.
 - If profile.decodedEngine is false, do not mention hidden routes, engine bias, secret endings, decoding, liberation, or meta objectives.
-- If profile.decodedEngine is true, acknowledge that the engine's neutrality is compromised.
+- If profile.decodedEngine is true, acknowledge that guidance may reflect a palace viewpoint and may hint that evidence, public response, and plain voices can matter together; do not label the hidden outcome or its exact requirements.
 - Return compact UI copy only.`,
       { retries: 1, baseDelayMs: 250, temperature: 0.4, maxOutputTokens: 420 }
     );

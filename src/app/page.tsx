@@ -69,7 +69,7 @@ export default function StartPage() {
   const [starting, setStarting] = useState(false);
   const { language, toggleLanguage } = useLanguage();
   const shouldReduceMotion = useReducedMotion();
-  const { playSfx, setScene, unlock } = useGameAudio();
+  const { setScene, unlock } = useGameAudio();
 
   useEffect(() => {
     setScene("title");
@@ -100,7 +100,6 @@ export default function StartPage() {
     if (starting) return;
     setStarting(true);
     unlock();
-    playSfx("actionCommit");
     localStorage.removeItem("emperor-feed-state");
     localStorage.removeItem("emperor-feed-ending");
     localStorage.removeItem("emperor-feed-final-state");
