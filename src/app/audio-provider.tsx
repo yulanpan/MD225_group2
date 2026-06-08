@@ -108,17 +108,33 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   }, [cancelFade, stopAudio]);
 
   const applyAllVolumes = useCallback((nextSettings: AudioSettings) => {
+    const musicBlocked = nextSettings.muted || !nextSettings.musicEnabled;
     const activeScene = sceneAudio.current;
+    if (musicBlocked) stopRetiredScenes(activeScene ?? undefined);
     if (activeScene?.dataset.scene) {
+      cancelFade(activeScene);
       const config = musicScenes[activeScene.dataset.scene as MusicScene];
-      setAudioVolume(activeScene, nextSettings.muted || !nextSettings.musicEnabled ? 0 : config.volume * nextSettings.volume * (sceneDuck.current ? 0.42 : 1));
+      const targetVolume = musicBlocked ? 0 : config.volume * nextSettings.volume * (sceneDuck.current ? 0.42 : 1);
+      setAudioVolume(activeScene, targetVolume);
+      if (musicBlocked) {
+        activeScene.pause();
+      } else if (unlockedRef.current && targetVolume > 0) {
+        void safePlay(activeScene);
+      }
     }
     for (const [layer, audio] of Object.entries(layerAudio.current) as Array<[MusicLayer, HTMLAudioElement]>) {
+      cancelFade(audio);
       const config = musicLayers[layer];
       const intensity = layerTargets.current[layer] ?? 0;
-      setAudioVolume(audio, nextSettings.muted || !nextSettings.musicEnabled ? 0 : config.volume * nextSettings.volume * intensity);
+      const targetVolume = musicBlocked ? 0 : config.volume * nextSettings.volume * intensity;
+      setAudioVolume(audio, targetVolume);
+      if (musicBlocked || targetVolume === 0) {
+        audio.pause();
+      } else if (unlockedRef.current) {
+        void safePlay(audio);
+      }
     }
-  }, []);
+  }, [cancelFade, stopRetiredScenes]);
 
   useEffect(() => {
     settingsRef.current = settings;
@@ -290,6 +306,7 @@ function AudioControls() {
         <div className="audio-toggles">
           <button
             className={audio.settings.musicEnabled ? "active" : ""}
+            aria-pressed={audio.settings.musicEnabled}
             onClick={() => audio.setMusicEnabled(!audio.settings.musicEnabled)}
           >
             Music
