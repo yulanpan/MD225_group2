@@ -752,8 +752,16 @@ test("registers an account and exposes cloud save status", async ({ page }) => {
   await expect(page).toHaveURL(/\/dashboard/);
   await expect(page.locator(".auth-chip")).toContainText(email);
   await expect(page.locator(".auth-chip")).toContainText(/Cloud saved|Saving/);
+  await expect(page.getByRole("dialog", { name: "Game Briefing" })).toBeVisible();
 
   await page.request.post("/api/auth/logout");
-  await page.reload();
-  await expect(page.locator(".auth-link")).toContainText("Login / Register");
+  await page.evaluate(() => localStorage.clear());
+  await page.goto("/login");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill("correct-password");
+  await page.locator(".auth-form .btn.primary").click();
+
+  await expect(page).toHaveURL(/\/dashboard/);
+  await expect(page.locator(".auth-chip")).toContainText(email);
+  await expect(page.getByRole("dialog", { name: "Game Briefing" })).toBeVisible();
 });

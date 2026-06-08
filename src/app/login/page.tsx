@@ -6,6 +6,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { applySnapshot, collectLocalSnapshot, localSnapshotIsMeaningful, resolveSnapshotConflict } from "@/lib/cloud-save-client";
 import type { CloudSaveSnapshot } from "@/lib/cloud-save";
 import { commonText, languageName } from "@/lib/i18n";
+import { forceTutorialAfterAuthKey } from "@/lib/onboarding-session";
 import { useLanguage } from "@/hooks/use-language";
 
 type AuthMode = "login" | "register";
@@ -59,7 +60,7 @@ export default function LoginPage() {
     }
     if (data.save) applySnapshot(data.save);
     else if (localSnapshotIsMeaningful(local)) await uploadSnapshot(local);
-    router.replace("/dashboard");
+    continueToDashboard();
   }
 
   async function resolve(choice: "local" | "remote" | "merge") {
@@ -67,6 +68,11 @@ export default function LoginPage() {
     const snapshot = resolveSnapshotConflict(choice, pending.local, pending.remote);
     applySnapshot(snapshot);
     await uploadSnapshot(snapshot);
+    continueToDashboard();
+  }
+
+  function continueToDashboard() {
+    localStorage.setItem(forceTutorialAfterAuthKey, "true");
     router.replace("/dashboard");
   }
 

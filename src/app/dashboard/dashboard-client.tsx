@@ -80,6 +80,7 @@ import {
 import { hasWrongLanguageText } from "@/lib/language-guard";
 import { layerIntensitiesForState, type MusicLayer } from "@/lib/audio";
 import { aiSourceLabel, combinedAiSourceLabel, normalizeAiSource, type AiSource } from "@/lib/ai-source";
+import { forceTutorialAfterAuthKey } from "@/lib/onboarding-session";
 import {
   glossaryText,
   lockedFeatureText,
@@ -674,6 +675,7 @@ export default function DashboardClient() {
   const [dialogueMoodTrail, setDialogueMoodTrail] = useState<DialogueMood[]>([]);
   const [playerProfile, setPlayerProfile] = useState<PlayerProfile>(() => emptyProfile());
   const [unlockAnimationQueue, setUnlockAnimationQueue] = useState<GuidedUnlockEvent[]>([]);
+  const [authTutorialReplay, setAuthTutorialReplay] = useState(false);
   const visualResetTimer = useRef<number | null>(null);
   const dialogueAbort = useRef<AbortController | null>(null);
   const guidedStepRef = useRef<GuidedCampaignStep>("off");
@@ -708,8 +710,20 @@ export default function DashboardClient() {
       setToastStack((current) => current.map((item) => (
         item.id === "shift-opened" ? initialShiftToast(language) : item
       )));
+      const forceAuthTutorial = localStorage.getItem(forceTutorialAfterAuthKey) === "true";
+      if (forceAuthTutorial) {
+        localStorage.removeItem(forceTutorialAfterAuthKey);
+        localStorage.removeItem("emperor-feed-state");
+        localStorage.removeItem("emperor-feed-ending");
+        localStorage.removeItem("emperor-feed-final-state");
+        localStorage.removeItem(replayTargetKey);
+        localStorage.removeItem(briefingKey);
+        localStorage.removeItem(guidanceUnlockedKey);
+        localStorage.removeItem(tutorialCompletedKey);
+        clearCurrentRunId();
+      }
       const saved = localStorage.getItem("emperor-feed-state");
-      const briefingDismissed = localStorage.getItem(briefingKey) === "true";
+      const briefingDismissed = !forceAuthTutorial && localStorage.getItem(briefingKey) === "true";
       const guidanceUnlocked = localStorage.getItem(guidanceUnlockedKey) === "true" || briefingDismissed;
       const tutorialCompleted = localStorage.getItem(tutorialCompletedKey) === "true";
       if (saved) {
@@ -733,6 +747,7 @@ export default function DashboardClient() {
       setTutorialOpen(false);
       setEngineIntroOpen(false);
       setSystemGuidanceUnlocked(guidanceUnlocked);
+      setAuthTutorialReplay(forceAuthTutorial);
       setTutorialStepIndex(0);
       setUnlockAnimationQueue([]);
       setHydrated(true);
@@ -855,8 +870,7 @@ export default function DashboardClient() {
   }
 
   async function startDialogueEvent(nextState: GameState, latestActionId: string) {
-    const freshGuidedProfile = isGuidedCampaignActive(playerProfile);
-    if (freshGuidedProfile) {
+    if (guidedModeActive) {
       const dialogueAlreadyUsed = nextState.dialogueEvents.length > 0 || nextState.dialogueEventIds.length > 0;
       if (dialogueAlreadyUsed || nextState.history.length !== 2) return;
     }
@@ -900,7 +914,7 @@ export default function DashboardClient() {
     return Boolean(
       tutorialOpen &&
       activeTutorialStep?.surface === "command" &&
-      isGuidedCampaignActive(playerProfile) &&
+      guidedModeActive &&
       state.history.length < tutorialFreeActionIds.length &&
       actionId === tutorialFreeActionIds[state.history.length]
     );
@@ -908,7 +922,7 @@ export default function DashboardClient() {
 
   async function commitAction(action: ActionDefinition, choice: ActionChoice, text: string | undefined, message: string, options: { spendAction?: boolean } = {}) {
     const performedState = performAction(state, action.id, choice, text, message, language, { spendAction: options.spendAction });
-    const nextState = tutorialOpen && isGuidedCampaignActive(playerProfile)
+    const nextState = tutorialOpen && guidedModeActive
       ? normalizeTutorialActionCosts(performedState)
       : performedState;
     const deltas = getMetricDeltas(state, nextState);
@@ -1061,6 +1075,7 @@ export default function DashboardClient() {
     setTutorialOpen(false);
     setEngineIntroOpen(false);
     setSystemGuidanceUnlocked(false);
+    setAuthTutorialReplay(false);
     setTutorialStepIndex(0);
     setUnlockAnimationQueue([]);
     setEngineMessage(fallbackReaction(language).engineMessage);
@@ -1082,7 +1097,9 @@ export default function DashboardClient() {
     router.push("/ending");
   }
 
-  const guidedStep = getGuidedCampaignStep(state, playerProfile);
+  const guidedModeActive = authTutorialReplay || isGuidedCampaignActive(playerProfile);
+  const guidedProfile = authTutorialReplay ? emptyProfile() : playerProfile;
+  const guidedStep = getGuidedCampaignStep(state, guidedProfile);
   const command = commandCopy(pendingCommand?.kind ?? "default", language);
   const commandEffects = pendingCommand ? previewEffectEntries(pendingCommand.preview, language) : [];
   const tutorial = useMemo(() => onboardingTourSteps(language), [language]);
@@ -1090,7 +1107,7 @@ export default function DashboardClient() {
   const tutorialCopy = onboardingTourUi(language);
   const activeTourId = activeTutorialStep?.spotlightTargetId ?? null;
   const activeActionTourId = activeTutorialStep?.actionTargetId ?? null;
-  const guidedDialogueOpen = isGuidedCampaignActive(playerProfile) && Boolean(dialogueEvent) && state.dialogueEvents.length === 0;
+  const guidedDialogueOpen = guidedModeActive && Boolean(dialogueEvent) && state.dialogueEvents.length === 0;
   const dialogueTimerPaused = guidedDialogueOpen && !dialogueTimedOut;
   const currentTutorialSurface: OnboardingSurface = pending
     ? "aiReview"
@@ -1259,6 +1276,7 @@ export default function DashboardClient() {
 
   function closeTutorial(nextState: GameState) {
     setTutorialOpen(false);
+    setAuthTutorialReplay(false);
     setTutorialStepIndex(0);
     setSpotlightRect(null);
     setActionHintRect(null);
