@@ -12,15 +12,8 @@ export function aiSourceLabel(source: AiSource, language: LanguageCode) {
   return commonText("aiFallback", language);
 }
 
-export function pairedAiSourceLabel(
-  first: AiSource,
-  second: AiSource,
-  language: LanguageCode,
-  labels: { first: string; second: string } = language === "zh"
-    ? { first: "开场", second: "回复" }
-    : { first: "opening", second: "replies" }
-) {
-  if (first === second) return aiSourceLabel(first, language);
-  const separator = language === "zh" ? "：" : ": ";
-  return `${labels.first}${separator}${aiSourceLabel(first, language)} / ${labels.second}${separator}${aiSourceLabel(second, language)}`;
+export function combinedAiSourceLabel(sources: AiSource[], language: LanguageCode) {
+  if (sources.includes("live")) return aiSourceLabel("live", language);
+  if (sources.includes("fallback")) return aiSourceLabel("fallback", language);
+  return aiSourceLabel("unavailable", language);
 }

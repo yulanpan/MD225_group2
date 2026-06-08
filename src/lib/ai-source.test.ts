@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aiSourceLabel, normalizeAiSource, pairedAiSourceLabel } from "./ai-source";
+import { aiSourceLabel, combinedAiSourceLabel, normalizeAiSource } from "./ai-source";
 
 describe("AI source labels", () => {
   it("normalizes provider source headers", () => {
@@ -16,10 +16,11 @@ describe("AI source labels", () => {
     expect(aiSourceLabel("unavailable", "en")).toBe("NO MODEL");
   });
 
-  it("collapses repeated paired source labels", () => {
-    expect(pairedAiSourceLabel("fallback", "fallback", "zh")).toBe("离线回应");
-    expect(pairedAiSourceLabel("live", "live", "zh")).toBe("AI 在线");
-    expect(pairedAiSourceLabel("live", "fallback", "zh")).toBe("开场：AI 在线 / 回复：离线回应");
-    expect(pairedAiSourceLabel("live", "fallback", "en")).toBe("opening: LIVE MODEL / replies: RULE MODE");
+  it("summarizes multiple dialogue source labels into one badge", () => {
+    expect(combinedAiSourceLabel(["fallback", "fallback"], "zh")).toBe("离线回应");
+    expect(combinedAiSourceLabel(["live", "live"], "zh")).toBe("AI 在线");
+    expect(combinedAiSourceLabel(["live", "fallback"], "zh")).toBe("AI 在线");
+    expect(combinedAiSourceLabel(["fallback", "unavailable"], "en")).toBe("RULE MODE");
+    expect(combinedAiSourceLabel(["unavailable", "unavailable"], "zh")).toBe("AI 未连接");
   });
 });

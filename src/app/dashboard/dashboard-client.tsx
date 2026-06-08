@@ -79,7 +79,7 @@ import {
 } from "@/lib/i18n";
 import { hasWrongLanguageText } from "@/lib/language-guard";
 import { layerIntensitiesForState, type MusicLayer } from "@/lib/audio";
-import { aiSourceLabel, normalizeAiSource, pairedAiSourceLabel, type AiSource } from "@/lib/ai-source";
+import { aiSourceLabel, combinedAiSourceLabel, normalizeAiSource, type AiSource } from "@/lib/ai-source";
 import {
   glossaryText,
   lockedFeatureText,
@@ -2111,8 +2111,8 @@ export default function DashboardClient() {
                 <b>{dialoguePlayerTurns}/{dialogueEvent.turnLimit}</b>
                 <span>
                   {dialogueRepliesStatus === "generating"
-                    ? `${aiSourceLabel(dialogueSource, language)} · ${language === "zh" ? "生成回复" : "drafting replies"}`
-                    : pairedAiSourceLabel(dialogueSource, dialogueRepliesSource, language)}
+                    ? `${combinedAiSourceLabel([dialogueSource, dialogueRepliesSource], language)} · ${language === "zh" ? "生成回复" : "drafting replies"}`
+                    : combinedAiSourceLabel([dialogueSource, dialogueRepliesSource], language)}
                 </span>
               </div>
             </div>
