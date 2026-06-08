@@ -41,6 +41,7 @@ async function clickTutorialNext(page: Page) {
 
 async function expectActiveTourTarget(page: Page, targetId: string) {
   await expect(page.locator(`[data-tour-target="${targetId}"][data-tour-active="true"]`)).toBeVisible();
+  await expectTutorialPanelClearOfTarget(page, targetId);
 }
 
 async function expectActiveActionTarget(page: Page, targetId: string) {
@@ -61,13 +62,35 @@ async function expectActionHintBelowTarget(page: Page, targetId: string) {
   expect(targetCenterX).toBeLessThanOrEqual(hintBox.x + hintBox.width - 12);
 }
 
+function boxOverlapArea(
+  first: NonNullable<Awaited<ReturnType<Locator["boundingBox"]>>>,
+  second: NonNullable<Awaited<ReturnType<Locator["boundingBox"]>>>
+) {
+  const overlapX = Math.max(0, Math.min(first.x + first.width, second.x + second.width) - Math.max(first.x, second.x));
+  const overlapY = Math.max(0, Math.min(first.y + first.height, second.y + second.height) - Math.max(first.y, second.y));
+  expect(overlapX * overlapY).toBe(0);
+}
+
+async function expectTutorialPanelClearOfTarget(page: Page, targetId: string) {
+  const panel = page.locator(".onboarding-panel");
+  const target = page.locator(`[data-tour-target="${targetId}"][data-tour-active="true"]`);
+  await expect(panel).toBeVisible();
+  await expect(target).toBeVisible();
+  await expect.poll(async () => {
+    const tutorialBox = await panel.boundingBox();
+    const targetBox = await target.boundingBox();
+    if (!tutorialBox || !targetBox) return Number.MAX_SAFE_INTEGER;
+    const overlapX = Math.max(0, Math.min(tutorialBox.x + tutorialBox.width, targetBox.x + targetBox.width) - Math.max(tutorialBox.x, targetBox.x));
+    const overlapY = Math.max(0, Math.min(tutorialBox.y + tutorialBox.height, targetBox.y + targetBox.height) - Math.max(tutorialBox.y, targetBox.y));
+    return overlapX * overlapY;
+  }, { timeout: 5000 }).toBeLessThanOrEqual(1);
+}
+
 async function expectTutorialPanelClearOfDialogue(page: Page) {
   const tutorialBox = await page.locator(".onboarding-panel").boundingBox();
   const dialogueBox = await page.locator(".dialogue-panel").boundingBox();
   if (!tutorialBox || !dialogueBox) throw new Error("Missing tutorial or dialogue geometry");
-  const overlapX = Math.max(0, Math.min(tutorialBox.x + tutorialBox.width, dialogueBox.x + dialogueBox.width) - Math.max(tutorialBox.x, dialogueBox.x));
-  const overlapY = Math.max(0, Math.min(tutorialBox.y + tutorialBox.height, dialogueBox.y + dialogueBox.height) - Math.max(tutorialBox.y, dialogueBox.y));
-  expect(overlapX * overlapY).toBe(0);
+  boxOverlapArea(tutorialBox, dialogueBox);
 }
 
 test("completes a six-action editorial shift and reaches the archive", async ({ page }) => {

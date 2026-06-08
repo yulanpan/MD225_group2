@@ -133,6 +133,7 @@ type SpotlightPanelPosition = {
   top: number;
   left: number;
   width: number;
+  maxHeight: number;
 };
 
 type ActionHintLayout = {
@@ -150,33 +151,89 @@ function escapeTourTarget(targetId: OnboardingTargetId) {
 }
 
 function spotlightPanelPosition(rect: SpotlightRect | null, panelSize?: { width: number; height: number } | null): SpotlightPanelPosition {
-  if (typeof window === "undefined" || !rect) return { top: 96, left: 24, width: 460 };
-  const width = Math.min(480, window.innerWidth - 48);
-  const gap = 18;
-  const estimatedHeight = Math.min(panelSize?.height ?? 560, window.innerHeight - 40);
-  const hasRightRoom = rect.right + gap + width <= window.innerWidth - 20;
-  const hasLeftRoom = rect.left - gap - width >= 20;
-  if (!hasRightRoom && !hasLeftRoom) {
-    const left = Math.max(16, (window.innerWidth - width) / 2);
-    const hasTopRoom = rect.top >= estimatedHeight + gap + 32;
-    const hasBottomRoom = rect.bottom + estimatedHeight + gap <= window.innerHeight - 20;
-    const preferredTop = hasTopRoom
-      ? rect.top - estimatedHeight - gap
-      : hasBottomRoom
-        ? rect.bottom + gap
-        : rect.top > window.innerHeight / 2
-          ? 72
-          : Math.max(72, window.innerHeight - estimatedHeight - 24);
+  if (typeof window === "undefined" || !rect) return { top: 96, left: 24, width: 460, maxHeight: 640 };
+  const margin = 18;
+  const gap = 30;
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const targetRect = rect;
+  const width = Math.min(480, Math.max(280, viewportWidth - margin * 2));
+  const naturalHeight = Math.min(panelSize?.height ?? 380, Math.max(180, viewportHeight - margin * 2));
+  const maxLeft = Math.max(margin, viewportWidth - width - margin);
+
+  type Candidate = {
+    left: number;
+    top: number;
+    maxHeight: number;
+    priority: number;
+    overlap: number;
+    clampDistance: number;
+    usableHeight: number;
+  };
+
+  function expandedTarget() {
+    const visualPad = 6;
     return {
-      top: clampToRange(preferredTop, 72, Math.max(72, window.innerHeight - estimatedHeight - 20)),
-      left,
-      width
+      left: targetRect.left - visualPad,
+      top: targetRect.top - visualPad,
+      right: targetRect.right + visualPad,
+      bottom: targetRect.bottom + visualPad
     };
   }
-  const left = hasRightRoom ? rect.right + gap : rect.left - gap - width;
-  const preferredTop = rect.top + rect.height / 2 - estimatedHeight / 2;
-  const top = clampToRange(preferredTop, 84, Math.max(84, window.innerHeight - estimatedHeight - 20));
-  return { top, left, width };
+
+  function overlapArea(left: number, top: number, height: number) {
+    const target = expandedTarget();
+    const overlapX = Math.max(0, Math.min(left + width, target.right) - Math.max(left, target.left));
+    const overlapY = Math.max(0, Math.min(top + height, target.bottom) - Math.max(top, target.top));
+    return overlapX * overlapY;
+  }
+
+  function createCandidate(rawLeft: number, rawTop: number, maxHeight: number, priority: number): Candidate {
+    const usableHeight = Math.max(0, Math.min(naturalHeight, maxHeight));
+    const maxTop = Math.max(margin, viewportHeight - usableHeight - margin);
+    const left = clampToRange(rawLeft, margin, maxLeft);
+    const top = clampToRange(rawTop, margin, maxTop);
+    return {
+      left,
+      top,
+      maxHeight: Math.max(120, Math.min(maxHeight, viewportHeight - margin * 2)),
+      priority,
+      overlap: overlapArea(left, top, usableHeight),
+      clampDistance: Math.abs(left - rawLeft) + Math.abs(top - rawTop),
+      usableHeight
+    };
+  }
+
+  const sideHeight = viewportHeight - margin * 2;
+  const sideTop = targetRect.top + targetRect.height / 2 - naturalHeight / 2;
+  const centeredLeft = targetRect.left + targetRect.width / 2 - width / 2;
+  const bottomRoom = viewportHeight - targetRect.bottom - gap - margin;
+  const topRoom = targetRect.top - gap - margin;
+  const topHeight = Math.min(naturalHeight, Math.max(0, topRoom));
+  const cornerTop = targetRect.top > viewportHeight / 2 ? margin : Math.max(margin, viewportHeight - naturalHeight - margin);
+
+  const candidates = [
+    createCandidate(targetRect.right + gap, sideTop, sideHeight, 0),
+    createCandidate(targetRect.left - gap - width, sideTop, sideHeight, 1),
+    createCandidate(centeredLeft, targetRect.bottom + gap, bottomRoom, 2),
+    createCandidate(centeredLeft, targetRect.top - gap - topHeight, topRoom, 3),
+    createCandidate(viewportWidth - width - margin, cornerTop, sideHeight, 4),
+    createCandidate(margin, cornerTop, sideHeight, 5)
+  ];
+
+  const best = candidates.sort((a, b) => {
+    const aClear = a.overlap <= 1 ? 0 : 1;
+    const bClear = b.overlap <= 1 ? 0 : 1;
+    if (aClear !== bClear) return aClear - bClear;
+    const aHeightPenalty = a.usableHeight >= 190 ? 0 : 190 - a.usableHeight;
+    const bHeightPenalty = b.usableHeight >= 190 ? 0 : 190 - b.usableHeight;
+    if (aHeightPenalty !== bHeightPenalty) return aHeightPenalty - bHeightPenalty;
+    if (a.overlap !== b.overlap) return a.overlap - b.overlap;
+    if (a.clampDistance !== b.clampDistance) return a.clampDistance - b.clampDistance;
+    return a.priority - b.priority;
+  })[0];
+
+  return { top: best.top, left: best.left, width, maxHeight: best.maxHeight };
 }
 
 function actionHintLayout(rect: SpotlightRect | null): ActionHintLayout {
@@ -2213,7 +2270,8 @@ export default function DashboardClient() {
             style={{
               left: tutorialPanelPosition.left,
               top: tutorialPanelPosition.top,
-              width: tutorialPanelPosition.width
+              width: tutorialPanelPosition.width,
+              maxHeight: tutorialPanelPosition.maxHeight
             }}
           >
             <div className="tutorial-kicker">
