@@ -85,7 +85,8 @@ describe("i18n helpers", () => {
     expect(aiLanguageInstruction("en")).toContain("English");
     expect(aiLanguageInstruction("zh")).toContain("简体中文");
     expect(fallbackReactionText("zh").engineMessage).toContain("直接证据");
-    expect(fallbackRewriteText("zh").strategy).toContain("暂时不能下结论");
+    expect(fallbackRewriteText("zh").strategy).toContain("宫廷允许");
+    expect(fallbackRewriteText("zh").strategy).toContain("宫廷警戒");
     expect(fallbackCommentsText("zh")).toHaveLength(6);
     expect(fallbackFinalReportText("zh")).toContain("这一局收在游行前的混乱里");
     expect(initialCommentsText("zh")).toHaveLength(6);

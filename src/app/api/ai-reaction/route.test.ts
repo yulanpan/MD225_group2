@@ -64,7 +64,7 @@ describe("POST /api/ai-reaction", () => {
     expect(response.headers.get("X-PNE-AI-Source")).toBe("fallback");
     await expect(response.json()).resolves.toMatchObject({
       recommendation: "accept_rewrite",
-      engineMessage: expect.stringContaining("Recommended framing")
+      engineMessage: expect.stringContaining("Palace Alert")
     });
   });
 

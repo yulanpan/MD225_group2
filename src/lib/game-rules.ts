@@ -536,7 +536,7 @@ export function explainEnding(state: GameState, language: LanguageCode = "en", e
     if (ending === "viralCollapse") return "证据、人群的怀疑和孩子那句直白的话在同一时间被看见。游行开始时，宫廷说法已经压不住这些声音。";
     if (ending === "editorExposed") return "证据已经足以让宫廷紧张，但你自己也暴露得太明显。记录还在，能把它们继续发出去的通道却被切断了。";
     if (ending === "algorithmicConsensus") return "证据出现在页面上，可赞美更顺口，也更安全。信息流把宫廷喜欢的说法放在前面，怀疑被挤到后面。";
-    if (ending === "perfectIllusion") return "宫廷说法传得比证据更远。等游行开始时，大家更容易重复赞美，而不是承认自己没看见。";
+    if (ending === "perfectIllusion") return "宫廷说法传得比证据更远。等游行开始时，大家重复赞美，压下自己没看见的事实。";
     if (ending === "privateDoubt") return "很多人已经觉得不对劲，但证据还没把他们聚到公开处。怀疑停在眼神、删掉的评论和私下猜测里。";
     return "游行开始前，没有一种说法真正占上风。赞美、怀疑、玩笑和观望挤在同一个页面里，公开记录仍然摇摆。";
   }

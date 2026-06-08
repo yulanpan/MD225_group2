@@ -63,7 +63,7 @@ export const narrativeBeats: NarrativeBeat[] = [
     title: "The Shame Frame Holds",
     titleZh: "羞辱式说法站住了",
     text: "The feed teaches citizens that doubt reflects on the viewer, not the cloth.",
-    textZh: "信息流让市民觉得：看不见布料是自己的问题，不是衣服的问题。",
+    textZh: "信息流让市民觉得：看不见布料像是自己的问题。",
     priority: 60
   },
   {
@@ -93,7 +93,7 @@ export const narrativeBeats: NarrativeBeat[] = [
     title: "Doubt Finds Company",
     titleZh: "怀疑者发现彼此",
     text: "The crowd begins to notice that private hesitation is shared.",
-    textZh: "人群开始发现：不是只有自己在怀疑。",
+    textZh: "人群开始发现：别人也在怀疑。",
     priority: 90
   },
   {
@@ -249,7 +249,7 @@ export function endingFacetsForState(state: GameState, endingId: EndingId, langu
   const zh = language === "zh";
   const publicMemory = (() => {
     if (endingId === "narrativeLiberation") {
-      return zh ? "大家记住的不是谁批准过哪句话，而是自己和别人一起确认过：那里没有布。" : "People remember less who approved the sentence and more what they confirmed together: there was no cloth.";
+      return zh ? "大家记住自己和别人一起确认过：那里没有布。" : "People remember what they confirmed together: there was no cloth.";
     }
     if (seeds.includes("childSignalAmplified")) {
       return zh ? "那句直白的话留了下来。它太容易复述，宫廷后来很难把它重新包装。" : "The child's plain sentence remains. It was too easy to repeat for the palace to wrap it back up.";
@@ -284,7 +284,7 @@ export function endingFacetsForState(state: GameState, endingId: EndingId, langu
       return zh ? "宫廷发现：只要大家看见它偏向谁，它的指引就会失去分量。" : "The palace learns that once people see who it favors, its guidance loses weight.";
     }
     if (endingId === "viralCollapse") {
-      return zh ? "宫廷发现：最难处理的不是长篇证据，而是人人都会转述的一句话。" : "The palace learns that the hardest thing to manage is not a long proof, but one sentence anyone can repeat.";
+      return zh ? "宫廷发现：人人都会转述的一句话最难处理。" : "The palace learns that one sentence anyone can repeat is the hardest thing to manage.";
     }
     if (endingId === "aiContainment") {
       return zh ? "宫廷发现：与其逐句改写，不如先夺走发布权。" : "The palace learns that taking the publish button away can work better than rewriting every sentence.";

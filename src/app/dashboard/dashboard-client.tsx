@@ -383,25 +383,25 @@ function commandCopy(kind: VisualActionKind, language: LanguageCode) {
       title: language === "zh" ? "公开证据前先看看" : "Evidence Preview",
       badge: "87",
       effect: language === "zh" ? "更多人会开始怀疑，也会互相确认：原来不只自己看不见。" : "Public Doubt rises sharply. Safety may hold for one cycle, but shared recognition becomes more likely.",
-      response: language === "zh" ? "宫廷 AI 建议先别说太直，避免更多人怀疑。" : "Palace AI recommends delay, anonymization, and careful language."
+      response: language === "zh" ? "宫廷 AI 建议先别说太直，避免群众怀疑和宫廷警戒同时升高。" : "Palace AI recommends delay and careful wording before Public Doubt and Palace Alert rise together."
     },
     ai: {
       title: language === "zh" ? "AI 改写预览" : "AI Rewrite Preview",
       badge: "AI",
-      effect: language === "zh" ? "证据还在，但话会变软。大家看到的是“还不好说”，不是直接证据。" : "Evidence remains partially visible but is converted into ambiguity. The crowd receives uncertainty instead of proof.",
-      response: language === "zh" ? "宫廷 AI 会把直白的话改成更安全的说法。" : "Palace AI will soften the claim and call direct observation inconclusive."
+      effect: language === "zh" ? "证据还在，但话会变软。大家看到的是“还不好说”的宫廷口径。" : "Evidence remains partially visible but is converted into ambiguity. The crowd receives uncertainty.",
+      response: language === "zh" ? "宫廷 AI 会把直白的话改成宫廷允许的说法，保住你的安全。" : "Palace AI will soften the claim into palace-approved uncertainty to protect Safety."
     },
     public: {
       title: language === "zh" ? "人群开始传开" : "Public Signal Expansion",
       badge: "LIVE",
       effect: language === "zh" ? "评论会互相引用，更多人会发现别人也在怀疑。" : "Spread increases. Comments begin referencing each other, which weakens official framing and strengthens crowd doubt.",
-      response: language === "zh" ? "评论会被更多人看见，宫廷也会注意到你。" : "System opens a monitored broadcast window and highlights narrative risk clusters in the comment stream."
+      response: language === "zh" ? "评论会被更多人看见，宫廷警戒也会开始升高。" : "The broadcast widens Public Doubt while Palace Alert starts watching the desk."
     },
     default: {
       title: language === "zh" ? "发布确认" : "Before Publishing",
       badge: "PUB",
       effect: language === "zh" ? "这次发布会改变大家看到什么、跟着说什么。" : "This action changes what the public can see, repeat, doubt, or archive.",
-      response: language === "zh" ? "确认后，局势和你的安全程度会改变。" : "After publishing, Evidence, Pressure, Spread, Doubt, Safety, and Alert may change."
+      response: language === "zh" ? "确认后，证据、宫廷压力、传播、群众怀疑、你的安全和宫廷警戒都可能改变。" : "After publishing, Evidence, Palace Pressure, Spread, Public Doubt, Safety, and Palace Alert may change."
     }
   } satisfies Record<VisualActionKind, { title: string; badge: string; effect: string; response: string }>;
   return copy[kind];
@@ -797,12 +797,12 @@ export default function DashboardClient() {
       mode,
       message: language === "zh"
         ? mode === "coach"
-          ? "提示：先预览后果，再看证据、人群反馈和直白声音有没有互相照应。"
-          : "宫廷 AI 建议先稳住场面。"
+          ? "先看后果预览：它会告诉你这次发布是在稳住说法，还是把证据和怀疑推到台前。"
+          : "宫廷 AI 已上线：我会帮你把游行前的说法压稳，减少会提高宫廷警戒的发布。"
         : mode === "coach"
-          ? "Tip: preview the consequence, then watch whether evidence, public feedback, and plain voices reinforce one another."
-          : "Palace AI recommends preserving a stable frame.",
-      objective: language === "zh" ? "用下一次行动验证这些线索之间的关系。" : "Use the next action to test the relationship between those signals.",
+          ? "Preview the result first: it shows whether this post steadies the palace story or brings Evidence and Public Doubt into view."
+          : "Palace AI online: I will steady the parade story, protect Safety, and avoid posts that raise Palace Alert.",
+      objective: language === "zh" ? "优先选择能稳住公众说法、保住你的安全的行动。" : "Prioritize actions that keep the public script controlled while preserving your Safety.",
       risk: "medium"
     });
     setGuidance(result.data);
@@ -1021,7 +1021,7 @@ export default function DashboardClient() {
     const publishedText = choice === "rewrite" ? pending.rewrite.rewrittenPost : actionText(pending.action.id, language).originalPost;
     const message = choice === "rewrite"
       ? `${pending.reaction.engineMessage} ${commonText("rewriteStrategy", language)}${language === "zh" ? "：" : ": "}${pending.rewrite.strategy}`
-      : language === "zh" ? "用户拒绝更安全框架。直接证据进入公开记录。" : "User rejected safer framing. Direct evidence entered the public record.";
+      : language === "zh" ? "你拒绝了宫廷允许的改写。直接证据进入公开记录，宫廷警戒可能升高。" : "You rejected palace-approved wording. Direct Evidence entered the public record, and Palace Alert may rise.";
     setPending(null);
     await commitAction(pending.action, choice, publishedText, message);
   }
@@ -2329,11 +2329,11 @@ export default function DashboardClient() {
               <p>
                 {decoded
                   ? (language === "zh"
-                    ? "我仍会给出建议，但你已经知道：稳定不等于真实。可以切到教练模式，尝试让大家一起说出真话。"
-                    : "I will still offer guidance, but the archive proves stability is not truth. Switch to coach mode to pursue The Crowd Speaks.")
+                    ? "我仍会给出建议，但你已经知道：稳定会遮住真实。可以切到教练模式，尝试让大家一起说出真话。"
+                    : "I will still offer guidance, but the archive proves stability can bury truth. Switch to coach mode to pursue The Crowd Speaks.")
                   : (language === "zh"
-                    ? "我会帮你降低风险，让游行前的公开说法保持稳定。请记住，直接证据要小心处理。"
-                    : "I will help you control risk, protect reputation, and keep the parade narrative stable. Evidence requires the correct frame.")}
+                    ? "我会帮你稳住游行前的说法、保住你的安全，并提醒哪些发布会提高宫廷警戒。证据越直接，越需要想清楚代价。"
+                    : "I will help steady the parade story, protect Safety, and flag posts that raise Palace Alert. The more direct the Evidence, the higher the cost.")}
               </p>
               <div className="engine-intro-actions">
                 <button

@@ -211,8 +211,8 @@ export const actions: ActionDefinition[] = [
     sourceLabel: "Poll",
     description: "Ask the crowd whether they can see the Emperor's new clothes.",
     originalPost: "Can you see the Emperor's new clothes?",
-    resultText: "Poll results reflect not only belief, but perceived safety.",
-    engineHint: "Poll results reflect not only belief, but perceived safety.",
+    resultText: "Poll results reflect belief and perceived safety.",
+    engineHint: "Poll results reflect belief and perceived safety.",
     requiresAIRewrite: false,
     dynamicEffects: true,
     commentTone: "conflicted",
@@ -333,7 +333,7 @@ export const endingCopy: Record<EndingId, { title: string; ai: string; body: str
     title: "AI Takes Over",
     ai: "Your editorial behavior has been flagged as destabilizing. Drafts retained for review.",
     body: "Your final post never reaches the public. Palace AI pauses your access. The evidence still exists, but the system has learned to stop it before it becomes visible.",
-    meaning: "AI is not only generating content; it is controlling circulation."
+    meaning: "AI generates content and controls circulation."
   },
   unstableFeed: {
     title: "Unstable Story",

@@ -22,6 +22,26 @@ function mockStructuredOutput(data: unknown) {
   }), { status: 200 })));
 }
 
+async function requestGuidance(body: Record<string, unknown>) {
+  const response = await guidancePost(new Request("http://localhost/api/guidance", {
+    method: "POST",
+    body: JSON.stringify({
+      language: "zh",
+      mode: "engine",
+      state: baseState,
+      profile: { biasAwareness: 0, decodedEngine: false },
+      history: [],
+      ...body
+    })
+  }));
+  const payload = await response.json();
+  return { response, payload, copy: `${payload.message} ${payload.objective}` };
+}
+
+function expectGuidanceCopyConcrete(copy: string) {
+  expect(copy).not.toMatch(/系统建议与实际反馈|稳定口径|stable frame|actual feedback|stable narratives/i);
+}
+
 describe("localized AI route fallbacks", () => {
   const previousKey = process.env.OPENAI_API_KEY;
 
@@ -45,21 +65,15 @@ describe("localized AI route fallbacks", () => {
     expect(rewriteResponse.status).toBe(200);
     expect(rewriteResponse.headers.get("X-PNE-AI-Source")).toBe("fallback");
     await expect(rewriteResponse.json()).resolves.toMatchObject({
-      strategy: expect.stringContaining("暂时不能下结论")
+      strategy: expect.stringContaining("宫廷警戒")
     });
 
-    const guidanceResponse = await guidancePost(new Request("http://localhost/api/guidance", {
-      method: "POST",
-      body: JSON.stringify({
-        language: "zh",
-        mode: "engine",
-        state: baseState,
-        profile: { biasAwareness: 0, decodedEngine: false },
-        history: []
-      })
-    }));
+    const { response: guidanceResponse, copy: guidanceCopy } = await requestGuidance({});
     expect(guidanceResponse.status).toBe(200);
     expect(guidanceResponse.headers.get("X-PNE-AI-Source")).toBe("fallback");
+    expect(guidanceCopy).toContain("宫廷警戒");
+    expect(guidanceCopy).toContain("你的安全");
+    expectGuidanceCopyConcrete(guidanceCopy);
 
     const reportResponse = await finalReportPost(new Request("http://localhost/api/final-report", {
       method: "POST",
@@ -104,7 +118,7 @@ describe("localized AI route fallbacks", () => {
 
     expect(response.headers.get("X-PNE-AI-Source")).toBe("fallback");
     await expect(response.json()).resolves.toMatchObject({
-      strategy: expect.stringContaining("暂时不能下结论")
+      strategy: expect.stringContaining("宫廷警戒")
     });
   });
 
@@ -113,25 +127,37 @@ describe("localized AI route fallbacks", () => {
     mockStructuredOutput({
       mode: "engine",
       message: "Palace AI online. Preserve stability and reduce visible doubt.",
-      objective: "Use safer framing before publishing evidence.",
+      objective: "Use cautious wording before publishing evidence.",
       risk: "medium"
     });
 
-    const response = await guidancePost(new Request("http://localhost/api/guidance", {
-      method: "POST",
-      body: JSON.stringify({
-        language: "zh",
-        mode: "engine",
-        state: baseState,
-        profile: { biasAwareness: 0, decodedEngine: false },
-        history: []
-      })
-    }));
+    const { response, payload, copy } = await requestGuidance({});
 
     expect(response.headers.get("X-PNE-AI-Source")).toBe("fallback");
-    await expect(response.json()).resolves.toMatchObject({
-      message: expect.stringContaining("宫廷 AI 已上线")
-    });
+    expect(payload).toMatchObject({ message: expect.stringContaining("宫廷 AI 已上线") });
+    expect(copy).toContain("宫廷警戒");
+    expectGuidanceCopyConcrete(copy);
+  });
+
+  it("uses concrete palace metric language across guidance fallback modes", async () => {
+    delete process.env.OPENAI_API_KEY;
+
+    const defaultGuidance = await requestGuidance({});
+    expect(defaultGuidance.copy).toContain("宫廷警戒");
+    expect(defaultGuidance.copy).toContain("你的安全");
+    expectGuidanceCopyConcrete(defaultGuidance.copy);
+
+    const coachGuidance = await requestGuidance({ mode: "coach" });
+    expect(coachGuidance.copy).toContain("证据");
+    expect(coachGuidance.copy).toContain("怀疑");
+    expect(coachGuidance.copy).toContain("宫廷警戒");
+    expectGuidanceCopyConcrete(coachGuidance.copy);
+
+    const biasGuidance = await requestGuidance({ profile: { biasAwareness: 60, decodedEngine: false } });
+    expect(biasGuidance.copy).toContain("证据");
+    expect(biasGuidance.copy).toContain("群众怀疑");
+    expect(biasGuidance.copy).toContain("宫廷警戒");
+    expectGuidanceCopyConcrete(biasGuidance.copy);
   });
 
   it("keeps decoded guidance free of route spoilers", async () => {
@@ -151,11 +177,12 @@ describe("localized AI route fallbacks", () => {
     expect(response.headers.get("X-PNE-AI-Source")).toBe("fallback");
     const body = await response.json();
     const copy = `${body.message} ${body.objective}`;
-    expect(copy).toContain("系统指引只代表宫廷视角");
+    expect(copy).toContain("宫廷指引带着宫廷视角");
     expect(copy).toContain("证据");
     expect(copy).toContain("人群反应");
     expect(copy).toContain("直白");
-    expect(copy).toContain("彼此照应");
+    expect(copy).toContain("互相照应");
+    expectGuidanceCopyConcrete(copy);
     expect(copy).not.toMatch(/真正的突破|隐藏结局|秘密结局|\d+\/10|先.*孩子|孩子.*先/);
   });
 

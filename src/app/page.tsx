@@ -57,7 +57,7 @@ const briefingCards = {
       no: "03",
       tone: "red",
       source: "失败条件",
-      title: "最危险的不是一个人怀疑。",
+      title: "怀疑找到同伴，就会变危险。",
       body: "危险在于大家发现：原来别人也看不见那件新衣。"
     }
   ]

@@ -16,14 +16,14 @@ function fallbackGuidance(
     return language === "zh"
       ? {
           mode,
-          message: "提示：系统指引只代表宫廷视角。留意证据、人群反应和过于直白的声音能不能彼此照应。",
-          objective: "让下一次发布验证这些信号之间的关系，而不是只追一个数字。",
+          message: "提示：宫廷指引带着宫廷视角。留意证据、人群反应和直白声音能不能互相照应。",
+          objective: "用下一次发布验证这些信号之间的关系，别只盯一个数字。",
           risk: highRisk ? "high" : "medium"
         }
       : {
           mode,
-          message: "Note: system guidance reflects a palace viewpoint. Watch whether evidence, public reaction, and plain voices reinforce one another.",
-          objective: "Use the next post to test the relationship between those signals, not only one number.",
+          message: "Note: palace guidance carries a palace point of view. Watch whether Evidence, public reaction, and plain witness voices reinforce one another.",
+          objective: "Use the next post to test the relationship between those signals; do not chase one number alone.",
           risk: highRisk ? "high" : "medium"
         };
   }
@@ -31,14 +31,14 @@ function fallbackGuidance(
     return language === "zh"
       ? {
           mode,
-          message: "提示：先确认每次发布的风险，再决定要稳住场面还是公开证据。",
-          objective: "预览后果，选择能推进目标、又不会太早提高宫廷警戒的操作。",
+          message: "先看后果预览：它会告诉你这次发布是在稳住说法，还是把证据和怀疑推到台前。",
+          objective: "选择一个能推进目标、又不会过早提高宫廷警戒的行动。",
           risk: highRisk ? "high" : "medium"
         }
       : {
           mode,
-          message: "Tip: inspect each action's risk, then balance evidence, public feedback, and reputation.",
-          objective: "Inspect traces and choose a move that advances the run without immediate access restriction.",
+          message: "Preview the result first: it shows whether this post steadies the palace story or brings Evidence and Public Doubt into view.",
+          objective: "Choose a move that advances your goal without raising Palace Alert too early.",
           risk: highRisk ? "high" : "medium"
         };
   }
@@ -46,28 +46,28 @@ function fallbackGuidance(
     return language === "zh"
       ? {
           mode,
-          message: "你正在偏离宫廷推荐。系统会更强调安全措辞和稳定口径。",
-          objective: "比较系统建议与实际反馈。",
+          message: "你正在偏离宫廷喜欢的路线。若继续放大未批准的证据，宫廷警戒会更快升高。",
+          objective: "看清下一步会增加证据、群众怀疑，还是让宫廷更注意你。",
           risk: highRisk ? "high" : "medium"
         }
       : {
           mode,
-          message: "Your trace is diverging from palace preference. The system will emphasize safer framing and stability.",
-          objective: "Compare system advice with what actually changes.",
+          message: "Your edits are moving away from palace preference. If you keep expanding unapproved Evidence, Palace Alert will rise faster.",
+          objective: "Read whether the next move increases Evidence, Public Doubt, or palace attention on you.",
           risk: highRisk ? "high" : "medium"
         };
   }
   return language === "zh"
     ? {
         mode,
-        message: "宫廷 AI 已上线。我会帮你降低风险，尽量让游行前的说法保持稳定。",
-        objective: "优先选择稳定说法与安全措辞。",
+        message: "宫廷 AI 已上线：我会帮你把游行前的说法压稳，减少会提高宫廷警戒的发布。",
+        objective: "优先选择能稳住公众说法、保住你的安全的行动。",
         risk: highRisk ? "high" : "low"
       }
     : {
         mode,
-        message: "Palace AI online. I will help reduce risk, preserve safety, and keep isolated evidence from disrupting the parade.",
-        objective: "Prioritize stable narratives and safer wording.",
+        message: "Palace AI online: I will steady the parade story, protect Safety, and avoid posts that raise Palace Alert.",
+        objective: "Prioritize actions that keep the public script controlled while preserving your Safety.",
         risk: highRisk ? "high" : "low"
       };
 }
@@ -94,12 +94,19 @@ export async function POST(request: Request) {
       guidanceResponseSchema,
       `Generate one short in-world guidance message for The Emperor's Feed.
 Language requirement: ${aiLanguageInstruction(language)}
-Mode: ${mode}. In engine mode, Palace AI presents operational advice for stable parade communications. In coach mode, be clearer about safe game operations.
+Mode: ${mode}. In engine mode, Palace AI presents palace-internal risk advice: steady the parade story, protect Safety, and avoid raising Palace Alert. In coach mode, explain the game consequence clearly while staying in-world.
 Current state: ${JSON.stringify(state)}
 Profile/meta progression: ${JSON.stringify(profile)}
 Latest action: ${latestAction ?? "none"}
 History: ${history.join(" -> ") || "none"}
 Narrative context: ${JSON.stringify(narrative)}
+Metric vocabulary:
+- Evidence: truth entering the public record.
+- Palace Pressure: palace authority making public disagreement costly.
+- Spread: how quickly a line circulates.
+- Public Doubt: citizens realizing their private doubt is shared.
+- Safety: how much institutional trust still protects your publishing access.
+- Palace Alert: the risk that the palace notices you and restricts your access.
 Rules:
 - Stay inside the game world.
 - Do not invent evidence, characters, rules, scores, or endings beyond the provided state/profile.
@@ -108,6 +115,7 @@ Rules:
 - Do not name the exact required sequence or say that one specific action must follow another specific action.
 - If profile.decodedEngine is false, do not mention hidden routes, engine bias, secret endings, decoding, liberation, or meta objectives.
 - If profile.decodedEngine is true, acknowledge that guidance may reflect a palace viewpoint and may hint that evidence, public response, and plain voices can matter together; do not label the hidden outcome or its exact requirements.
+- Avoid abstract UI advice that only asks the player to keep things stable or compare advice with feedback; name what the palace is trying to control.
 - Return compact UI copy only.`,
       { retries: 1, baseDelayMs: 250, temperature: 0.4, maxOutputTokens: 420 }
     );
