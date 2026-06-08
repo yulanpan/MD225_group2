@@ -104,6 +104,7 @@ export default function StartPage() {
     localStorage.removeItem("emperor-feed-ending");
     localStorage.removeItem("emperor-feed-final-state");
     localStorage.removeItem("emperor-feed-briefing-dismissed");
+    localStorage.removeItem("emperor-feed-tutorial-completed");
     clearCurrentRunId();
     ensureCurrentRunId();
     window.setTimeout(() => router.push("/dashboard"), 620);

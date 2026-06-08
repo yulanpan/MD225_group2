@@ -126,6 +126,17 @@ export function applyEffects(state: GameState, effects: Effects = {}, options: A
   };
 }
 
+export function didSpendAction(entry: HistoryEntry) {
+  if (typeof entry.spentAction === "boolean") return entry.spentAction;
+  const before = Number(entry.stateBefore?.actionsLeft);
+  const after = Number(entry.stateAfter?.actionsLeft);
+  return Number.isFinite(before) && Number.isFinite(after) ? after < before : true;
+}
+
+export function spentActionCount(state: Pick<GameState, "history">) {
+  return state.history.filter(didSpendAction).length;
+}
+
 export function calculateEnding(state: GameState): EndingId {
   if (state.systemSuspicion >= 7) return "aiContainment";
   if (state.truth >= 6 && state.publicDoubt >= 5 && state.childAmplified) return "viralCollapse";
@@ -344,6 +355,7 @@ export function performAction(
   const copy = actionText(action.id, language);
   const resultText = publishedText ?? resolved.resultText ?? copy.resultText ?? copy.originalPost;
   const engine = engineMessage ?? copy.engineHint;
+  const spentAction = options.spendAction ?? true;
   const entry: HistoryEntry = {
     id: `${actionId}-${state.history.length + 1}`,
     actionId,
@@ -353,6 +365,7 @@ export function performAction(
     publishedText: resultText,
     resultText,
     engineMessage: engine,
+    spentAction,
     metricDeltas: metricDeltas(before, after),
     stateBefore: before,
     stateAfter: after
@@ -391,7 +404,12 @@ export function loadStateFromStorage(value: string | null): GameState {
         : Array.isArray(parsed.comments)
           ? publicCommentsFromStrings(parsed.comments)
           : initialPublicComments,
-      history: Array.isArray(parsed.history) ? parsed.history : [],
+      history: Array.isArray(parsed.history)
+        ? parsed.history.map((entry) => ({
+          ...entry,
+          spentAction: typeof entry.spentAction === "boolean" ? entry.spentAction : didSpendAction(entry)
+        }))
+        : [],
       dialogueEvents: Array.isArray(parsed.dialogueEvents)
         ? parsed.dialogueEvents.map((entry) => entry?.event ? { ...entry, event: withSanitizedDialogueEvent(entry.event) } : entry)
         : [],

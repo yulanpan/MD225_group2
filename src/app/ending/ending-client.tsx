@@ -26,6 +26,7 @@ import type { AchievementUnlock, EndingId, FeedEvent, FinalReport, GameState, Hi
 
 const replayTargetKey = "emperor-feed-replay-target";
 const briefingKey = "emperor-feed-briefing-dismissed";
+const tutorialCompletedKey = "emperor-feed-tutorial-completed";
 
 function actionPathTone(choice: string) {
   if (choice === "original") return "risk";
@@ -132,6 +133,7 @@ export default function EndingClient() {
     localStorage.removeItem("emperor-feed-final-state");
     localStorage.removeItem(replayTargetKey);
     localStorage.removeItem(briefingKey);
+    localStorage.removeItem(tutorialCompletedKey);
     clearCurrentRunId();
     router.push("/dashboard");
   }
@@ -142,6 +144,7 @@ export default function EndingClient() {
     localStorage.removeItem("emperor-feed-final-state");
     localStorage.setItem(replayTargetKey, analysis.replayTarget);
     localStorage.removeItem(briefingKey);
+    localStorage.removeItem(tutorialCompletedKey);
     clearCurrentRunId();
     router.push("/dashboard");
   }

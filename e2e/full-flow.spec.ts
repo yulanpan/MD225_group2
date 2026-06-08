@@ -443,10 +443,17 @@ test("each new shift briefing continues into the spotlight tutorial with real co
   await expect(page.locator(".engine-intro-panel")).toHaveCount(0);
   await expect(page.locator(".guidance-card")).toBeVisible();
   await expect(page.locator(".guidance-card")).toContainText("System Guide");
+  await expect(page.locator(".role-card")).toContainText("0 spent");
+  await expect(page.locator(".clock-card")).toContainText("6/6");
+  const guidedState = await page.evaluate(() => JSON.parse(localStorage.getItem("emperor-feed-state") ?? "{}"));
+  expect(guidedState.actionsLeft).toBe(6);
+  expect(guidedState.history?.map((entry: { spentAction?: boolean }) => entry.spentAction)).toEqual([false, false]);
 
   await page.reload();
   await expect(page.locator(".onboarding-panel")).toHaveCount(0);
   await expect(page.locator(".guidance-card")).toBeVisible();
+  await expect(page.locator(".role-card")).toContainText("0 spent");
+  await expect(page.locator(".clock-card")).toContainText("6/6");
 
   await page.goto("/");
   await page.getByRole("button", { name: "Start Game" }).click();

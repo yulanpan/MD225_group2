@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
-import { actions, zones } from "@/lib/game-data";
+import { actions, initialState, zones } from "@/lib/game-data";
 import {
   calculateEndingWithProfile,
   createInitialState,
@@ -15,6 +15,7 @@ import {
   isActionUnlocked,
   loadStateFromStorage,
   performAction,
+  spentActionCount,
   commentHistoryLimit,
   publicCommentsFromStrings
 } from "@/lib/game-rules";
@@ -113,8 +114,10 @@ import type {
 
 const briefingKey = "emperor-feed-briefing-dismissed";
 const guidanceUnlockedKey = "emperor-feed-guidance-unlocked";
+const tutorialCompletedKey = "emperor-feed-tutorial-completed";
 const replayTargetKey = "emperor-feed-replay-target";
 const dialogueTimeoutDefaultMs = 60000;
+const tutorialFreeActionIds = ["publishTailorsClaim", "showUnfilteredComments"] as const;
 
 type SpotlightRect = {
   top: number;
@@ -196,6 +199,33 @@ function actionHintLayout(rect: SpotlightRect | null): ActionHintLayout {
       "--tutorial-action-arrow-x": `${arrowX}px`
     } as CSSProperties
   };
+}
+
+function isTutorialFreeHistoryEntry(state: GameState, index: number) {
+  return state.history[index]?.actionId === tutorialFreeActionIds[index];
+}
+
+function normalizeTutorialFreeState(state: GameState) {
+  const history = state.history.map((entry, index) => (
+    isTutorialFreeHistoryEntry(state, index) ? { ...entry, spentAction: false } : entry
+  ));
+  const spentActions = spentActionCount({ history });
+  return {
+    ...state,
+    history,
+    actionsLeft: Math.max(0, initialState.actionsLeft - spentActions)
+  };
+}
+
+function needsLegacyTutorialRefund(state: GameState, guidanceUnlocked: boolean, tutorialCompleted: boolean) {
+  if (tutorialCompleted) return true;
+  return (
+    guidanceUnlocked &&
+    state.history.length === tutorialFreeActionIds.length &&
+    tutorialFreeActionIds.every((_, index) => isTutorialFreeHistoryEntry(state, index)) &&
+    state.history.every((entry) => entry.spentAction === true) &&
+    state.actionsLeft === initialState.actionsLeft - tutorialFreeActionIds.length
+  );
 }
 
 function Term({ id, children, language }: { id: string; children: ReactNode; language: LanguageCode }) {
@@ -621,15 +651,24 @@ export default function DashboardClient() {
         item.id === "shift-opened" ? initialShiftToast(language) : item
       )));
       const saved = localStorage.getItem("emperor-feed-state");
+      const briefingDismissed = localStorage.getItem(briefingKey) === "true";
+      const guidanceUnlocked = localStorage.getItem(guidanceUnlockedKey) === "true" || briefingDismissed;
+      const tutorialCompleted = localStorage.getItem(tutorialCompletedKey) === "true";
       if (saved) {
-        setState(loadStateFromStorage(saved));
+        const loadedState = loadStateFromStorage(saved);
+        const nextState = needsLegacyTutorialRefund(loadedState, guidanceUnlocked, tutorialCompleted)
+          ? normalizeTutorialFreeState(loadedState)
+          : loadedState;
+        if (nextState !== loadedState) {
+          localStorage.setItem("emperor-feed-state", JSON.stringify(nextState));
+          localStorage.setItem(tutorialCompletedKey, "true");
+        }
+        setState(nextState);
       } else {
         setState(createInitialState(language));
         setEngineMessage(fallbackReaction(language).engineMessage);
       }
       const target = localStorage.getItem(replayTargetKey);
-      const briefingDismissed = localStorage.getItem(briefingKey) === "true";
-      const guidanceUnlocked = localStorage.getItem(guidanceUnlockedKey) === "true" || briefingDismissed;
       ensureCurrentRunId();
       setPlayerProfile(loadProfile());
       setReplayTarget(target);
@@ -954,6 +993,7 @@ export default function DashboardClient() {
     localStorage.removeItem(replayTargetKey);
     localStorage.removeItem(briefingKey);
     localStorage.removeItem(guidanceUnlockedKey);
+    localStorage.removeItem(tutorialCompletedKey);
     clearCurrentRunId();
     ensureCurrentRunId();
     setBriefingOpen(true);
@@ -1156,14 +1196,26 @@ export default function DashboardClient() {
     };
   }
 
-  function completeTutorial() {
+  function closeTutorial(nextState: GameState) {
     setTutorialOpen(false);
     setTutorialStepIndex(0);
     setSpotlightRect(null);
     setActionHintRect(null);
     localStorage.setItem(guidanceUnlockedKey, "true");
     setSystemGuidanceUnlocked(true);
-    void refreshGuidance(state);
+    void refreshGuidance(nextState);
+  }
+
+  function skipTutorial() {
+    closeTutorial(state);
+  }
+
+  function completeTutorial() {
+    const nextState = normalizeTutorialFreeState(state);
+    localStorage.setItem(tutorialCompletedKey, "true");
+    localStorage.setItem("emperor-feed-state", JSON.stringify(nextState));
+    setState(nextState);
+    closeTutorial(nextState);
   }
 
   function moveOnboardingTo(stepId: string) {
@@ -1505,6 +1557,7 @@ export default function DashboardClient() {
   ]);
 
   const activeActionHint = actionHintRect ? actionHintLayout(actionHintRect) : null;
+  const formalActionsUsed = spentActionCount(state);
 
   return (
     <main
@@ -1590,7 +1643,7 @@ export default function DashboardClient() {
           <div className="lab-head">
             <div className="role-card tour-target" {...tourState("role-card")}>
               <div className="role-num">{state.actionsLeft}</div>
-              <div><b>{language === "zh" ? "剩余执行次数" : "Actions Left"}</b><span>{language === "zh" ? `已执行 ${state.history.length} 次 · 还能执行 ${state.actionsLeft} 次` : `${state.history.length} used · ${state.actionsLeft} left this run`}</span></div>
+              <div><b>{language === "zh" ? "剩余执行次数" : "Actions Left"}</b><span>{language === "zh" ? `正式已执行 ${formalActionsUsed} 次 · 还能执行 ${state.actionsLeft} 次` : `${formalActionsUsed} spent · ${state.actionsLeft} left this run`}</span></div>
             </div>
             <div className="metrics-grid tour-target" aria-label="State variables" {...tourState("metrics-grid")}>
               {metricRows.map(([key, tone]) => {
@@ -2181,7 +2234,7 @@ export default function DashboardClient() {
               </div>
             )}
             <div className="tutorial-actions">
-              <button className="tool-btn" onClick={completeTutorial}>{tutorialCopy.skip}</button>
+              <button className="tool-btn" onClick={skipTutorial}>{tutorialCopy.skip}</button>
               <button className="tool-btn" disabled={tutorialStepIndex === 0} onClick={previousTutorialStep}>{tutorialCopy.previous}</button>
               {activeTutorialStep.advanceOn === "next" || activeTutorialStep.advanceOn === "tutorialFinished" ? (
                 <button className="btn primary" onClick={nextTutorialStep}>

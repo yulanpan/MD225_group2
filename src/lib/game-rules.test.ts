@@ -14,7 +14,8 @@ import {
   isActionUnlocked,
   loadStateFromStorage,
   performAction,
-  resolveActionEffects
+  resolveActionEffects,
+  spentActionCount
 } from "./game-rules";
 import { createEmptyProfile, mergeEngineFragmentUnlocks, engineFragmentDefinitions } from "./profile";
 
@@ -52,8 +53,21 @@ describe("game rules", () => {
 
     expect(next.actionsLeft).toBe(initialState.actionsLeft);
     expect(next.history).toHaveLength(1);
+    expect(next.history[0].spentAction).toBe(false);
+    expect(spentActionCount(next)).toBe(0);
     expect(next.virality).toBeGreaterThan(initialState.virality);
     expect(next.usedActionIds).toContain("publishTailorsClaim");
+  });
+
+  it("derives spent action counts for older saved history", () => {
+    const spent = performAction(initialState, "publishTailorsClaim", "direct");
+    const legacy = JSON.parse(JSON.stringify(spent));
+    delete legacy.history[0].spentAction;
+
+    const restored = loadStateFromStorage(JSON.stringify(legacy));
+
+    expect(restored.history[0].spentAction).toBe(true);
+    expect(spentActionCount(restored)).toBe(1);
   });
 
   it("locks evidence leaks until their prerequisite action is performed", () => {
