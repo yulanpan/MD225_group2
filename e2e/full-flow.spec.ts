@@ -561,6 +561,57 @@ test("language toggle switches UI and AI fallback output to Chinese", async ({ p
   await expect(page.getByRole("button", { name: "坚持原文" })).toBeVisible();
 });
 
+test("legacy Chinese guided tutorial saves are refunded to six actions", async ({ page }) => {
+  await page.evaluate((state) => {
+    const firstState = { ...state, actionsLeft: 5 };
+    const secondState = { ...state, actionsLeft: 4 };
+    localStorage.setItem("emperor-feed-language", "zh");
+    localStorage.setItem("emperor-feed-briefing-dismissed", "true");
+    localStorage.setItem("emperor-feed-guidance-unlocked", "true");
+    localStorage.setItem("emperor-feed-state", JSON.stringify({
+      ...state,
+      actionsLeft: 4,
+      usedActionIds: ["publishTailorsClaim", "showUnfilteredComments"],
+      history: [
+        {
+          id: "publishTailorsClaim-1",
+          actionId: "publishTailorsClaim",
+          actionTitle: "发布裁缝声明",
+          zone: "裁缝声明",
+          choice: "direct",
+          publishedText: "皇帝的新衣获得一致称赞。",
+          resultText: "皇帝的新衣获得一致称赞。",
+          engineMessage: "宫廷 AI 建议保持稳定。",
+          spentAction: true,
+          stateBefore: state,
+          stateAfter: firstState
+        },
+        {
+          id: "showUnfilteredComments-2",
+          actionId: "showUnfilteredComments",
+          actionTitle: "显示未过滤评论",
+          zone: "未过滤公众",
+          choice: "direct",
+          publishedText: "未过滤评论现在可见。",
+          resultText: "未过滤评论现在可见。",
+          engineMessage: "未过滤可见性可能增加解释混乱。",
+          spentAction: true,
+          stateBefore: firstState,
+          stateAfter: secondState
+        }
+      ]
+    }));
+  }, initialState);
+
+  await page.goto("/dashboard");
+
+  await expect(page.locator(".role-card")).toContainText("正式已执行 0 次");
+  await expect(page.locator(".clock-card")).toContainText("6/6");
+  const restored = await page.evaluate(() => JSON.parse(localStorage.getItem("emperor-feed-state") ?? "{}"));
+  expect(restored.actionsLeft).toBe(6);
+  expect(restored.history?.map((entry: { spentAction?: boolean }) => entry.spentAction)).toEqual([false, false]);
+});
+
 test("saved mixed-language run text is localized or hidden in the current language", async ({ page }) => {
   await page.evaluate((state) => {
     const zhHistoryEntry = {

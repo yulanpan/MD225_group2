@@ -13,6 +13,7 @@ import {
   isActionCompleted,
   isActionUnlocked,
   loadStateFromStorage,
+  normalizeTutorialActionCosts,
   performAction,
   resolveActionEffects,
   spentActionCount
@@ -60,14 +61,29 @@ describe("game rules", () => {
   });
 
   it("derives spent action counts for older saved history", () => {
-    const spent = performAction(initialState, "publishTailorsClaim", "direct");
+    const spent = performAction(initialState, "inspectLooms", "direct");
     const legacy = JSON.parse(JSON.stringify(spent));
     delete legacy.history[0].spentAction;
 
-    const restored = loadStateFromStorage(JSON.stringify(legacy));
+    const restored = normalizeTutorialActionCosts(loadStateFromStorage(JSON.stringify(legacy)));
 
     expect(restored.history[0].spentAction).toBe(true);
     expect(spentActionCount(restored)).toBe(1);
+  });
+
+  it("normalizes old paid tutorial actions back to free actions", () => {
+    const first = performAction(initialState, "publishTailorsClaim", "direct");
+    const second = performAction(first, "showUnfilteredComments", "direct");
+    const legacy = JSON.parse(JSON.stringify(second));
+    legacy.history[0].spentAction = true;
+    legacy.history[1].spentAction = true;
+    legacy.actionsLeft = 4;
+
+    const restored = normalizeTutorialActionCosts(loadStateFromStorage(JSON.stringify(legacy)));
+
+    expect(restored.actionsLeft).toBe(6);
+    expect(restored.history.map((entry) => entry.spentAction)).toEqual([false, false]);
+    expect(spentActionCount(restored)).toBe(0);
   });
 
   it("locks evidence leaks until their prerequisite action is performed", () => {

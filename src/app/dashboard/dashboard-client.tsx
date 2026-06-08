@@ -14,8 +14,10 @@ import {
   isActionCompleted,
   isActionUnlocked,
   loadStateFromStorage,
+  normalizeTutorialActionCosts,
   performAction,
   spentActionCount,
+  tutorialFreeActionIds,
   commentHistoryLimit,
   publicCommentsFromStrings
 } from "@/lib/game-rules";
@@ -117,7 +119,6 @@ const guidanceUnlockedKey = "emperor-feed-guidance-unlocked";
 const tutorialCompletedKey = "emperor-feed-tutorial-completed";
 const replayTargetKey = "emperor-feed-replay-target";
 const dialogueTimeoutDefaultMs = 60000;
-const tutorialFreeActionIds = ["publishTailorsClaim", "showUnfilteredComments"] as const;
 
 type SpotlightRect = {
   top: number;
@@ -201,30 +202,18 @@ function actionHintLayout(rect: SpotlightRect | null): ActionHintLayout {
   };
 }
 
-function isTutorialFreeHistoryEntry(state: GameState, index: number) {
-  return state.history[index]?.actionId === tutorialFreeActionIds[index];
+function hasOpeningTutorialSequence(state: Pick<GameState, "history">) {
+  return tutorialFreeActionIds.every((actionId, index) => state.history[index]?.actionId === actionId);
 }
 
-function normalizeTutorialFreeState(state: GameState) {
-  const history = state.history.map((entry, index) => (
-    isTutorialFreeHistoryEntry(state, index) ? { ...entry, spentAction: false } : entry
-  ));
-  const spentActions = spentActionCount({ history });
-  return {
-    ...state,
-    history,
-    actionsLeft: Math.max(0, initialState.actionsLeft - spentActions)
-  };
-}
-
-function needsLegacyTutorialRefund(state: GameState, guidanceUnlocked: boolean, tutorialCompleted: boolean) {
+function shouldRefundStoredTutorialActions(state: GameState, guidanceUnlocked: boolean, tutorialCompleted: boolean) {
+  if (!hasOpeningTutorialSequence(state)) return false;
   if (tutorialCompleted) return true;
   return (
     guidanceUnlocked &&
     state.history.length === tutorialFreeActionIds.length &&
-    tutorialFreeActionIds.every((_, index) => isTutorialFreeHistoryEntry(state, index)) &&
-    state.history.every((entry) => entry.spentAction === true) &&
-    state.actionsLeft === initialState.actionsLeft - tutorialFreeActionIds.length
+    state.actionsLeft === initialState.actionsLeft - tutorialFreeActionIds.length &&
+    spentActionCount(state) === tutorialFreeActionIds.length
   );
 }
 
@@ -656,12 +645,11 @@ export default function DashboardClient() {
       const tutorialCompleted = localStorage.getItem(tutorialCompletedKey) === "true";
       if (saved) {
         const loadedState = loadStateFromStorage(saved);
-        const nextState = needsLegacyTutorialRefund(loadedState, guidanceUnlocked, tutorialCompleted)
-          ? normalizeTutorialFreeState(loadedState)
+        const nextState = shouldRefundStoredTutorialActions(loadedState, guidanceUnlocked, tutorialCompleted)
+          ? normalizeTutorialActionCosts(loadedState)
           : loadedState;
         if (nextState !== loadedState) {
           localStorage.setItem("emperor-feed-state", JSON.stringify(nextState));
-          localStorage.setItem(tutorialCompletedKey, "true");
         }
         setState(nextState);
       } else {
@@ -844,12 +832,16 @@ export default function DashboardClient() {
       tutorialOpen &&
       activeTutorialStep?.surface === "command" &&
       isGuidedCampaignActive(playerProfile) &&
-      ["publishTailorsClaim", "showUnfilteredComments"].includes(actionId)
+      state.history.length < tutorialFreeActionIds.length &&
+      actionId === tutorialFreeActionIds[state.history.length]
     );
   }
 
   async function commitAction(action: ActionDefinition, choice: ActionChoice, text: string | undefined, message: string, options: { spendAction?: boolean } = {}) {
-    const nextState = performAction(state, action.id, choice, text, message, language, { spendAction: options.spendAction });
+    const performedState = performAction(state, action.id, choice, text, message, language, { spendAction: options.spendAction });
+    const nextState = tutorialOpen && isGuidedCampaignActive(playerProfile)
+      ? normalizeTutorialActionCosts(performedState)
+      : performedState;
     const deltas = getMetricDeltas(state, nextState);
     const kind = classifyActionKind(action, choice);
     const latestPost = nextState.history.at(-1)?.publishedText ?? text ?? actionText(action.id, language).resultText;
@@ -1207,11 +1199,16 @@ export default function DashboardClient() {
   }
 
   function skipTutorial() {
-    closeTutorial(state);
+    const nextState = hasOpeningTutorialSequence(state) ? normalizeTutorialActionCosts(state) : state;
+    if (nextState !== state) {
+      localStorage.setItem("emperor-feed-state", JSON.stringify(nextState));
+      setState(nextState);
+    }
+    closeTutorial(nextState);
   }
 
   function completeTutorial() {
-    const nextState = normalizeTutorialFreeState(state);
+    const nextState = normalizeTutorialActionCosts(state);
     localStorage.setItem(tutorialCompletedKey, "true");
     localStorage.setItem("emperor-feed-state", JSON.stringify(nextState));
     setState(nextState);

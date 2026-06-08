@@ -41,6 +41,7 @@ const numericKeys: NumericStateKey[] = [
 ];
 
 export const commentHistoryLimit = 18;
+export const tutorialFreeActionIds = ["publishTailorsClaim", "showUnfilteredComments"] as const;
 type ApplyEffectsOptions = {
   spendAction?: boolean;
 };
@@ -135,6 +136,23 @@ export function didSpendAction(entry: HistoryEntry) {
 
 export function spentActionCount(state: Pick<GameState, "history">) {
   return state.history.filter(didSpendAction).length;
+}
+
+export function isOpeningTutorialAction(state: Pick<GameState, "history">, index: number) {
+  return state.history[index]?.actionId === tutorialFreeActionIds[index];
+}
+
+export function normalizeTutorialActionCosts(state: GameState) {
+  let changed = false;
+  const history = state.history.map((entry, index) => {
+    if (!isOpeningTutorialAction(state, index)) return entry;
+    if (entry.spentAction === false) return entry;
+    changed = true;
+    return { ...entry, spentAction: false };
+  });
+  const actionsLeft = Math.max(0, initialState.actionsLeft - spentActionCount({ history }));
+  if (actionsLeft !== state.actionsLeft) changed = true;
+  return changed ? { ...state, history, actionsLeft } : state;
 }
 
 export function calculateEnding(state: GameState): EndingId {
