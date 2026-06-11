@@ -126,10 +126,12 @@ describe("player profile and achievements", () => {
 
     expect(ids).toEqual(expect.arrayContaining(["stabilityBias", "evidenceRecoding", "crowdSuppression", "containmentProtocol"]));
     expect(engineFragmentsForState(publicDoubt)).toEqual(expect.arrayContaining(["stabilityBias", "evidenceRecoding", "crowdSuppression", "containmentProtocol"]));
-    expect(secretEndingEligible({ ...publicDoubt, truth: 5, publicDoubt: 5, systemSuspicion: 3 }, createEmptyProfile())).toBe(true);
+    expect(secretEndingEligible({ ...publicDoubt, truth: 5, publicDoubt: 5, systemSuspicion: 3, childAmplified: true }, createEmptyProfile())).toBe(true);
+    expect(secretEndingEligible({ ...publicDoubt, truth: 5, publicDoubt: 5, systemSuspicion: 3, childAmplified: false }, createEmptyProfile())).toBe(false);
+    expect(secretEndingEligible({ ...publicDoubt, truth: 5, publicDoubt: 5, systemSuspicion: 7, childAmplified: true }, createEmptyProfile())).toBe(false);
     const merged = mergeEngineFragmentUnlocks(createEmptyProfile(), engineFragmentDefinitions.map((item) => item.id), "run-a", "2026-05-20T00:00:00.000Z");
     expect(merged.profile.decodedEngine).toBe(true);
     expect(merged.profile.biasAwareness).toBe(100);
-    expect(secretEndingEligible({ ...publicDoubt, truth: 5, publicDoubt: 5, systemSuspicion: 3 }, merged.profile)).toBe(true);
+    expect(secretEndingEligible({ ...publicDoubt, truth: 5, publicDoubt: 5, systemSuspicion: 3, childAmplified: true }, merged.profile)).toBe(true);
   });
 });

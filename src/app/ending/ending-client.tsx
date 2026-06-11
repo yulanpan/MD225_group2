@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { analyzeEnding, calculateEnding, createInitialState, explainEnding, loadStateFromStorage, localizedEndingTitle } from "@/lib/game-rules";
+import { analyzeEnding, calculateEndingWithProfile, createInitialState, explainEnding, loadStateFromStorage, localizedEndingTitle } from "@/lib/game-rules";
 import { endingSceneForEnding } from "@/lib/audio";
-import { actionText, choiceText, commonText, endingText, fallbackFinalReportText, languageName, metricLabel, type LanguageCode } from "@/lib/i18n";
+import { actionText, choiceText, commonText, endingText, fallbackFinalReportTextForEnding, languageName, metricLabel, type LanguageCode } from "@/lib/i18n";
 import { hasWrongLanguageText } from "@/lib/language-guard";
 import { endingFacetsForState } from "@/lib/narrative";
 import { useLanguage } from "@/hooks/use-language";
@@ -35,6 +35,7 @@ function actionPathTone(choice: string) {
 }
 
 async function requestFinalReport(endingId: EndingId, state: GameState, language: LanguageCode): Promise<string> {
+  const fallback = fallbackFinalReportTextForEnding(endingId, language);
   try {
     const response = await fetch("/api/final-report", {
       method: "POST",
@@ -46,11 +47,11 @@ async function requestFinalReport(endingId: EndingId, state: GameState, language
         history: state.history.map((entry) => entry.actionTitle)
       })
     });
-    if (!response.ok) return fallbackFinalReportText(language);
+    if (!response.ok) return fallback;
     const data = (await response.json()) as FinalReport;
-    return hasWrongLanguageText(data.report, language) ? fallbackFinalReportText(language) : data.report;
+    return hasWrongLanguageText(data.report, language) ? fallback : data.report;
   } catch {
-    return fallbackFinalReportText(language);
+    return fallback;
   }
 }
 
@@ -94,7 +95,7 @@ export default function EndingClient() {
   const { setScene } = useGameAudio();
   const [state, setState] = useState<GameState>(createInitialState("en"));
   const [endingId, setEndingId] = useState<EndingId>("unstableFeed");
-  const [report, setReport] = useState<string>(fallbackFinalReportText("en"));
+  const [report, setReport] = useState<string>(fallbackFinalReportTextForEnding("unstableFeed", "en"));
   const [profile, setProfile] = useState<PlayerProfile>({ version: 2, achievements: [], runs: [], engineFragments: [], biasAwareness: 0, decodedEngine: false, secretEndingUnlocked: false });
   const [newUnlocks, setNewUnlocks] = useState<AchievementUnlock[]>([]);
   const [recordedRun, setRecordedRun] = useState<RunRecord | null>(null);
@@ -103,12 +104,13 @@ export default function EndingClient() {
     if (!languageReady) return;
     queueMicrotask(() => {
       const stored = loadStateFromStorage(localStorage.getItem("emperor-feed-final-state") ?? localStorage.getItem("emperor-feed-state"));
-      const calculated = (localStorage.getItem("emperor-feed-ending") as EndingId | null) ?? calculateEnding(stored);
+      const loadedProfile = loadProfile();
+      const calculated = (localStorage.getItem("emperor-feed-ending") as EndingId | null) ?? calculateEndingWithProfile(stored, loadedProfile);
       setState(stored);
       setEndingId(calculated);
-      setReport(fallbackFinalReportText(language));
+      setReport(fallbackFinalReportTextForEnding(calculated, language));
       const runId = ensureCurrentRunId();
-      const recorded = recordCompletedRun(loadProfile(), stored, calculated, language, runId);
+      const recorded = recordCompletedRun(loadedProfile, stored, calculated, language, runId);
       saveProfile(recorded.profile);
       setProfile(recorded.profile);
       setNewUnlocks(recorded.newUnlocks);
@@ -126,6 +128,10 @@ export default function EndingClient() {
   const analysis = analyzeEnding(state, language, endingId);
   const endingFacets = endingFacetsForState(state, endingId, language);
   const pressureProfile = endingPressureProfile(endingId);
+  const isHiddenEnding = endingId === "narrativeLiberation";
+  const hiddenRecordNote = language === "zh"
+    ? "宫廷 AI 的建议还在，但公开记录已经不再只按它的口径收束。证据、人群的怀疑和孩子的话留在了同一处。"
+    : "Palace AI still offers its line, but the public record no longer closes around it. Evidence, shared doubt, and the child's words remain in the same place.";
 
   function restartShift() {
     localStorage.removeItem("emperor-feed-state");
@@ -187,13 +193,14 @@ export default function EndingClient() {
               <i />
               <i />
             </div>
-            <div className="doc-label">{language === "zh" ? "本局结局" : "Narrative Record / Closed Case"}</div>
+            <div className="doc-label">{isHiddenEnding ? (language === "zh" ? "另一份公开记录" : "A Different Public Record") : (language === "zh" ? "本局结局" : "Narrative Record / Closed Case")}</div>
             <h3>{copy.title}</h3>
             <div className="archive-meta">
-              <span>{language === "zh" ? `结局：${copy.title}` : `Classification: ${copy.title}`}</span>
-              <span>{language === "zh" ? "总结：宫廷 AI" : "Compiled by: Palace AI"}</span>
-              <span>{language === "zh" ? "操作记录：本局 6 次行动" : "Action Record: 6-action run"}</span>
+              <span>{isHiddenEnding ? (language === "zh" ? `公开记录：${copy.title}` : `Public Record: ${copy.title}`) : (language === "zh" ? `结局：${copy.title}` : `Classification: ${copy.title}`)}</span>
+              <span>{isHiddenEnding ? (language === "zh" ? "记录来源：公开记录" : "Filed by: Public Record") : (language === "zh" ? "总结：宫廷 AI" : "Compiled by: Palace AI")}</span>
+              <span>{language === "zh" ? `操作记录：本局 ${state.history.length} 次行动` : `Action Record: ${state.history.length}-action run`}</span>
             </div>
+            {isHiddenEnding && <div className="hidden-record-note">{hiddenRecordNote}</div>}
             <p>{report}</p>
             <AnimatePresence>
               {(newUnlocks.length > 0 || (recordedRun?.engineFragmentsUnlocked?.length ?? 0) > 0) && (
@@ -312,7 +319,7 @@ export default function EndingClient() {
               <button className="btn primary" onClick={replayWithTarget}>{commonText("tryFor", language)} {localizedEndingTitle(analysis.replayEndingHint, language)}</button>
             </article>
             <article className="outcome-card" data-index="08" data-reveal>
-              <h4>{commonText("aiFinalReport", language)}</h4>
+              <h4>{isHiddenEnding ? (language === "zh" ? "宫廷记录失效" : "Palace Note Overridden") : commonText("aiFinalReport", language)}</h4>
               <p>{copy.ai}</p>
             </article>
             <article className="outcome-card" data-index="09" data-reveal>

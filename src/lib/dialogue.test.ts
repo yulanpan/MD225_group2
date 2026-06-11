@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   applyDialogueRecord,
+  dialogueOutcomeFromTranscript,
   dialogueOutcomeEffects,
   dialogueQuickReplies,
   fallbackDialogueEvent,
@@ -11,7 +12,8 @@ import {
   withSanitizedDialogueEvent
 } from "./dialogue";
 import { initialState } from "./game-data";
-import { loadStateFromStorage, performAction } from "./game-rules";
+import { calculateEndingWithProfile, loadStateFromStorage, performAction } from "./game-rules";
+import { createEmptyProfile } from "./profile";
 import type { DialogueMessage, DialogueRecord } from "./types";
 
 function message(content: string): DialogueMessage {
@@ -97,6 +99,42 @@ describe("dialogue rules", () => {
     const publicEvent = fallbackDialogueEvent("public-witness-4", "publicWitness", "en");
     expect(fallbackDialogueResolution(publicEvent, [message("I heard that too.")], "en").outcomeTag).toBe("amplifyWitness");
     expect(fallbackDialogueResolution(publicEvent, [message("Stay quiet.")], "en").outcomeTag).toBe("surfaceDoubt");
+    const childGuardian = fallbackDialogueEvent("child-guardian-signal", "childGuardian", "en");
+    expect(fallbackDialogueResolution(childGuardian, [message("I will protect the name, but keep the fact he spoke.")], "en").outcomeTag).toBe("surfaceDoubt");
+    expect(fallbackDialogueResolution(childGuardian, [message("Let the crowd repeat it.")], "en").outcomeTag).toBe("amplifyWitness");
+    expect(fallbackDialogueResolution(childGuardian, [message("I will lower his visibility.")], "en").outcomeTag).toBe("containNarrative");
+  });
+
+  it("keeps the child guardian protection choice compatible with narrative liberation", () => {
+    const route = [
+      ["publishTailorsClaim", "direct"],
+      ["inspectLooms", "direct"],
+      ["factCheckTrend", "direct"],
+      ["showUnfilteredComments", "direct"],
+      ["quoteChildAnonymously", "original"]
+    ] as const;
+    const beforeGuardian = route.reduce(
+      (current, [actionId, choice]) => performAction(current, actionId, choice),
+      initialState
+    );
+    const guardian = fallbackDialogueEvent("child-guardian-signal", "childGuardian", "en");
+    const transcript = [message("I will protect the name, but keep the fact he spoke.")];
+    const protectedChild = applyDialogueRecord(beforeGuardian, {
+      event: guardian,
+      transcript,
+      outcomeTag: dialogueOutcomeFromTranscript(guardian, transcript) ?? "noEffect",
+      effects: {},
+      summary: "The guardian accepted anonymity while the spoken fact stayed public."
+    });
+    const withMinister = performAction(protectedChild, "approveMinisterReport", "direct");
+
+    expect(protectedChild.publicDoubt).toBeGreaterThanOrEqual(beforeGuardian.publicDoubt);
+    expect(withMinister).toMatchObject({
+      truth: 7,
+      publicDoubt: 5,
+      childAmplified: true
+    });
+    expect(calculateEndingWithProfile(withMinister, createEmptyProfile())).toBe("narrativeLiberation");
   });
 
   it("updates quick replies from the latest speaker turn", () => {

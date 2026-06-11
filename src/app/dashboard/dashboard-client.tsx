@@ -438,7 +438,7 @@ function narrativeThreadLabel(thread: ReturnType<typeof buildNarrativeContext>["
     officialPerformance: { en: "Official Performance", zh: "官方表演" },
     evidenceTrail: { en: "Evidence Trail", zh: "证据线索" },
     publicRecognition: { en: "Public Recognition", zh: "公众确认" },
-    engineContainment: { en: "AI Control", zh: "AI 控制" },
+    engineContainment: { en: "Palace Control", zh: "宫廷控制" },
     childSignal: { en: "Child Signal", zh: "孩子信号" }
   };
   return labels[thread][language];
@@ -1806,7 +1806,7 @@ export default function DashboardClient() {
               <div className="wire">
                 <b>{commonText("courtWire", language)}</b>
                 <div className="wire-track" aria-hidden="true">
-                  <span>{language === "zh" ? "有人开始重复：“我还以为只有我看不见。” · 孩子的话正在传开 · 宫廷要求继续称赞 · 有人开始重复：“我还以为只有我看不见。” ·" : "THREAD 41: spectators repeat \"I thought I was the only one\" · ENGINE FLAG: visual evidence destabilizes prestige hierarchy · CHILD QUOTE CLUSTER: propagation exceeds containment threshold · THREAD 41: spectators repeat \"I thought I was the only one\" ·"}</span>
+                  <span>{language === "zh" ? "有人开始重复：“我还以为只有我看不见。” · 孩子的话正在传开 · 宫廷要求继续称赞 · 有人开始重复：“我还以为只有我看不见。” ·" : "THREAD 41: spectators repeat \"I thought I was the only one\" · ENGINE FLAG: visual evidence unsettles the palace story · CHILD QUOTE CLUSTER: crowd repetition rising · THREAD 41: spectators repeat \"I thought I was the only one\" ·"}</span>
                 </div>
               </div>
               <div className="feed-grid">
@@ -2005,7 +2005,7 @@ export default function DashboardClient() {
                   </button>
                   <Link className="decision archive-decision" href="/archive" style={{ "--accent": "var(--cyan)" } as CSSProperties}>
                     <b>{commonText("viewArchive", language)}</b>
-                      <small>{decoded ? (language === "zh" ? "已看清 AI 偏向" : "AI bias found") : `${playerProfile.biasAwareness}% ${language === "zh" ? "隐藏线索" : "Archive Signal"}`}</small>
+                      <small>{decoded ? (language === "zh" ? "已看见宫廷偏向" : "Palace pattern seen") : `${playerProfile.biasAwareness}% ${language === "zh" ? "隐藏线索" : "Archive Signal"}`}</small>
                   </Link>
                 </div>
               </div>
@@ -2359,8 +2359,8 @@ export default function DashboardClient() {
               <p>
                 {decoded
                   ? (language === "zh"
-                    ? "我仍会给出建议，但你已经知道：稳定会遮住真实。可以切到教练模式，尝试让大家一起说出真话。"
-                    : "I will still offer guidance, but the archive proves stability can bury truth. Switch to coach mode to pursue The Crowd Speaks.")
+                    ? "我仍会给出建议，但你已经看见：稳定常常排在真实之前。你可以让证据、人群和孩子的话留在同一处。"
+                    : "I will still offer guidance, but you have seen how stability can come before truth. You can keep evidence, public doubt, and the child's words in the same record.")
                   : (language === "zh"
                     ? "我会帮你稳住游行前的说法、保住你的安全，并提醒哪些发布会提高宫廷警戒。证据越直接，越需要想清楚代价。"
                     : "I will help steady the parade story, protect Safety, and flag posts that raise Palace Alert. The more direct the Evidence, the higher the cost.")}

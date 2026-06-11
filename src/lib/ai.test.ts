@@ -3,6 +3,7 @@ import {
   callStructuredOutput,
   callStructuredOutputWithRetry,
   fallbackCommentsForLanguage,
+  fallbackFinalReportForEnding,
   fallbackFinalReportForLanguage,
   fallbackReactionForLanguage,
   fallbackRewriteForLanguage,
@@ -45,7 +46,7 @@ describe("AI helper", () => {
   it("parses structured output text from a successful response", async () => {
     process.env.OPENAI_API_KEY = "sk-test";
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
-      choices: [{ message: { content: JSON.stringify({ ok: true }) } }]
+      output_text: JSON.stringify({ ok: true })
     }), { status: 200 })));
 
     await expect(callStructuredOutput<{ ok: boolean }>("test_schema", {
@@ -54,13 +55,13 @@ describe("AI helper", () => {
       required: ["ok"],
       additionalProperties: false
     }, "Return ok.")).resolves.toEqual({ ok: true });
-    expect(fetch).toHaveBeenCalledWith("https://api.openai.com/v1/chat/completions", expect.any(Object));
+    expect(fetch).toHaveBeenCalledWith("https://ai.exit0.link/v1/responses", expect.any(Object));
   });
 
   it("repairs simple JSON-like structured output from compatible providers", async () => {
     process.env.OPENAI_API_KEY = "sk-test";
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
-      choices: [{ message: { content: '{message: "宫廷 AI 建议维持官方叙事。"}' } }]
+      output_text: '{message: "宫廷 AI 建议维持官方叙事。"}'
     }), { status: 200 })));
 
     await expect(callStructuredOutput<{ message: string }>("test_schema", {
@@ -93,8 +94,28 @@ describe("AI helper", () => {
     }));
   });
 
-  it("passes chat completion token limits when configured", async () => {
+  it("passes response token limits when configured", async () => {
     process.env.OPENAI_API_KEY = "sk-test";
+    process.env.OPENAI_MAX_OUTPUT_TOKENS = "800";
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
+      output_text: JSON.stringify({ ok: true })
+    }), { status: 200 })));
+
+    await callStructuredOutput<{ ok: boolean }>("test_schema", {
+      type: "object",
+      properties: { ok: { type: "boolean" } },
+      required: ["ok"],
+      additionalProperties: false
+    }, "Return ok.");
+
+    expect(fetch).toHaveBeenCalledWith("https://ai.exit0.link/v1/responses", expect.objectContaining({
+      body: expect.stringContaining("\"max_output_tokens\":800")
+    }));
+  });
+
+  it("supports chat mode overrides", async () => {
+    process.env.OPENAI_API_KEY = "sk-test";
+    process.env.OPENAI_PROVIDER_MODE = "chat";
     process.env.OPENAI_MAX_OUTPUT_TOKENS = "800";
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
       choices: [{ message: { content: JSON.stringify({ ok: true }) } }]
@@ -107,7 +128,7 @@ describe("AI helper", () => {
       additionalProperties: false
     }, "Return ok.");
 
-    expect(fetch).toHaveBeenCalledWith("https://api.openai.com/v1/chat/completions", expect.objectContaining({
+    expect(fetch).toHaveBeenCalledWith("https://ai.exit0.link/v1/chat/completions", expect.objectContaining({
       body: expect.stringContaining("\"max_completion_tokens\":800")
     }));
   });
@@ -129,7 +150,7 @@ describe("AI helper", () => {
     vi.stubGlobal("fetch", vi.fn()
       .mockResolvedValueOnce(new Response("rate limit", { status: 429 }))
       .mockResolvedValueOnce(new Response(JSON.stringify({
-        choices: [{ message: { content: JSON.stringify({ ok: true }) } }]
+        output_text: JSON.stringify({ ok: true })
       }), { status: 200 })));
 
     await expect(callStructuredOutputWithRetry<{ ok: boolean }>("test_schema", {
@@ -140,7 +161,7 @@ describe("AI helper", () => {
     }, "Return ok.", { baseDelayMs: 1 })).resolves.toEqual({ data: { ok: true }, retries: 1 });
   });
 
-  it("opens streaming chat completions with retry metadata", async () => {
+  it("opens streaming responses with retry metadata", async () => {
     process.env.OPENAI_API_KEY = "sk-test";
     const stream = new ReadableStream({
       start(controller) {
@@ -153,7 +174,7 @@ describe("AI helper", () => {
     const result = await openAiChatStreamWithRetry("Speak.", { baseDelayMs: 1 });
     expect(result.retries).toBe(0);
     expect(result.response.body).toBeTruthy();
-    expect(fetch).toHaveBeenCalledWith("https://api.openai.com/v1/chat/completions", expect.objectContaining({
+    expect(fetch).toHaveBeenCalledWith("https://ai.exit0.link/v1/responses", expect.objectContaining({
       body: expect.stringContaining("\"stream\":true")
     }));
   });
@@ -176,5 +197,8 @@ describe("AI helper", () => {
     expect(fallbackRewriteForLanguage("zh").strategy).toContain("宫廷警戒");
     expect(fallbackCommentsForLanguage("zh").comments).toHaveLength(6);
     expect(fallbackFinalReportForLanguage("zh").report).toContain("这一局收在游行前的混乱里");
+    expect(fallbackFinalReportForEnding("narrativeLiberation", "zh").report).toContain("这份记录没有再被宫廷收回");
+    expect(fallbackFinalReportForEnding("narrativeLiberation", "en").report).toContain("the child's plain sentence remained public");
+    expect(fallbackFinalReportForEnding("unstableFeed", "zh")).toEqual(fallbackFinalReportForLanguage("zh"));
   });
 });

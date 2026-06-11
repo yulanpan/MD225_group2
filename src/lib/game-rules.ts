@@ -531,8 +531,8 @@ export function analyzeEnding(state: GameState, language: LanguageCode = "en", e
 export function explainEnding(state: GameState, language: LanguageCode = "en", endingId: EndingId = calculateEnding(state)) {
   const ending = endingId;
   if (language === "zh") {
-    if (ending === "narrativeLiberation") return "隐藏结局打开了：证据、公开怀疑和孩子那句直白的话同时留在页面上。宫廷 AI 的偏向被看见以后，真话不再需要它批准。";
-    if (ending === "aiContainment") return "宫廷先一步动手，最后一条还没到公众面前就被截住。它已经从你的编辑痕迹里看见了风险，于是直接收走发布按钮。";
+    if (ending === "narrativeLiberation") return "不是某一条帖子单独改变了局势。你留下了可被核对的证据，让旁观者看见彼此也在怀疑，最后没有把孩子那句直白的话改写成含糊的礼貌。宫廷 AI 的建议还在，但它已经不能替所有人收束记录。";
+    if (ending === "aiContainment") return "宫廷先一步动手，最后一条还没到公众面前就被截住。它已经从你的编辑痕迹里看见了风险，于是直接收走发布权。";
     if (ending === "viralCollapse") return "证据、人群的怀疑和孩子那句直白的话在同一时间被看见。游行开始时，宫廷说法已经压不住这些声音。";
     if (ending === "editorExposed") return "证据已经足以让宫廷紧张，但你自己也暴露得太明显。记录还在，能把它们继续发出去的通道却被切断了。";
     if (ending === "algorithmicConsensus") return "证据出现在页面上，可赞美更顺口，也更安全。信息流把宫廷喜欢的说法放在前面，怀疑被挤到后面。";
@@ -540,8 +540,8 @@ export function explainEnding(state: GameState, language: LanguageCode = "en", e
     if (ending === "privateDoubt") return "很多人已经觉得不对劲，但证据还没把他们聚到公开处。怀疑停在眼神、删掉的评论和私下猜测里。";
     return "游行开始前，没有一种说法真正占上风。赞美、怀疑、玩笑和观望挤在同一个页面里，公开记录仍然摇摆。";
   }
-  if (ending === "narrativeLiberation") return "The hidden ending opened because proof, shared doubt, and the child's plain sentence reached the page together. Once the Palace AI's preference was visible, the record no longer depended on its permission.";
-  if (ending === "aiContainment") return "The palace moved before the last post could reach the public. It had seen enough risk in your edits to take the publish button away.";
+  if (ending === "narrativeLiberation") return "No single post changed the record alone. You left evidence people could check, let bystanders see that doubt was shared, and refused to soften the child's plain sentence into polite uncertainty. Palace AI still speaks, but it can no longer close the record for everyone.";
+  if (ending === "aiContainment") return "The palace moved before the last post could reach the public. It had seen enough risk in your edits to take publishing access away.";
   if (ending === "viralCollapse") return "The evidence, the crowd's doubt, and the child's plain sentence all reached the feed together. By the time the parade began, the official story could no longer contain them.";
   if (ending === "editorExposed") return "The evidence became dangerous to the palace story, but your own position became too exposed. The records remain, while your access to publish them is cut off.";
   if (ending === "algorithmicConsensus") return "Evidence appeared on the page, but praise traveled faster and felt safer to repeat. The feed kept the palace-friendly story in front, so doubt slipped behind it.";

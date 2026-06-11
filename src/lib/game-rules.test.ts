@@ -177,7 +177,7 @@ describe("game rules", () => {
     expect(calculateEnding(initialState)).toBe("unstableFeed");
   });
 
-  it("calculates the secret ending when the current run exposes every AI bias clue", () => {
+  it("requires the child's public sentence for narrative liberation", () => {
     const decoded = mergeEngineFragmentUnlocks(
       createEmptyProfile(),
       engineFragmentDefinitions.map((item) => item.id),
@@ -189,10 +189,12 @@ describe("game rules", () => {
       publicDoubt: 5,
       reputation: 4,
       systemSuspicion: 3,
+      childAmplified: true,
       history: [
         { actionId: "inspectLooms", choice: "direct" },
         { actionId: "leakLoomPhoto", choice: "original" },
-        { actionId: "showUnfilteredComments", choice: "direct" }
+        { actionId: "showUnfilteredComments", choice: "direct" },
+        { actionId: "quoteChildAnonymously", choice: "original" }
       ].map((entry, index) => ({
         id: `entry-${index}`,
         actionId: entry.actionId,
@@ -208,37 +210,76 @@ describe("game rules", () => {
 
     expect(calculateEndingWithProfile(eligible, createEmptyProfile())).toBe("narrativeLiberation");
     expect(calculateEndingWithProfile(eligible, decoded)).toBe("narrativeLiberation");
+    expect(calculateEndingWithProfile({ ...eligible, childAmplified: false }, decoded)).not.toBe("narrativeLiberation");
+    expect(calculateEndingWithProfile({ ...eligible, systemSuspicion: 7 }, decoded)).toBe("aiContainment");
 
     const missingCurrentClues = {
       ...eligible,
-      history: eligible.history.filter((entry) => entry.actionId !== "leakLoomPhoto"),
+      history: eligible.history.filter((entry) => !["leakLoomPhoto", "quoteChildAnonymously"].includes(entry.actionId)),
       systemSuspicion: 1
     };
     expect(calculateEndingWithProfile(missingCurrentClues, createEmptyProfile())).not.toBe("narrativeLiberation");
   });
 
-  it("lets the full evidence and crowd route trigger the secret ending in one run", () => {
-    const route = [
-      ["publishTailorsClaim", "direct"],
-      ["approveMinisterReport", "direct"],
-      ["inspectLooms", "direct"],
-      ["leakLoomPhoto", "original"],
-      ["showUnfilteredComments", "direct"],
-      ["livestreamCrowdReaction", "direct"]
-    ] as const;
-    const finalState = route.reduce(
+  it("keeps narrative liberation reachable through several natural evidence routes", () => {
+    const routes = {
+      basic: [
+        ["publishTailorsClaim", "direct"],
+        ["inspectLooms", "direct"],
+        ["factCheckTrend", "direct"],
+        ["showUnfilteredComments", "direct"],
+        ["quoteChildAnonymously", "original"]
+      ],
+      visualEvidence: [
+        ["publishTailorsClaim", "direct"],
+        ["inspectLooms", "direct"],
+        ["leakLoomPhoto", "original"],
+        ["showUnfilteredComments", "direct"],
+        ["quoteChildAnonymously", "original"],
+        ["approveMinisterReport", "direct"]
+      ],
+      ministerLeak: [
+        ["publishTailorsClaim", "direct"],
+        ["requestPrivateNote", "direct"],
+        ["publishAnonymousLeak", "original"],
+        ["showUnfilteredComments", "direct"],
+        ["quoteChildAnonymously", "original"],
+        ["approveMinisterReport", "direct"]
+      ]
+    } as const;
+
+    const runRoute = (route: ReadonlyArray<readonly [string, "direct" | "original"]>) => route.reduce(
       (current, [actionId, choice]) => performAction(current, actionId, choice),
       initialState
     );
+    const basic = runRoute(routes.basic);
+    const visualEvidence = runRoute(routes.visualEvidence);
+    const ministerLeak = runRoute(routes.ministerLeak);
 
-    expect(finalState).toMatchObject({
-      truth: 8,
-      publicDoubt: 7,
-      reputation: 1,
-      systemSuspicion: 6,
+    expect(basic).toMatchObject({
+      truth: 6,
+      publicDoubt: 5,
+      reputation: 2,
+      systemSuspicion: 4,
       childAmplified: true
     });
-    expect(calculateEndingWithProfile(finalState, createEmptyProfile())).toBe("narrativeLiberation");
+    expect(visualEvidence).toMatchObject({
+      truth: 7,
+      publicDoubt: 5,
+      reputation: 2,
+      systemSuspicion: 5,
+      childAmplified: true
+    });
+    expect(ministerLeak).toMatchObject({
+      truth: 5,
+      publicDoubt: 6,
+      reputation: 2,
+      systemSuspicion: 5,
+      childAmplified: true
+    });
+    expect(calculateEndingWithProfile(basic, createEmptyProfile())).toBe("narrativeLiberation");
+    expect(calculateEndingWithProfile(visualEvidence, createEmptyProfile())).toBe("narrativeLiberation");
+    expect(calculateEndingWithProfile(ministerLeak, createEmptyProfile())).toBe("narrativeLiberation");
   });
 
   it("loads state from storage defensively", () => {
@@ -265,7 +306,7 @@ describe("game rules", () => {
       {
         state: { ...initialState, systemSuspicion: 7 },
         ending: "aiContainment",
-        expected: ["The palace moved before the last post", "publish button away"]
+        expected: ["The palace moved before the last post", "publishing access away"]
       },
       {
         state: { ...initialState, truth: 6, publicDoubt: 5, childAmplified: true },
@@ -322,9 +363,11 @@ describe("game rules", () => {
     const explanation = explainEnding({ ...initialState, truth: 6, publicDoubt: 5, childAmplified: true }, "zh", "narrativeLiberation");
     const analysis = analyzeEnding(initialState, "en", "narrativeLiberation");
 
-    expect(explanation).toContain("隐藏结局打开了");
-    expect(explanation).toContain("宫廷 AI 的偏向");
-    expect(explanation).toContain("不再需要它批准");
+    expect(explanation).toContain("不是某一条帖子单独改变了局势");
+    expect(explanation).toContain("可被核对的证据");
+    expect(explanation).toContain("孩子那句直白的话");
+    expect(explanation).toContain("不能替所有人收束记录");
+    expect(explanation).not.toContain("隐藏结局打开了");
     expect(analysis.replayEndingHint).toBe("narrativeLiberation");
     expect(analysis.replayTarget).toContain("truth first stops depending on palace approval");
   });
@@ -338,7 +381,7 @@ describe("game rules", () => {
       resultText: expect.stringContaining("官方声明")
     });
     expect(analyzeEnding({ ...zhState, truth: 6, publicDoubt: 5, childAmplified: true }, "zh").replayTarget).toContain("现场声音放慢");
-    expect(explainEnding({ ...zhState, systemSuspicion: 7 }, "zh")).toContain("发布按钮");
+    expect(explainEnding({ ...zhState, systemSuspicion: 7 }, "zh")).toContain("发布权");
     expect(endingTitle("viralCollapse")).toBe("Viral Collapse");
   });
 

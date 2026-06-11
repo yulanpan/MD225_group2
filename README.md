@@ -55,10 +55,10 @@ Supported variables:
 
 ```text
 OPENAI_API_KEY=
-OPENAI_BASE_URL=https://api.openai.com/v1
-OPENAI_MODEL=gpt-5.2
+OPENAI_BASE_URL=https://ai.exit0.link/v1
+OPENAI_MODEL=gpt-5.3-codex-spark
 OPENAI_MAX_OUTPUT_TOKENS=1000
-OPENAI_PROVIDER_MODE=chat
+OPENAI_PROVIDER_MODE=responses
 DATA_DIR=.data
 AUTH_COOKIE_SECURE=false
 AUTH_SESSION_DAYS=30
@@ -70,6 +70,8 @@ AUTH_SESSION_DAYS=30
 - `responses` - sends requests to `/v1/responses`
 
 Do not commit `.env.local` or real API keys.
+
+For deployment, set these same variables in the hosting platform's environment settings. Visitors do not need their own API key; the app's server-side API routes call the provider with the deployed secret.
 
 `DATA_DIR` stores the SQLite database at `DATA_DIR/the-emperors-feed.sqlite`. Use `AUTH_COOKIE_SECURE=false` for plain HTTP local/shared testing, and set it to `true` when serving through HTTPS.
 

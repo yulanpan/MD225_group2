@@ -24,7 +24,7 @@ export const achievementDefinitions: AchievementDefinition[] = [
   { id: "viralCollapse", title: "Truth Goes Viral", titleZh: "真话传开", description: "Let the truth become impossible to contain.", descriptionZh: "让孩子的话和证据传播到无法压住。", rarity: "critical" },
   { id: "algorithmicConsensus", title: "Praise Wins", titleZh: "赞美压过证据", description: "Let ranking overpower visible evidence.", descriptionZh: "让更容易传播的内容压过证据。", rarity: "rare" },
   { id: "editorExposed", title: "Access Revoked", titleZh: "发布权被收回", description: "Make Evidence visible after your Safety has collapsed.", descriptionZh: "在你的安全已经很低时，让证据变得可见。", rarity: "rare" },
-  { id: "aiContainment", title: "AI Takes Over", titleZh: "系统接管", description: "Raise Palace Alert until the system takes the publish button.", descriptionZh: "让宫廷警戒升到系统收走发布按钮。", rarity: "critical" },
+  { id: "aiContainment", title: "The Palace Takes Over", titleZh: "宫廷接管", description: "Push the palace until it takes the publishing desk back.", descriptionZh: "把宫廷逼到重新接管发布台。", rarity: "critical" },
   { id: "unstableFeed", title: "Unstable Story", titleZh: "局势未定", description: "Reach the parade with no single public story in control.", descriptionZh: "让游行开始时，没有任何一种公开说法真正占上风。", rarity: "standard" },
   { id: "allEndings", title: "Complete Archive", titleZh: "完整档案", description: "Collect every ending record.", descriptionZh: "收集所有结局记录。", rarity: "critical" },
   { id: "truthArchive", title: "Evidence Archive", titleZh: "证据档案", description: "Finish a run with Evidence at 7 or higher.", descriptionZh: "结算时让证据达到 7 或更高。", rarity: "rare" },
@@ -34,8 +34,8 @@ export const achievementDefinitions: AchievementDefinition[] = [
   { id: "sourceSweeper", title: "Source Sweeper", titleZh: "多来源编辑", description: "Use actions from at least three source zones.", descriptionZh: "在一局中处理至少三个来源。", rarity: "standard" },
   { id: "dialogueHandler", title: "Transmission Handler", titleZh: "交流处理人", description: "Resolve an incoming exchange.", descriptionZh: "完成一次突发交流。", rarity: "standard" },
   { id: "publicBreach", title: "Public Doubt", titleZh: "群众怀疑", description: "Raise Public Doubt to 6 or higher.", descriptionZh: "让很多人发现彼此都在怀疑。", rarity: "critical" },
-  { id: "engineDecoded", title: "AI Bias Found", titleZh: "看清 AI 偏向", description: "Recover every Palace AI bias clue.", descriptionZh: "发现所有隐藏线索，看清宫廷 AI 的偏向。", rarity: "critical" },
-  { id: "narrativeLiberation", title: "The Crowd Speaks", titleZh: "真相由众人说出", description: "Break the palace-preferred story and restore public authorship.", descriptionZh: "打破宫廷偏好的说法，让人群重新说出真相。", rarity: "critical" }
+  { id: "engineDecoded", title: "Palace Pattern Seen", titleZh: "看见宫廷偏向", description: "Recover every clue about how Palace AI favors stability.", descriptionZh: "发现所有隐藏线索，看见宫廷 AI 如何偏向稳定。", rarity: "critical" },
+  { id: "narrativeLiberation", title: "The Crowd Speaks", titleZh: "真相由众人说出", description: "Keep evidence, shared doubt, and the child's words in one public record.", descriptionZh: "让证据、共同的怀疑和孩子的话留在同一份公开记录里。", rarity: "critical" }
 ];
 
 const achievementById = new Map(achievementDefinitions.map((item) => [item.id, item]));
@@ -339,9 +339,10 @@ export function secretEndingEligible(state: GameState, profile: PlayerProfile) {
   return canDecodeEngineWithState(profile, state) &&
     state.truth >= 5 &&
     state.publicDoubt >= 4 &&
+    state.childAmplified &&
     countDefiantActions(state) >= 3 &&
     state.reputation > 0 &&
-    state.systemSuspicion < 8;
+    state.systemSuspicion < 7;
 }
 
 function sourceZonesUsed(state: GameState) {

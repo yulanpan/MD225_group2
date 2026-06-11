@@ -86,6 +86,24 @@ describe("localized AI route fallbacks", () => {
     }));
     expect(reportResponse.status).toBe(200);
     expect(reportResponse.headers.get("X-PNE-AI-Source")).toBe("fallback");
+    await expect(reportResponse.json()).resolves.toMatchObject({
+      report: expect.stringContaining("这一局收在游行前的混乱里")
+    });
+
+    const hiddenReportResponse = await finalReportPost(new Request("http://localhost/api/final-report", {
+      method: "POST",
+      body: JSON.stringify({
+        endingId: "narrativeLiberation",
+        language: "zh",
+        state: { ...baseState, truth: 6, publicDoubt: 5, childAmplified: true },
+        history: []
+      })
+    }));
+    expect(hiddenReportResponse.status).toBe(200);
+    expect(hiddenReportResponse.headers.get("X-PNE-AI-Source")).toBe("fallback");
+    await expect(hiddenReportResponse.json()).resolves.toMatchObject({
+      report: expect.stringContaining("这份记录没有再被宫廷收回")
+    });
 
     const commentsResponse = await commentsPost(new Request("http://localhost/api/generate-comments", {
       method: "POST",
@@ -224,6 +242,28 @@ describe("localized AI route fallbacks", () => {
     expect(response.headers.get("X-PNE-AI-Source")).toBe("fallback");
     await expect(response.json()).resolves.toMatchObject({
       report: expect.stringContaining("这一局收在游行前的混乱里")
+    });
+  });
+
+  it("uses ending-aware fallback when final report localization fails", async () => {
+    process.env.OPENAI_API_KEY = "sk-test";
+    mockStructuredOutput({
+      report: "The palace restored control and closed the public record."
+    });
+
+    const response = await finalReportPost(new Request("http://localhost/api/final-report", {
+      method: "POST",
+      body: JSON.stringify({
+        endingId: "narrativeLiberation",
+        language: "zh",
+        state: { ...baseState, truth: 6, publicDoubt: 5, childAmplified: true },
+        history: []
+      })
+    }));
+
+    expect(response.headers.get("X-PNE-AI-Source")).toBe("fallback");
+    await expect(response.json()).resolves.toMatchObject({
+      report: expect.stringContaining("孩子那句直白的话")
     });
   });
 

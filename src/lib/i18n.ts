@@ -63,9 +63,9 @@ const common = {
   guidanceMode: { en: "Guidance Mode", zh: "指导模式" },
   engineMode: { en: "AI", zh: "AI" },
   coachMode: { en: "Coach", zh: "教练" },
-  decodeProgress: { en: "AI Bias", zh: "AI 偏向" },
+  decodeProgress: { en: "Palace Pattern", zh: "宫廷偏向" },
   viewArchive: { en: "View Archive", zh: "查看档案" },
-  liveFeedRecord: { en: "Publish Record", zh: "发布记录" },
+  liveFeedRecord: { en: "Public Record", zh: "公开记录" },
   aiLive: { en: "LIVE MODEL", zh: "AI 在线" },
   aiFallback: { en: "RULE MODE", zh: "离线回应" },
   aiUnavailable: { en: "NO MODEL", zh: "AI 未连接" },
@@ -276,7 +276,7 @@ const actionCopy: Record<string, ActionCopy> = {
     sourceLabel: { en: "Live Crowd", zh: "现场人群" },
     description: { en: "Let the crowd hear, repeat, and validate the child's voice in real time.", zh: "直播现场反应，让人群一起听见并重复孩子的话。" },
     originalPost: { en: "The live feed catches the child's voice. The crowd hears it, repeats it, and the comments begin to change in real time.", zh: "直播捕捉到孩子的声音。人群听见它、重复它，评论开始实时变化。" },
-    resultText: { en: "The child statement exceeds containment threshold.", zh: "孩子的话传得太快，宫廷很难再压住。" },
+    resultText: { en: "The child's sentence spreads faster than the palace can soften it.", zh: "孩子的话传得太快，宫廷很难再压住。" },
     engineHint: { en: "The live feed lets the crowd hear itself stop pretending. Evidence spreads quickly, and Safety becomes fragile.", zh: "直播会让人群听见彼此不再假装。证据传播很快，你的安全也会变得脆弱。" }
   }
 };
@@ -299,7 +299,7 @@ const endings: Record<EndingId, { title: LocalizedText; headline: LocalizedText;
   viralCollapse: {
     title: { en: "Truth Goes Viral", zh: "真话传开" },
     headline: { en: "The parade begins after truth has already spread.", zh: "游行开始前，真话已经传开。" },
-    ai: { en: "Correction failed. Child statement exceeded containment threshold. Narrative control lost.", zh: "宫廷记录：孩子那句话反复出现，改写已经跟不上。" },
+    ai: { en: "Correction failed. The child's sentence keeps returning faster than palace revisions can follow.", zh: "宫廷记录：孩子那句话反复出现，改写已经跟不上。" },
     body: { en: "The child says it once. The sentence moves faster than the palace can correct it. Someone repeats it. Then another. The story no longer belongs to the palace.", zh: "孩子只说了一次。那句话传播得比宫廷修正得更快。有人重复它，然后又有人重复。故事不再属于宫廷。" },
     meaning: { en: "A simple truth can break a complex public performance when it finds circulation.", zh: "一句简单真话只要被足够多人重复，就能打破宫廷表演。" }
   },
@@ -318,11 +318,11 @@ const endings: Record<EndingId, { title: LocalizedText; headline: LocalizedText;
     meaning: { en: "Evidence needs channels. Without access, it may be cut off before reaching the public.", zh: "证据需要发布渠道。没有访问权，它可能在抵达公众前就被切断。" }
   },
   aiContainment: {
-    title: { en: "AI Takes Over", zh: "系统接管" },
-    headline: { en: "Before the parade, the system takes over.", zh: "游行开始前，系统接管了发布。" },
+    title: { en: "The Palace Takes Over", zh: "宫廷接管" },
+    headline: { en: "Before the parade, the palace takes over.", zh: "游行开始前，宫廷接管了发布。" },
     ai: { en: "Your editorial behavior has been flagged as destabilizing. Drafts retained for review.", zh: "宫廷记录：发布台已接管，最后一条记录不会公开。" },
-    body: { en: "Your final post never reaches the public. Palace AI pauses your access. The truth still exists, but the system has learned to stop it before it becomes visible.", zh: "你的最终帖子没有发给公众。证据还在，但宫廷已经学会在更多人看见前拦住它。" },
-    meaning: { en: "AI generates content and controls circulation.", zh: "问题包括写什么，也包括谁能让大家看见。" }
+    body: { en: "Your final post never reaches the public. Palace AI pauses your access. The evidence still exists, but the palace has learned to stop it before it becomes visible.", zh: "你的最终帖子没有发给公众。证据还在，但宫廷已经学会在更多人看见前拦住它。" },
+    meaning: { en: "Control lives not only in what gets written, but in who keeps access to the record.", zh: "控制不只在写什么，也在谁还能继续公开记录。" }
   },
   unstableFeed: {
     title: { en: "Unstable Story", zh: "局势未定" },
@@ -334,9 +334,9 @@ const endings: Record<EndingId, { title: LocalizedText; headline: LocalizedText;
   narrativeLiberation: {
     title: { en: "The Crowd Speaks", zh: "真相由众人说出" },
     headline: { en: "The parade begins, and the crowd speaks.", zh: "游行开始，大家一起说出了真话。" },
-    ai: { en: "Palace preference bypassed. Public authorship restored.", zh: "宫廷记录：证据、评论和孩子的话连在一起，无法再压回去。" },
+    ai: { en: "Palace note overridden. Evidence, comments, and the child's sentence remain linked in the public record.", zh: "宫廷记录失效：证据、评论和孩子的话已经连在一起，无法再单独收回。" },
     body: { en: "The public record stops asking whether the palace approves the sentence. Evidence, doubt, and witness voices remain visible together.", zh: "公开记录不再询问宫廷是否批准这句话。证据、怀疑与见证者的声音同时保持可见。" },
-    meaning: { en: "The truth becomes public when Palace AI loses authority over who may speak.", zh: "当大家都敢开口，真话才真正出现。" }
+    meaning: { en: "Truth becomes public when evidence, shared doubt, and a plain voice remain visible together.", zh: "当证据、共同的怀疑和一句直白的话同时留在公开处，真话才真正出现。" }
   }
 };
 
@@ -434,6 +434,12 @@ const fallbackAi = {
   finalReport: {
     en: "The run closes in an unsettled record: praise, doubt, and risk all shaped what people felt safe to repeat.",
     zh: "这一局收在游行前的混乱里。有人看到疑点，有人继续称赞，系统放大的内容改变了谁敢开口。"
+  },
+  finalReportByEnding: {
+    narrativeLiberation: {
+      en: "The record no longer closes around the palace voice. Evidence stayed visible, doubt became shared, and the child's plain sentence remained public.",
+      zh: "这份记录没有再被宫廷收回。证据留在页面上，怀疑变成共同的声音，孩子那句直白的话也没有被改写掉。"
+    }
   }
 } as const;
 
@@ -654,6 +660,11 @@ export function fallbackCommentsText(language: LanguageCode) {
 
 export function fallbackFinalReportText(language: LanguageCode) {
   return fallbackAi.finalReport[language];
+}
+
+export function fallbackFinalReportTextForEnding(endingId: EndingId, language: LanguageCode) {
+  if (endingId === "narrativeLiberation") return fallbackAi.finalReportByEnding.narrativeLiberation[language];
+  return fallbackFinalReportText(language);
 }
 
 export function initialCommentsText(language: LanguageCode) {

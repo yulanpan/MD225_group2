@@ -436,6 +436,44 @@ test("ending headline and trigger explanation are concrete in both languages", a
   await expect(page.locator(".outcome-card").filter({ hasText: "Why This Ending Triggered" })).toContainText("public record unsettled");
 });
 
+test("hidden ending report reads as a public record without internal route language", async ({ page }) => {
+  const storedState = {
+    ...initialState,
+    actionsLeft: 1,
+    truth: 6,
+    pressure: 4,
+    virality: 4,
+    publicDoubt: 5,
+    reputation: 2,
+    systemSuspicion: 4,
+    childAmplified: true
+  };
+  await page.goto("/");
+  await page.evaluate((state) => {
+    localStorage.setItem("emperor-feed-language", "zh");
+    localStorage.setItem("emperor-feed-final-state", JSON.stringify(state));
+    localStorage.setItem("emperor-feed-ending", "narrativeLiberation");
+  }, storedState);
+
+  await page.goto("/ending");
+  const body = page.locator("body");
+  await expect(page.getByRole("heading", { name: "游行开始，大家一起说出了真话。" })).toBeVisible();
+  await expect(page.locator(".ending-summary-card")).toContainText("另一份公开记录");
+  await expect(page.locator(".ending-summary-card")).toContainText("记录来源：公开记录");
+  await expect(page.locator(".outcome-card").filter({ hasText: "这局为什么会这样" })).toContainText("可被核对的证据");
+  await expect(page.locator(".outcome-card").filter({ hasText: "宫廷记录失效" })).toBeVisible();
+  await expect(body).not.toContainText(/Compiled by: Palace AI|隐藏结局打开了|secret ending|threshold|fragments/i);
+
+  await page.evaluate(() => localStorage.setItem("emperor-feed-language", "en"));
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "The parade begins, and the crowd speaks." })).toBeVisible();
+  await expect(page.locator(".ending-summary-card")).toContainText("A Different Public Record");
+  await expect(page.locator(".ending-summary-card")).toContainText("Filed by: Public Record");
+  await expect(page.locator(".outcome-card").filter({ hasText: "Why This Ending Triggered" })).toContainText("evidence people could check");
+  await expect(page.locator(".outcome-card").filter({ hasText: "Palace Note Overridden" })).toBeVisible();
+  await expect(body).not.toContainText(/Compiled by: Palace AI|hidden ending opened|secret ending|threshold|fragments/i);
+});
+
 test("each new shift briefing continues into the spotlight tutorial with real controls", async ({ page }) => {
   await page.goto("/dashboard");
   await expect(page.getByRole("dialog", { name: "Game Briefing" })).toBeVisible();
