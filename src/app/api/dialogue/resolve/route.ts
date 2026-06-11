@@ -5,9 +5,9 @@ import {
   dialogueResolveRequestSchema
 } from "@/lib/schemas";
 import { aiLanguageInstruction } from "@/lib/i18n";
-import { fallbackDialogueResolution } from "@/lib/dialogue";
+import { dialogueOutcomeFromTranscript, fallbackDialogueResolution } from "@/lib/dialogue";
 import { buildNarrativeContext } from "@/lib/narrative";
-import type { GameState } from "@/lib/types";
+import type { DialogueOutcomeTag, GameState } from "@/lib/types";
 
 type DialogueResolution = {
   outcomeTag: string;
@@ -16,10 +16,10 @@ type DialogueResolution = {
   feedText: string;
 };
 
-function safeResolution(value: DialogueResolution, fallback: ReturnType<typeof fallbackDialogueResolution>) {
+function safeResolution(value: DialogueResolution, fallback: ReturnType<typeof fallbackDialogueResolution>, forcedOutcome?: DialogueOutcomeTag | null) {
   const parsedTag = dialogueOutcomeTagSchema.safeParse(value.outcomeTag);
   return {
-    outcomeTag: parsedTag.success ? parsedTag.data : fallback.outcomeTag,
+    outcomeTag: forcedOutcome ?? (parsedTag.success ? parsedTag.data : fallback.outcomeTag),
     summary: value.summary?.slice(0, 260) || fallback.summary,
     feedTitle: value.feedTitle?.slice(0, 90) || fallback.feedTitle,
     feedText: value.feedText?.slice(0, 220) || fallback.feedText
@@ -36,6 +36,7 @@ export async function POST(request: Request) {
   const narrative = buildNarrativeContext(state as GameState, (state as Partial<GameState>).history?.at?.(-1));
   const startedAt = Date.now();
   const fallback = fallbackDialogueResolution(event, transcript, language);
+  const forcedOutcome = dialogueOutcomeFromTranscript(event, transcript);
 
   if (!hasOpenAiKey()) {
     return Response.json(fallback, {
@@ -74,7 +75,7 @@ Rules:
       ,
       { temperature: 0.15, maxOutputTokens: 420 }
     );
-    return Response.json(safeResolution(result.data, fallback), {
+    return Response.json(safeResolution(result.data, fallback, forcedOutcome), {
       headers: {
         "X-PNE-AI-Source": "live",
         "X-PNE-AI-Latency": String(Date.now() - startedAt),

@@ -9,6 +9,7 @@ import {
   endingText,
   engineStatusText,
   fallbackCommentsText,
+  fallbackFinalReportTextForEnding,
   fallbackFinalReportText,
   fallbackReactionText,
   fallbackRewriteText,
@@ -89,6 +90,8 @@ describe("i18n helpers", () => {
     expect(fallbackRewriteText("zh").strategy).toContain("宫廷警戒");
     expect(fallbackCommentsText("zh")).toHaveLength(6);
     expect(fallbackFinalReportText("zh")).toContain("这一局收在游行前的混乱里");
+    expect(fallbackFinalReportTextForEnding("narrativeLiberation", "zh")).toContain("证据留在页面上");
+    expect(fallbackFinalReportTextForEnding("unstableFeed", "zh")).toBe(fallbackFinalReportText("zh"));
     expect(initialCommentsText("zh")).toHaveLength(6);
     expect(initialFeedEventText("zh").title).toBe("游戏已开始");
     expect(commentsForToneText("praise", "zh")[0]).toContain("愚人");

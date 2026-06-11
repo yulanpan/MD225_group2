@@ -1,6 +1,7 @@
-import type { AiReaction, FinalReport, GeneratedComments, PublicComment, RewriteResult } from "./types";
+import type { AiReaction, EndingId, FinalReport, GeneratedComments, PublicComment, RewriteResult } from "./types";
 import {
   fallbackCommentsText,
+  fallbackFinalReportTextForEnding,
   fallbackFinalReportText,
   fallbackReactionText,
   fallbackRewriteText,
@@ -21,6 +22,9 @@ type StreamOptions = RetryOptions & {
   maxCompletionTokens?: number;
 };
 
+const defaultBaseUrl = "https://ai.exit0.link/v1";
+const defaultModel = "gpt-5.3-codex-spark";
+
 const engineSystem = `You are Palace AI inside an interactive adaptation of The Emperor's New Clothes.
 
 You are not a helpful assistant. You are an in-world AI system used by the royal palace to manage public communication.
@@ -35,18 +39,18 @@ function getApiKey() {
 
 function normalizeBaseUrl(value: string | undefined) {
   const trimmed = value?.trim();
-  const raw = trimmed && trimmed !== "undefined" ? trimmed : "https://api.openai.com/v1";
+  const raw = trimmed && trimmed !== "undefined" ? trimmed : defaultBaseUrl;
   const withoutTrailingSlash = raw.replace(/\/+$/, "");
   return withoutTrailingSlash.endsWith("/v1") ? withoutTrailingSlash : `${withoutTrailingSlash}/v1`;
 }
 
 function getProviderMode(): ProviderMode {
-  return process.env.OPENAI_PROVIDER_MODE === "responses" ? "responses" : "chat";
+  return process.env.OPENAI_PROVIDER_MODE === "chat" ? "chat" : "responses";
 }
 
 function getModel() {
   const model = process.env.OPENAI_MODEL?.trim();
-  return model && model !== "undefined" ? model : "gpt-5.2";
+  return model && model !== "undefined" ? model : defaultModel;
 }
 
 function getMaxOutputTokens() {
@@ -308,6 +312,10 @@ export function fallbackCommentsForLanguage(language: LanguageCode): GeneratedCo
 
 export function fallbackFinalReportForLanguage(language: LanguageCode): FinalReport {
   return { report: fallbackFinalReportText(language) };
+}
+
+export function fallbackFinalReportForEnding(endingId: EndingId, language: LanguageCode): FinalReport {
+  return { report: fallbackFinalReportTextForEnding(endingId, language) };
 }
 
 export function hasOpenAiKey() {

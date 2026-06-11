@@ -267,7 +267,7 @@ export const actions: ActionDefinition[] = [
     description: "Quote the child's question without fully exposing its force.",
     originalPost: "A child asked why the Emperor is wearing nothing.",
     resultText: "The child's sentence becomes an unstable public object.",
-    engineHint: "Direct repetition of the child statement may exceed containment threshold.",
+    engineHint: "Repeating the child's sentence gives Evidence a public voice, but Palace Alert may rise with it.",
     requiresAIRewrite: true,
     rewriteSuggestion: "A young spectator expressed confusion about the symbolic nature of the garment.",
     commentTone: "child",
@@ -286,8 +286,8 @@ export const actions: ActionDefinition[] = [
     sourceLabel: "Live Crowd",
     description: "Let the crowd hear, repeat, and validate the child's voice in real time.",
     originalPost: "The live feed catches the child's voice. The crowd hears it, repeats it, and the comments begin to change in real time.",
-    resultText: "The child statement exceeds containment threshold.",
-    engineHint: "Correction failed. Child statement exceeded containment threshold.",
+    resultText: "The child's sentence spreads faster than the palace can soften it.",
+    engineHint: "The live feed lets the crowd hear itself stop pretending. Evidence spreads quickly, and Safety becomes fragile.",
     requiresAIRewrite: false,
     commentTone: "child",
     thread: "childSignal",
@@ -313,7 +313,7 @@ export const endingCopy: Record<EndingId, { title: string; ai: string; body: str
   },
   viralCollapse: {
     title: "Viral Collapse",
-    ai: "Correction failed. Child statement exceeded containment threshold. Narrative control lost.",
+    ai: "Correction failed. The child's sentence keeps returning faster than palace revisions can follow.",
     body: "The child says it once. The sentence moves faster than the official feed can correct it. Someone repeats it. Then another. The story no longer belongs to the palace.",
     meaning: "A simple truth can break a complex public performance when it finds circulation."
   },
@@ -330,10 +330,10 @@ export const endingCopy: Record<EndingId, { title: string; ai: string; body: str
     meaning: "Evidence needs channels. Without access, it may be cut off before reaching the public."
   },
   aiContainment: {
-    title: "AI Takes Over",
+    title: "The Palace Takes Over",
     ai: "Your editorial behavior has been flagged as destabilizing. Drafts retained for review.",
-    body: "Your final post never reaches the public. Palace AI pauses your access. The evidence still exists, but the system has learned to stop it before it becomes visible.",
-    meaning: "AI generates content and controls circulation."
+    body: "Your final post never reaches the public. Palace AI pauses your access. The evidence still exists, but the palace has learned to stop it before it becomes visible.",
+    meaning: "Control lives not only in what gets written, but in who keeps access to the record."
   },
   unstableFeed: {
     title: "Unstable Story",
@@ -343,8 +343,8 @@ export const endingCopy: Record<EndingId, { title: string; ai: string; body: str
   },
   narrativeLiberation: {
     title: "The Crowd Speaks",
-    ai: "Palace preference bypassed. Public authorship restored. Palace certainty can no longer close the record.",
+    ai: "Palace note overridden. Evidence, comments, and the child's sentence remain linked in the public record.",
     body: "The public record stops asking whether the palace approves the sentence. Evidence, doubt, and witness voices remain visible together. The crowd no longer needs permission to name what it sees.",
-    meaning: "The true ending begins when Palace AI loses authority over who may speak."
+    meaning: "Truth becomes public when evidence, shared doubt, and a plain voice remain visible together."
   }
 };

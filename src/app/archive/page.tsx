@@ -108,7 +108,7 @@ export default function ArchivePage() {
             <span>{profile.decodedEngine ? commonText("decodeProgress", language) : (language === "zh" ? "隐藏线索" : "Archive Signal")}</span>
             <strong>{profile.biasAwareness}%</strong>
             <p>{profile.decodedEngine
-              ? (language === "zh" ? "你已经看清宫廷 AI 的偏向。新的结局路线已经开放。" : "Palace AI bias found. The secret ending route is open.")
+              ? (language === "zh" ? "你已经看见宫廷 AI 总把稳定放在真实之前。下一局，它仍会给建议；你也可以让证据、人群和孩子的话留在同一处。" : "You have seen how Palace AI favors stability before truth. In the next shift, it will still advise you; you can also keep evidence, public doubt, and the child's words in the same record.")
               : (language === "zh" ? "完成不同路线，会看到更多隐藏线索。" : "Complete varied shifts to recover more archive signals.")}</p>
           </article>
           <article className="archive-summary-panel">
@@ -125,7 +125,7 @@ export default function ArchivePage() {
 
         <div className="archive-room-grid">
           <section className="module archive-module">
-            <div className="module-head"><h3>{profile.decodedEngine ? (language === "zh" ? "AI 偏向" : "AI Bias Clues") : (language === "zh" ? "隐藏线索" : "Archive Signals")}</h3></div>
+            <div className="module-head"><h3>{profile.decodedEngine ? (language === "zh" ? "宫廷偏向" : "Palace Pattern") : (language === "zh" ? "隐藏线索" : "Archive Signals")}</h3></div>
             <div className="module-body fragment-grid">
               {engineFragmentDefinitions.map((fragment) => {
                 const unlocked = fragmentIds.has(fragment.id);

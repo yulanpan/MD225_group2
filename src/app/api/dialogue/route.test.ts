@@ -178,8 +178,8 @@ describe("dialogue API routes", () => {
     const providerStream = new ReadableStream({
       start(controller) {
         const enc = new TextEncoder();
-        controller.enqueue(enc.encode("data: {\"choices\":[{\"delta\":{\"content\":\"Signal\"}}]}\n\n"));
-        controller.enqueue(enc.encode("data: {\"choices\":[{\"delta\":{\"content\":\" received.\"}}]}\n\n"));
+        controller.enqueue(enc.encode("data: {\"type\":\"response.output_text.delta\",\"delta\":\"Signal\"}\n\n"));
+        controller.enqueue(enc.encode("data: {\"type\":\"response.output_text.delta\",\"delta\":\" received.\"}\n\n"));
         controller.enqueue(enc.encode("data: [DONE]\n\n"));
         controller.close();
       }
@@ -200,7 +200,7 @@ describe("dialogue API routes", () => {
     expect(response.headers.get("X-PNE-AI-Source")).toBe("live");
     const fetchBody = JSON.parse((vi.mocked(fetch).mock.calls[0]?.[1]?.body ?? "{}") as string);
     expect(fetchBody.temperature).toBe(0.42);
-    expect(fetchBody.messages[1].content).toContain("Do not invent new scenes, witnesses, inspections, direct observations, garment details, or facts");
+    expect(fetchBody.input[1].content).toContain("Do not invent new scenes, witnesses, inspections, direct observations, garment details, or facts");
     const text = await response.text();
     expect(text).toContain("Signal");
     expect(text).toContain("received.");
@@ -234,13 +234,13 @@ describe("dialogue API routes", () => {
   it("sanitizes live quick replies and sends hallucination guardrails", async () => {
     process.env.OPENAI_API_KEY = "sk-test";
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
-      choices: [{ message: { content: JSON.stringify({
+      output_text: JSON.stringify({
         quickReplies: [
           { id: "specifics", label: "Give me specifics.", playerLine: "Give me specifics.", intent: "clarify", moodDelta: { trust: 0, agitation: 0, openness: 1, leverage: -1 } },
           { id: "preserve", label: "<b>I will preserve the record.</b>", playerLine: "I will preserve the record.", intent: "protect", moodDelta: { trust: 1, agitation: -1, openness: 1, leverage: 0 } },
           { id: "specifics-copy", label: "Give me specifics.", playerLine: "Give me specifics.", intent: "clarify", moodDelta: { trust: 0, agitation: 0, openness: 1, leverage: -1 } }
         ]
-      }) } }]
+      })
     }), { status: 200 })));
     const event = fallbackDialogueEvent("engine-audit-risk", "engineAudit", "en");
     const transcript = [
@@ -259,7 +259,7 @@ describe("dialogue API routes", () => {
 
     expect(response.headers.get("X-PNE-AI-Source")).toBe("live");
     const fetchBody = JSON.parse((vi.mocked(fetch).mock.calls[0]?.[1]?.body ?? "{}") as string);
-    expect(fetchBody.messages[1].content).toContain("Do not invent new evidence");
+    expect(fetchBody.input[1].content).toContain("Do not invent new evidence");
     const data = await response.json();
     expect(data.quickReplies.map((reply: { label: string }) => reply.label)).toEqual(["Give me specifics.", "I will preserve the record."]);
   });
@@ -335,6 +335,37 @@ describe("dialogue API routes", () => {
     await expect(response.json()).resolves.toMatchObject({
       outcomeTag: "reassureAuthority",
       summary: "The exchange was recorded."
+    });
+  });
+
+  it("does not let live child-guardian resolution suppress a protected original quote", async () => {
+    process.env.OPENAI_API_KEY = "sk-test";
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
+      choices: [{ message: { content: JSON.stringify({
+        outcomeTag: "containNarrative",
+        summary: "The guardian accepted anonymity while the spoken fact stayed public.",
+        feedTitle: "Incoming Transmission",
+        feedText: "The child's name stayed protected, but the record kept the sentence."
+      }) } }]
+    }), { status: 200 })));
+    const event = fallbackDialogueEvent("child-guardian-signal", "childGuardian", "en");
+    const response = await RESOLVE(new Request("http://localhost/api/dialogue/resolve", {
+      method: "POST",
+      body: JSON.stringify({
+        language: "en",
+        event,
+        state: { ...initialState, childAmplified: true },
+        transcript: [
+          { role: "speaker", content: event.openingLine, createdAt: "now" },
+          { role: "player", content: "I will protect the name, but keep the fact he spoke.", createdAt: "now" }
+        ]
+      })
+    }));
+
+    expect(response.headers.get("X-PNE-AI-Source")).toBe("live");
+    await expect(response.json()).resolves.toMatchObject({
+      outcomeTag: "surfaceDoubt",
+      summary: "The guardian accepted anonymity while the spoken fact stayed public."
     });
   });
 

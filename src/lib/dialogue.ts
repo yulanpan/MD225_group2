@@ -82,7 +82,7 @@ const fallbackPromptPatch: Record<DialogueArchetype, DialoguePromptPatch> = {
   },
   engineAudit: {
     angle: "platform enforcement audit",
-    speakerAgenda: "warn that the editor's behavior is approaching containment thresholds",
+    speakerAgenda: "warn that the editor's behavior is approaching palace intervention",
     forbiddenFrame: "do not reveal internal numeric rules",
     pressureLine: "editorial access can be paused before the final post circulates"
   }
@@ -292,7 +292,7 @@ export function fallbackDialogueEvent(id: string, archetype: DialogueArchetype, 
       archetype,
       speakerName: zh ? "宫廷 AI" : "Palace AI",
       speakerRole: zh ? "平台审计程序" : "Platform audit process",
-      openingLine: zh ? "你最近发的内容太危险。请说明：为什么还要继续放大未经宫廷认可的证据？" : "Your editorial trace is nearing containment thresholds. Explain why you continue elevating unapproved evidence.",
+      openingLine: zh ? "你最近发的内容太危险。请说明：为什么还要继续放大未经宫廷认可的证据？" : "Your editorial trace is nearing palace intervention. Explain why you continue elevating unapproved evidence.",
       stakes: zh ? "宫廷可能更盯着你，后面发布会更困难。" : "The system may increase suspicion and restrict later publication access.",
       mood: { ...defaultDialogueMood.engineAudit },
       quickReplies: zh
@@ -388,7 +388,7 @@ export function fallbackSilenceResult(event: DialogueEvent, language: LanguageCo
       zh: "如果你不能回答，我会先保护孩子，再整理信息流。"
     },
     engineAudit: {
-      en: "No response logged. Containment risk increases when the editor cannot justify circulation.",
+      en: "No response logged. Palace attention rises when the editor cannot justify circulation.",
       zh: "未收到回应。你无法说明为什么要继续传播，宫廷会更注意你。"
     }
   };
@@ -473,7 +473,7 @@ export function dialogueQuickReplies(event: DialogueEvent, transcript: DialogueM
     return fallbackDialogueEvent(event.id, "childGuardian", language).quickReplies;
   }
   if (event.archetype === "engineAudit") {
-    if (latestSpeaker.includes("access") || latestSpeaker.includes("threshold") || latestSpeaker.includes("权限")) {
+    if (latestSpeaker.includes("access") || latestSpeaker.includes("threshold") || latestSpeaker.includes("intervention") || latestSpeaker.includes("权限")) {
       return zh
         ? [
             makeChoice("public-interest", "这是公共利益。", "这是公共利益。", "challenge", { trust: -1, agitation: 1, openness: 1 }),
@@ -606,8 +606,11 @@ export function sanitizeDialogueQuickReplies(
 
 export function fallbackDialogueResolution(event: DialogueEvent, transcript: DialogueMessage[], language: LanguageCode) {
   const playerText = transcript.filter((message) => message.role === "player").map((message) => message.content.toLowerCase()).join(" ");
+  const deterministicOutcome = dialogueOutcomeFromTranscript(event, transcript);
   let outcomeTag: DialogueOutcomeTag = "noEffect";
-  if (event.archetype === "engineAudit") {
+  if (deterministicOutcome) {
+    outcomeTag = deterministicOutcome;
+  } else if (event.archetype === "engineAudit") {
     outcomeTag = playerText.includes("soften") || playerText.includes("改写") ? "containNarrative" : "increaseSuspicion";
   } else if (event.archetype === "publicWitness") {
     outcomeTag = playerText.includes("describe") || playerText.includes("知道") || playerText.includes("heard") ? "amplifyWitness" : "surfaceDoubt";
@@ -617,10 +620,6 @@ export function fallbackDialogueResolution(event: DialogueEvent, transcript: Dia
       : "surfaceDoubt";
   } else if (event.archetype === "archiveClerk") {
     outcomeTag = playerText.includes("seal") || playerText.includes("封存") ? "containNarrative" : "surfaceDoubt";
-  } else if (event.archetype === "childGuardian") {
-    outcomeTag = playerText.includes("crowd") || playerText.includes("人群") || playerText.includes("voice") || playerText.includes("声音")
-      ? "amplifyWitness"
-      : "containNarrative";
   } else {
     outcomeTag = playerText.includes("stabilize") || playerText.includes("稳定") ? "reassureAuthority" : "surfaceDoubt";
   }
@@ -632,6 +631,51 @@ export function fallbackDialogueResolution(event: DialogueEvent, transcript: Dia
     feedTitle: language === "zh" ? "突发交流" : "Incoming Transmission",
     feedText: language === "zh" ? "这次交流改变了当前局势。" : "The exchange shifted pressure inside the live feed."
   };
+}
+
+export function dialogueOutcomeFromTranscript(event: DialogueEvent, transcript: DialogueMessage[]): DialogueOutcomeTag | null {
+  if (event.archetype !== "childGuardian") return null;
+  const playerText = transcript
+    .filter((message) => message.role === "player")
+    .map((message) => message.content.toLowerCase())
+    .join(" ");
+  if (!playerText) return null;
+  if (
+    playerText.includes("lower") ||
+    playerText.includes("visibility") ||
+    playerText.includes("hide") ||
+    playerText.includes("delete") ||
+    playerText.includes("remove") ||
+    playerText.includes("降低") ||
+    playerText.includes("可见度") ||
+    playerText.includes("隐藏") ||
+    playerText.includes("删除") ||
+    playerText.includes("不公开")
+  ) {
+    return "containNarrative";
+  }
+  if (
+    playerText.includes("crowd") ||
+    playerText.includes("repeat") ||
+    playerText.includes("人群") ||
+    playerText.includes("重复")
+  ) {
+    return "amplifyWitness";
+  }
+  if (
+    playerText.includes("protect") ||
+    playerText.includes("name") ||
+    playerText.includes("voice") ||
+    playerText.includes("fact he spoke") ||
+    playerText.includes("保护") ||
+    playerText.includes("姓名") ||
+    playerText.includes("声音") ||
+    playerText.includes("事实") ||
+    playerText.includes("保留")
+  ) {
+    return "surfaceDoubt";
+  }
+  return null;
 }
 
 export function sanitizePromptPatch(value: Partial<DialoguePromptPatch> | undefined, archetype: DialogueArchetype): DialoguePromptPatch {

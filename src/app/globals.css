@@ -2524,6 +2524,7 @@ h2 {
 .ending-summary-card .doc-label,
 .ending-summary-card h3,
 .ending-summary-card > p,
+.ending-summary-card .hidden-record-note,
 .ending-summary-card .archive-meta {
   grid-column: 1;
 }
@@ -2546,6 +2547,16 @@ h2 {
 .ending-summary-card .archive-meta {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin: 10px 0 4px;
+}
+
+.hidden-record-note {
+  border-left: 3px solid var(--cyan-hot);
+  margin: 2px 0 4px;
+  padding: 10px 12px;
+  background: rgba(0, 220, 255, 0.08);
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+  line-height: 1.55;
 }
 
 .ending-summary-card .ending-unlocks,

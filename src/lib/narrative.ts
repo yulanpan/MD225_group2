@@ -265,7 +265,7 @@ export function endingFacetsForState(state: GameState, endingId: EndingId, langu
 
   const editorConsequence = (() => {
     if (endingId === "narrativeLiberation") {
-      return zh ? "你不只是值班编辑了。你把证据和人群声音留在了同一处。" : "You are no longer only the desk editor. You kept evidence and public voices in the same place.";
+      return zh ? "你没有替宫廷收束记录。你把证据和人群声音留在了同一处。" : "You did not close the record for the palace. You kept evidence and public voices in the same place.";
     }
     if (endingId === "aiContainment") {
       return zh ? "宫廷不再把发布台交给你。之后每一次发声都会先被它检查。" : "The palace no longer trusts you with the publishing desk. Later posts will be checked first.";
@@ -287,7 +287,7 @@ export function endingFacetsForState(state: GameState, endingId: EndingId, langu
       return zh ? "宫廷发现：人人都会转述的一句话最难处理。" : "The palace learns that one sentence anyone can repeat is the hardest thing to manage.";
     }
     if (endingId === "aiContainment") {
-      return zh ? "宫廷发现：与其逐句改写，不如先夺走发布权。" : "The palace learns that taking the publish button away can work better than rewriting every sentence.";
+      return zh ? "宫廷发现：与其逐句改写，不如先夺走发布权。" : "The palace learns that taking publishing access away can work better than rewriting every sentence.";
     }
     if (endingId === "algorithmicConsensus") {
       return zh ? "宫廷发现：证据不必消失，只要被更顺口的赞美盖过去。" : "The palace learns that evidence does not have to vanish if praise can cover it first.";
