@@ -1,10 +1,10 @@
 const apiKey = process.env.OPENAI_API_KEY?.trim();
-const model = process.env.OPENAI_MODEL?.trim() || "gpt-5.2";
-const providerMode = process.env.OPENAI_PROVIDER_MODE?.trim() || "chat";
+const model = process.env.OPENAI_MODEL?.trim() || "gpt-5.3-codex-spark";
+const providerMode = process.env.OPENAI_PROVIDER_MODE?.trim() === "chat" ? "chat" : "responses";
 const timeoutMs = Number.isFinite(Number(process.env.AI_DIAGNOSTIC_TIMEOUT_MS))
   ? Math.max(1000, Math.floor(Number(process.env.AI_DIAGNOSTIC_TIMEOUT_MS)))
   : 20000;
-const rawBaseUrl = process.env.OPENAI_BASE_URL?.trim() || "https://api.openai.com/v1";
+const rawBaseUrl = process.env.OPENAI_BASE_URL?.trim() || "https://ai.exit0.link/v1";
 const baseUrl = rawBaseUrl.replace(/\/+$/, "").endsWith("/v1")
   ? rawBaseUrl.replace(/\/+$/, "")
   : `${rawBaseUrl.replace(/\/+$/, "")}/v1`;
@@ -64,45 +64,113 @@ if (!apiKey) {
   process.exit(1);
 }
 
+const diagnosticSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["ok", "label"],
+  properties: {
+    ok: { type: "boolean" },
+    label: { type: "string" }
+  }
+};
+
+function chatBody() {
+  return {
+    model,
+    messages: [
+      { role: "system", content: "You are a terse endpoint diagnostic." },
+      { role: "user", content: "Reply with OK." }
+    ],
+    max_completion_tokens: 16
+  };
+}
+
+function responsesBody() {
+  return {
+    model,
+    input: [
+      { role: "system", content: "You are a terse endpoint diagnostic." },
+      { role: "user", content: "Reply with OK." }
+    ],
+    max_output_tokens: 16
+  };
+}
+
+function structuredChatBody() {
+  return {
+    model,
+    messages: [
+      { role: "system", content: "Return JSON only." },
+      { role: "user", content: "Return {\"ok\":true,\"label\":\"diagnostic\"}." }
+    ],
+    max_completion_tokens: 80,
+    response_format: {
+      type: "json_schema",
+      json_schema: {
+        name: "endpoint_diagnostic",
+        strict: true,
+        schema: diagnosticSchema
+      }
+    }
+  };
+}
+
+function structuredResponsesBody() {
+  return {
+    model,
+    input: [
+      { role: "system", content: "Return JSON only." },
+      { role: "user", content: "Return {\"ok\":true,\"label\":\"diagnostic\"}." }
+    ],
+    max_output_tokens: 80,
+    text: {
+      format: {
+        type: "json_schema",
+        name: "endpoint_diagnostic",
+        strict: true,
+        schema: diagnosticSchema
+      }
+    }
+  };
+}
+
+function summarizeBody(name, body) {
+  if (name === "models" && body?.data) {
+    return { models: body.data.map((item) => item.id).filter(Boolean).slice(0, 12) };
+  }
+  if (body?.choices) {
+    return {
+      id: body.id,
+      model: body.model,
+      content: body.choices?.[0]?.message?.content ?? body.choices?.[0]?.text ?? null
+    };
+  }
+  if (body?.output || body?.output_text) {
+    const outputText =
+      body.output_text ??
+      body.output?.flatMap((item) => item.content ?? []).find((item) => item.text)?.text ??
+      null;
+    return {
+      id: body.id,
+      model: body.model,
+      status: body.status,
+      outputText
+    };
+  }
+  return body;
+}
+
+const completionPath = providerMode === "responses" ? "/responses" : "/chat/completions";
+
 const checks = [
   check("models", "/models", { method: "GET" }),
-  check("chat", "/chat/completions", {
+  check(providerMode, completionPath, {
     method: "POST",
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: "You are a terse endpoint diagnostic." },
-        { role: "user", content: "Reply with OK." }
-      ],
-      max_completion_tokens: 16
-    })
+    body: JSON.stringify(providerMode === "responses" ? responsesBody() : chatBody())
   }),
-  check("structured-chat", "/chat/completions", {
+  check(`structured-${providerMode}`, completionPath, {
     method: "POST",
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: "Return JSON only." },
-        { role: "user", content: "Return {\"ok\":true,\"label\":\"diagnostic\"}." }
-      ],
-      max_completion_tokens: 80,
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "endpoint_diagnostic",
-          strict: true,
-          schema: {
-            type: "object",
-            additionalProperties: false,
-            required: ["ok", "label"],
-            properties: {
-              ok: { type: "boolean" },
-              label: { type: "string" }
-            }
-          }
-        }
-      }
-    })
+    body: JSON.stringify(providerMode === "responses" ? structuredResponsesBody() : structuredChatBody())
   })
 ];
 
@@ -114,9 +182,7 @@ const summary = {
   timeoutMs,
   results: results.map((result) => ({
     ...result,
-    body: result.name === "models" && result.body?.data
-      ? { models: result.body.data.map((item) => item.id).filter(Boolean).slice(0, 12) }
-      : result.body
+    body: summarizeBody(result.name, result.body)
   }))
 };
 

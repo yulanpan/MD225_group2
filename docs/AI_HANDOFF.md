@@ -53,25 +53,23 @@ All live generation should go through `src/lib/ai.ts`. Do not call provider APIs
 Environment variables:
 
 - `OPENAI_API_KEY` - required only for live AI generation.
-- `OPENAI_BASE_URL` - defaults to `https://api.openai.com/v1`.
-- `OPENAI_MODEL` - defaults to `gpt-5.2`.
+- `OPENAI_BASE_URL` - defaults to `https://ai.exit0.link/v1`.
+- `OPENAI_MODEL` - defaults to `gpt-5.3-codex-spark`.
 - `OPENAI_MAX_OUTPUT_TOKENS` - optional numeric cap.
-- `OPENAI_PROVIDER_MODE` - `chat` by default, or `responses`.
+- `OPENAI_PROVIDER_MODE` - `responses` by default, or `chat` for compatible `/v1/chat/completions` providers.
 
-For Xiaomi Mimo OpenAI-compatible calls with console API keys (`sk-...`, such as keys created on the API Keys page), use chat mode:
+Current OpenAI-compatible deployment target:
 
 ```sh
-OPENAI_BASE_URL=https://api.xiaomimimo.com/v1
-OPENAI_MODEL=mimo-v2.5-pro
-OPENAI_PROVIDER_MODE=chat
+OPENAI_BASE_URL=https://ai.exit0.link/v1
+OPENAI_MODEL=gpt-5.3-codex-spark
+OPENAI_PROVIDER_MODE=responses
 ```
 
-Token Plan keys use a different `tp-...` credential shape and endpoint; do not point ordinary console `sk-...` keys at `token-plan-cn.xiaomimimo.com`.
-
-Do not commit real API keys. To check a local endpoint/key without writing secrets to the repo, run:
+Set `OPENAI_API_KEY` as a local or hosting-platform secret. Do not commit real API keys. To check a local endpoint/key without writing secrets to the repo, run:
 
 ```sh
-OPENAI_API_KEY=... OPENAI_BASE_URL=https://api.xiaomimimo.com/v1 OPENAI_MODEL=mimo-v2.5-pro OPENAI_PROVIDER_MODE=chat pnpm ai:diagnose
+OPENAI_API_KEY=... OPENAI_BASE_URL=https://ai.exit0.link/v1 OPENAI_MODEL=gpt-5.3-codex-spark OPENAI_PROVIDER_MODE=responses pnpm ai:diagnose
 ```
 
 The diagnostic uses Node `fetch` with a default 20 second request timeout. Override with `AI_DIAGNOSTIC_TIMEOUT_MS=30000` if needed. The app uses Node/Next `fetch`; if the diagnostic times out while curl works, treat it as a local network or provider protocol compatibility issue rather than adding a curl fallback to the game runtime.
