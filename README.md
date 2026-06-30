@@ -14,7 +14,7 @@
 
 <br />
 
-<img src="public/images/report/title-screen.jpg" alt="The Emperor's Feed title screen" width="82%" />
+<img src="public/images/report/crowd-speaks-ending.png" alt="The Crowd Speaks hidden ending" width="82%" />
 
 </div>
 
@@ -38,13 +38,13 @@ The finished project includes a title screen, tutorial, operational dashboard, a
 
 The images below are taken from the final group report document.
 
-| Palace Feed Desk | Tutorial Briefing |
+| Title Screen | Palace Feed Desk |
 |---|---|
-| <img src="public/images/report/palace-feed-desk.jpg" alt="Palace Feed Desk dashboard" width="100%" /> | <img src="public/images/report/tutorial-briefing.jpg" alt="Tutorial briefing modal" width="100%" /> |
+| <img src="public/images/report/title-screen.jpg" alt="The Emperor's Feed title screen" width="100%" /> | <img src="public/images/report/palace-feed-desk.jpg" alt="Palace Feed Desk dashboard" width="100%" /> |
 
-| Hidden Ending: The Crowd Speaks |
+| Tutorial Briefing |
 |---|
-| <img src="public/images/report/crowd-speaks-ending.png" alt="The Crowd Speaks hidden ending" width="100%" /> |
+| <img src="public/images/report/tutorial-briefing.jpg" alt="Tutorial briefing modal" width="100%" /> |
 
 ## Gameplay
 

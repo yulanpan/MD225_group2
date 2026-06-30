@@ -14,7 +14,7 @@
 
 <br />
 
-<img src="public/images/report/title-screen.jpg" alt="皇帝的信息流标题页" width="82%" />
+<img src="public/images/report/crowd-speaks-ending.png" alt="真相由众人说出隐藏结局" width="82%" />
 
 </div>
 
@@ -38,13 +38,13 @@
 
 以下图片均来自最终 group report 文档。
 
-| 宫廷发布台 | 新手教程 |
+| 标题页 | 宫廷发布台 |
 |---|---|
-| <img src="public/images/report/palace-feed-desk.jpg" alt="宫廷发布台 dashboard" width="100%" /> | <img src="public/images/report/tutorial-briefing.jpg" alt="新手教程弹窗" width="100%" /> |
+| <img src="public/images/report/title-screen.jpg" alt="皇帝的信息流标题页" width="100%" /> | <img src="public/images/report/palace-feed-desk.jpg" alt="宫廷发布台 dashboard" width="100%" /> |
 
-| 隐藏结局：真相由众人说出 |
+| 新手教程 |
 |---|
-| <img src="public/images/report/crowd-speaks-ending.png" alt="真相由众人说出隐藏结局" width="100%" /> |
+| <img src="public/images/report/tutorial-briefing.jpg" alt="新手教程弹窗" width="100%" /> |
 
 ## 玩法
 
