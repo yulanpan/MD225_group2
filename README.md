@@ -8,64 +8,146 @@
 
 **Language:** [EN](README.md) · [CN](README.zh-CN.md)
 
-[Code](https://github.com/yulanpan/MD225_group2) · [Demo Flow](#suggested-demo-flow) · [Local Setup](#quick-start) · [Project Structure](#project-structure)
+[Concept](#concept) · [Gameplay](#gameplay) · [System Design](#system-design) · [Technical Architecture](#technical-architecture) · [Run Locally](#run-locally)
 
 **Pan Yulan · Huang Xuanning · Wu Sitong · Du Sihan · Wang Zhiran**
+
+<br />
+
+<img src="public/images/background-king-with-figure.png" alt="The Emperor's Feed visual background" width="82%" />
 
 </div>
 
 ---
 
+## Concept
+
+*The Emperor's Feed* adapts Hans Christian Andersen's **The Emperor's New Clothes** into a contemporary platform-control interface. The project asks a media question rather than a simple moral one:
+
+> If everyone can already sense that something is false, what kind of system keeps the falsehood publicly stable?
+
+The player enters the palace media office as the **Palace Feed Editor**. Before the royal parade begins, they have only six editorial actions to decide which claims, evidence, comments, private notes, and direct voices enter the public record. The game turns the familiar fairy tale into a playable system about feed visibility, official wording, public hesitation, AI-assisted rewriting, and collective recognition.
+
 ## Abstract
 
-*The Emperor's Feed* reimagines Hans Christian Andersen's **The Emperor's New Clothes** as a contemporary social-feed control system. Instead of retelling the fairy tale as a linear story, the project turns it into a playable palace publishing desk: the player becomes the **Palace Feed Editor**, making six editorial decisions before the royal parade begins.
+In Andersen's story, the lie survives because public doubt is dangerous. Officials praise what they cannot see, the crowd performs agreement, and the child's plain sentence matters because it breaks the rules of public speech. *The Emperor's Feed* remediates that structure as a bilingual Next.js web game: a palace publishing desk where every post has consequences.
 
-Each action changes what the public can see, repeat, doubt, archive, or lose access to. The system tracks Evidence, Palace Pressure, Spread, Public Doubt, Safety, and Palace Alert, transforming the fairy tale's central question into a media-system problem: truth does not win simply because it exists; it needs visibility, circulation, shared recognition, and protection from institutional rewriting.
+The finished project includes a title screen, tutorial, operational dashboard, account and guest play, cloud saves, archive records, achievements, layered audio, multiple endings, deterministic game rules, and Palace AI responses with offline fallback text. Live AI can enrich rewrites, comments, dialogue, guidance, and reports, but the core game loop and endings remain rule-based and reproducible.
 
-The project combines Next.js, React, TypeScript, local rule-based game logic, bilingual interface writing, optional OpenAI-compatible generation, deterministic fallback text, audio scenes, accounts, cloud saves, achievements, archives, and multiple endings. AI appears inside the story as the **Palace Narrative Engine**, a fictional system that can advise, rewrite, generate comments, and produce reports, while final outcomes remain controlled by deterministic local rules.
+## Gameplay
 
-## Key Contributions
+The player does not simply choose whether to "tell the truth." They decide how truth moves through a controlled media system.
 
-1. **A fairy tale remediated as a platform interface.**
-   The project turns the Emperor's court into a publishing backend, replacing linear narration with dashboards, metrics, comments, AI advice, pop-ups, archives, and player decisions.
+| Step | Player Action | Narrative Function |
+|---|---|---|
+| 1 | Choose a source | Tailors, ministers, public comments, and the child's voice expose different parts of the story. |
+| 2 | Preview consequences | The player sees how a post may change evidence, safety, public doubt, or palace attention. |
+| 3 | Publish or accept rewrite | Direct evidence can be softened by Palace AI, while safer wording can protect the editor. |
+| 4 | Read the feed | Comments, AI guidance, metric shifts, and public records show how the story is changing. |
+| 5 | Reach an ending | The final result depends on what became visible, what circulated, and who kept access to the publishing desk. |
 
-2. **A six-action narrative control loop.**
-   Each run gives the player six editorial actions before the parade. These actions influence public evidence, palace pressure, viral spread, public doubt, player safety, and palace alert.
+Each run is short but strategic: six actions, more possible routes than available moves, and several endings that reflect different media states.
 
-3. **AI as an in-world narrative force.**
-   The Palace Narrative Engine is not presented as a neutral assistant. It acts as a fictional institutional system that recommends safer wording, reframes evidence, monitors risk, and stabilizes the palace story.
+## System Design
 
-4. **Bilingual interface design.**
-   English and Simplified Chinese are both supported in the game interface, tutorial, dashboard copy, endings, achievements, and fallback AI text.
+### Sources
 
-5. **Playable with or without live AI.**
-   OpenAI-compatible generation can enrich comments, rewrites, dialogue, and final reports, while deterministic fallback content keeps the full game playable offline.
+The dashboard converts characters and social forces from the fairy tale into editorial sources.
 
-6. **Replayable endings and archive memory.**
-   Multiple endings, achievements, archive records, hidden engine fragments, and replay objectives help players gradually understand what the system protects.
-
-## Game Overview
-
-| Area | Description |
+| Source | Role in the System |
 |---|---|
-| Role | Palace Feed Editor |
-| Core Loop | Choose source -> preview consequence -> publish or accept rewrite -> observe metrics -> reach ending |
-| Action Limit | Six editorial actions before the parade |
-| Metrics | Evidence, Palace Pressure, Spread, Public Doubt, Safety, Palace Alert |
-| AI Role | In-world Palace Narrative Engine for advice, rewrites, comments, dialogue, and reports |
-| Languages | English and Simplified Chinese |
-| Save System | Guest localStorage saves and optional account/cloud saves through SQLite |
+| Tailors' Room | Official claims, fabric language, loom evidence, and the first layer of deception. |
+| Ministers' Reports | Public authority, private fear, and contradictions inside palace legitimacy. |
+| Public Comments | Crowd repetition, isolated doubt, shared recognition, and comment visibility. |
+| Child's Voice | The simplest truth, risky because it is direct and hard to absorb into palace language. |
+
+### Metrics
+
+The game uses six readable metrics so players can understand why a choice matters without reading a rule manual.
+
+| Metric | Meaning |
+|---|---|
+| Evidence | Verifiable material entering the public record. |
+| Palace Pressure | Official authority making disagreement costly. |
+| Spread | How far a post travels, whether or not it is true. |
+| Public Doubt | Whether people can see that others also hesitate. |
+| Safety | The editor's remaining protection from palace retaliation. |
+| Palace Alert | How close the palace is to seizing back control of the publishing desk. |
+
+### Endings
+
+The endings are not simple good/bad branches. They describe different information states:
+
+- A lie can remain stable when praise stays public and doubt stays private.
+- Evidence can exist but still be buried by safer, repeatable language.
+- Truth can spread too fast and expose the editor before the public record is strong enough.
+- The strongest outcome requires evidence, shared doubt, and the child's plain sentence to remain connected.
+
+## Palace AI
+
+The AI is part of the fiction. It appears as the **Palace Narrative Engine**, a calm institutional system that protects palace stability. It can:
+
+- recommend safer editorial decisions;
+- rewrite direct posts into more ambiguous language;
+- generate public comments and feed reactions;
+- open dialogue interruptions;
+- produce final reports after a run.
+
+The AI layer is intentionally not the rule engine. State changes, action locks, achievements, and endings are calculated locally. If no API key is configured, the app returns deterministic fallback text so the submitted project remains playable in classroom, demo, and archival settings.
+
+## Media Framing
+
+The project connects production practice with several course concepts:
+
+| Concept | How the Game Uses It |
+|---|---|
+| Media convergence | Story text, interface, game rules, comments, audio, AI text, accounts, and archives become one playable artefact. |
+| Remediation | A nineteenth-century fairy tale becomes a social-feed dashboard and publishing backend. |
+| Hypertext and electronic literature | The player builds a path through sources, posts, records, and endings instead of reading a fixed sequence. |
+| Participatory culture | Public comments can become collective recognition, but participation is still shaped by platform visibility. |
+| Remix culture | Andersen's tale is recombined with moderation, ranking, AI rewriting, and platform governance. |
+
+## Technical Architecture
+
+The project is a Next.js 16 application written in React 19 and TypeScript. The code separates the narrative surface from the deterministic rule engine so the game can stay testable even when AI text varies.
+
+| Layer | Main Files |
+|---|---|
+| App routes and screens | `src/app/` |
+| Main dashboard loop | `src/app/dashboard/dashboard-client.tsx` |
+| Action data and source zones | `src/lib/game-data.ts` |
+| Rule engine and ending logic | `src/lib/game-rules.ts` |
+| Dialogue interruptions | `src/lib/dialogue.ts` |
+| Bilingual copy and glossary | `src/lib/i18n.ts` |
+| AI-compatible client and fallbacks | `src/lib/ai.ts` |
+| Accounts and cloud saves | `src/lib/auth.ts`, `src/lib/profile.ts` |
+| Tests | `src/**/*.test.ts`, `e2e/*.spec.ts` |
+
+## Features
+
+- Bilingual English and Simplified Chinese interface.
+- Six-action narrative loop with preview, confirmation, and final report.
+- Multiple endings, achievements, archive memory, and replay objectives.
+- Palace AI advice, rewrites, generated comments, dialogue, and reports.
+- Deterministic fallback content when live AI is unavailable.
+- Guest play through browser storage.
+- Optional account login and SQLite-backed cloud saves.
+- Audio scenes for title, dashboard, dialogue, archive, and endings.
+- Vitest unit/API tests and Playwright flow/visual checks.
+- Docker support for packaged deployment.
 
 ## Suggested Demo Flow
 
-1. Open the title screen and switch between English and Chinese.
-2. Start a new shift and enter the tutorial.
-3. Publish one palace-friendly action and one evidence-forward action.
-4. Show how metrics, comments, AI guidance, and Palace Alert respond.
-5. Trigger or show a dialogue interruption.
-6. Continue to an ending and open the archive page.
+1. Open the title screen and show the language switch.
+2. Start a new shift and follow the tutorial into the dashboard.
+3. Publish one palace-friendly action to show stability-oriented play.
+4. Publish one evidence-forward action to show risk, comments, and metric changes.
+5. Show Palace AI advice or a rewrite prompt.
+6. Trigger or show a dialogue interruption.
+7. Continue to an ending and explain how the final report reflects the route.
+8. Open the archive to show endings, achievements, and replay memory.
 
-## Quick Start
+## Run Locally
 
 ```bash
 pnpm install
@@ -78,9 +160,9 @@ Open:
 http://127.0.0.1:7987
 ```
 
-The app also works without an AI key. Server routes return deterministic fallback content where live generation is unavailable.
+The app works without an AI key. Server routes return deterministic fallback content where live generation is unavailable.
 
-## Environment Variables
+## Environment
 
 Copy `.env.example` to `.env.local` if live AI or persistent account data is needed:
 
@@ -106,7 +188,7 @@ Endpoint diagnostic:
 OPENAI_API_KEY=... pnpm ai:diagnose
 ```
 
-## Build, Test, and Run
+## Build and Test
 
 ```bash
 pnpm lint
@@ -134,17 +216,6 @@ Docker:
 docker compose up --build
 ```
 
-## Tech Stack
-
-- **Framework:** Next.js 16 App Router
-- **Interface:** React 19, TypeScript
-- **Animation:** GSAP, Motion
-- **Validation:** Zod and structured JSON schemas
-- **Storage:** localStorage for guest play; SQLite for account/cloud saves
-- **AI Integration:** OpenAI-compatible server routes with fallback behavior
-- **Testing:** Vitest and Playwright
-- **Deployment Support:** Docker and Docker Compose
-
 ## Project Structure
 
 ```text
@@ -164,7 +235,7 @@ e2e/                         Playwright flow and visual checks
 docs/                        Handoff and copy-review notes
 ```
 
-## Team Contributions
+## Team
 
 | Member | Main Role |
 |---|---|
@@ -173,10 +244,6 @@ docs/                        Handoff and copy-review notes
 | Wu Sitong | Content organization, story logic review, route testing, player-flow feedback |
 | Du Sihan | Visual references, media support, presentation assets, demo recording/editing |
 | Wang Zhiran | Documentation, report drafting, references, proofreading, formatting |
-
-## Design Statement
-
-The project argues that public truth is shaped by media conditions: whether evidence is visible, whether doubt can circulate, whether people recognize one another's uncertainty, and whether the system allows the record to remain open.
 
 ## Repository Notes
 
