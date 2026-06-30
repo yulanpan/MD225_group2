@@ -59,6 +59,10 @@ OPENAI_BASE_URL=https://ai.exit0.link/v1
 OPENAI_MODEL=gpt-5.3-codex-spark
 OPENAI_MAX_OUTPUT_TOKENS=1000
 OPENAI_PROVIDER_MODE=responses
+OPENAI_REASONING_EFFORT=low
+OPENAI_HTTP_TRANSPORT=fetch
+OPENAI_HTTP_TIMEOUT_SECONDS=30
+OPENAI_CURL_USE_PROXY=false
 DATA_DIR=.data
 AUTH_COOKIE_SECURE=false
 AUTH_SESSION_DAYS=30
@@ -68,6 +72,8 @@ AUTH_SESSION_DAYS=30
 
 - `chat` - sends requests to `/v1/chat/completions`
 - `responses` - sends requests to `/v1/responses`
+
+`OPENAI_REASONING_EFFORT` applies to compatible chat providers. Use `low` for faster in-game responses, or `none`/`off` to omit the parameter.
 
 Do not commit `.env.local` or real API keys.
 

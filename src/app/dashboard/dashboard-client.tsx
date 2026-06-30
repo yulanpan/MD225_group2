@@ -364,6 +364,23 @@ function fallbackRewrite(language: LanguageCode): RewriteResult {
   };
 }
 
+function riskLevelFromPreview(preview: ActionPreview): AiReaction["riskLevel"] {
+  if (preview.riskBand === "high" || preview.riskBand === "severe") return "high";
+  if (preview.riskBand === "medium") return "medium";
+  return "low";
+}
+
+function localReactionForAction(action: ActionDefinition, preview: ActionPreview, language: LanguageCode): AiReaction {
+  const copy = actionText(action.id, language);
+  const fallback = fallbackReaction(language);
+  return {
+    engineMessage: copy.engineHint,
+    riskLevel: riskLevelFromPreview(preview),
+    suggestedRewrite: copy.rewriteSuggestion ?? fallback.suggestedRewrite,
+    recommendation: action.requiresAIRewrite ? "accept_rewrite" : "publish_original"
+  };
+}
+
 function fallbackComments(language: LanguageCode): GeneratedComments {
   const comments = fallbackCommentsText(language);
   return { comments, publicComments: publicCommentsFromStrings(comments, language) };
@@ -812,15 +829,7 @@ export default function DashboardClient() {
   }
 
   async function refreshGuidance(nextState: GameState, latestAction?: string, mode = guidanceMode) {
-    const profile = loadProfile();
-    const result = await postJson<GuidanceResult>("/api/guidance", {
-      language,
-      mode,
-      state: nextState,
-      profile,
-      latestAction,
-      history: nextState.history.map((entry) => entry.actionTitle)
-    }, {
+    const fallback: GuidanceResult = {
       mode,
       message: language === "zh"
         ? mode === "coach"
@@ -831,9 +840,11 @@ export default function DashboardClient() {
           : "Palace AI online: I will steady the parade story, protect Safety, and avoid posts that raise Palace Alert.",
       objective: language === "zh" ? "优先选择能稳住公众说法、保住你的安全的行动。" : "Prioritize actions that keep the public script controlled while preserving your Safety.",
       risk: "medium"
-    });
-    setGuidance(result.data);
-    setGuidanceSource(result.source);
+    };
+    setGuidance(fallback);
+    setGuidanceSource("fallback");
+    void nextState;
+    void latestAction;
   }
 
   function armDialogueTimer() {
@@ -984,18 +995,9 @@ export default function DashboardClient() {
     unlockAudio();
     setVisualPhase("scanning");
     setEngineStatus("evaluating");
-    const reactionResult = await postJson<AiReaction>("/api/ai-reaction", {
-      actionId: action.id,
-      language,
-      state,
-      history: state.history.map((entry) => entry.actionTitle)
-    }, {
-      ...fallbackReaction(language),
-      engineMessage: actionText(action.id, language).engineHint,
-      suggestedRewrite: actionText(action.id, language).rewriteSuggestion ?? fallbackReaction(language).suggestedRewrite
-    });
-    const reaction = reactionResult.data;
-    setEngineSource(reactionResult.source);
+    const preview = getActionPreview(action.id, state, undefined, language);
+    const reaction = localReactionForAction(action, preview, language);
+    setEngineSource("fallback");
 
     if (action.requiresAIRewrite) {
       setEngineStatus("rewriting");
@@ -1024,7 +1026,7 @@ export default function DashboardClient() {
     }
 
     const kind = classifyActionKind(action);
-    setPendingCommand({ action, reaction, kind, preview: getActionPreview(action.id, state, undefined, language) });
+    setPendingCommand({ action, reaction, kind, preview });
     setVisualPhase("previewing");
     setLastRiskKind(kind);
     setEngineMessage(reaction.engineMessage);

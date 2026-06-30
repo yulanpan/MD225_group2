@@ -28,6 +28,16 @@ class MockAudio {
 
 const mockAudioInstances: MockAudio[] = [];
 
+function audibleMusicScenes() {
+  return mockAudioInstances
+    .filter((audio) => audio.dataset.scene && !audio.paused && audio.volume > 0)
+    .map((audio) => audio.dataset.scene);
+}
+
+function audibleMusicCount() {
+  return mockAudioInstances.filter((audio) => !audio.paused && audio.volume > 0).length;
+}
+
 function AudioHarness() {
   const audio = useGameAudio();
   const initialized = useRef(false);
@@ -38,6 +48,22 @@ function AudioHarness() {
     audio.setScene("dashboard");
     audio.setLayerIntensity("pressure", 1);
     audio.unlock();
+  }, [audio]);
+
+  return null;
+}
+
+function SceneSwitchHarness() {
+  const audio = useGameAudio();
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
+    audio.setScene("dashboard");
+    audio.setLayerIntensity("pressure", 1);
+    audio.unlock();
+    window.setTimeout(() => audio.setScene("dialogue"), 650);
   }, [audio]);
 
   return null;
@@ -81,5 +107,27 @@ describe("AudioProvider controls", () => {
       expect(audio.paused).toBe(true);
       expect(audio.volume).toBe(0);
     }
+  });
+
+  it("keeps exactly one music track audible while switching scenes", async () => {
+    render(
+      <AudioProvider>
+        <SceneSwitchHarness />
+      </AudioProvider>
+    );
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(620);
+    });
+    expect(audibleMusicScenes()).toEqual(["dashboard"]);
+    expect(audibleMusicCount()).toBe(1);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(80);
+    });
+
+    expect(audibleMusicScenes()).toEqual(["dialogue"]);
+    expect(audibleMusicCount()).toBe(1);
+    expect(mockAudioInstances.filter((audio) => audio.dataset.layer && !audio.paused && audio.volume > 0)).toHaveLength(0);
   });
 });

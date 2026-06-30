@@ -26,6 +26,7 @@ describe("AI helper", () => {
   const previousMode = process.env.OPENAI_PROVIDER_MODE;
   const previousModel = process.env.OPENAI_MODEL;
   const previousMaxOutputTokens = process.env.OPENAI_MAX_OUTPUT_TOKENS;
+  const previousReasoningEffort = process.env.OPENAI_REASONING_EFFORT;
 
   afterEach(() => {
     restoreEnv("OPENAI_API_KEY", previousKey);
@@ -33,6 +34,7 @@ describe("AI helper", () => {
     restoreEnv("OPENAI_PROVIDER_MODE", previousMode);
     restoreEnv("OPENAI_MODEL", previousModel);
     restoreEnv("OPENAI_MAX_OUTPUT_TOKENS", previousMaxOutputTokens);
+    restoreEnv("OPENAI_REASONING_EFFORT", previousReasoningEffort);
     vi.restoreAllMocks();
   });
 
@@ -117,6 +119,7 @@ describe("AI helper", () => {
     process.env.OPENAI_API_KEY = "sk-test";
     process.env.OPENAI_PROVIDER_MODE = "chat";
     process.env.OPENAI_MAX_OUTPUT_TOKENS = "800";
+    process.env.OPENAI_MODEL = "gpt-5.3-codex-spark";
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
       choices: [{ message: { content: JSON.stringify({ ok: true }) } }]
     }), { status: 200 })));
@@ -131,6 +134,28 @@ describe("AI helper", () => {
     expect(fetch).toHaveBeenCalledWith("https://ai.exit0.link/v1/chat/completions", expect.objectContaining({
       body: expect.stringContaining("\"max_completion_tokens\":800")
     }));
+    expect(fetch).toHaveBeenCalledWith("https://ai.exit0.link/v1/chat/completions", expect.objectContaining({
+      body: expect.stringContaining("\"reasoning_effort\":\"low\"")
+    }));
+  });
+
+  it("can omit chat reasoning effort for compatible providers that reject it", async () => {
+    process.env.OPENAI_API_KEY = "sk-test";
+    process.env.OPENAI_PROVIDER_MODE = "chat";
+    process.env.OPENAI_REASONING_EFFORT = "none";
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
+      choices: [{ message: { content: JSON.stringify({ ok: true }) } }]
+    }), { status: 200 })));
+
+    await callStructuredOutput<{ ok: boolean }>("test_schema", {
+      type: "object",
+      properties: { ok: { type: "boolean" } },
+      required: ["ok"],
+      additionalProperties: false
+    }, "Return ok.");
+
+    const requestInit = vi.mocked(fetch).mock.calls[0]?.[1] as RequestInit;
+    expect(String(requestInit.body)).not.toContain("reasoning_effort");
   });
 
   it("throws a safe error when the provider response fails", async () => {
@@ -177,6 +202,9 @@ describe("AI helper", () => {
     expect(fetch).toHaveBeenCalledWith("https://ai.exit0.link/v1/responses", expect.objectContaining({
       body: expect.stringContaining("\"stream\":true")
     }));
+    const requestInit = vi.mocked(fetch).mock.calls[0]?.[1] as RequestInit;
+    expect(String(requestInit.body)).toContain("plain text");
+    expect(String(requestInit.body)).toContain("Do not return JSON");
   });
 
   it("lists models from the configured provider", async () => {

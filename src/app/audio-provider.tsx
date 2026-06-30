@@ -5,7 +5,6 @@ import {
   audioSettingsStorageKey,
   defaultAudioSettings,
   loadAudioSettingsFromStorage,
-  musicLayers,
   musicScenes,
   type AudioSettings,
   type MusicLayer,
@@ -34,6 +33,17 @@ function setAudioVolume(audio: HTMLAudioElement, value: number) {
   audio.volume = Math.max(0, Math.min(1, value));
 }
 
+let exclusiveMusicAudio: HTMLAudioElement | null = null;
+
+function playExclusiveMusic(audio: HTMLAudioElement) {
+  if (exclusiveMusicAudio && exclusiveMusicAudio !== audio) {
+    exclusiveMusicAudio.pause();
+    setAudioVolume(exclusiveMusicAudio, 0);
+  }
+  exclusiveMusicAudio = audio;
+  return safePlay(audio);
+}
+
 export function AudioProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AudioSettings>(defaultAudioSettings);
   const [unlocked, setUnlocked] = useState(false);
@@ -60,6 +70,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     cancelFade(audio);
     audio.pause();
     setAudioVolume(audio, 0);
+    if (exclusiveMusicAudio === audio) exclusiveMusicAudio = null;
   }, [cancelFade]);
 
   const stopRetiredScenes = useCallback((except?: HTMLAudioElement) => {
@@ -85,28 +96,6 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     fadeTimers.current.set(audio, timer);
   }, [cancelFade]);
 
-  const crossfade = useCallback((current: HTMLAudioElement | null, next: HTMLAudioElement, targetVolume: number, duration: number) => {
-    cancelFade(current);
-    cancelFade(next);
-    const startedAt = Date.now();
-    const initialCurrentVolume = current?.volume ?? 0;
-    const timer = window.setInterval(() => {
-      const progress = Math.min(1, (Date.now() - startedAt) / duration);
-      setAudioVolume(next, targetVolume * progress);
-      if (current) setAudioVolume(current, initialCurrentVolume * (1 - progress));
-      if (progress < 1) return;
-      window.clearInterval(timer);
-      fadeTimers.current.delete(next);
-      if (current) {
-        fadeTimers.current.delete(current);
-        stopAudio(current);
-        retiredSceneAudio.current = retiredSceneAudio.current.filter((audio) => audio !== current);
-      }
-    }, 40);
-    fadeTimers.current.set(next, timer);
-    if (current) fadeTimers.current.set(current, timer);
-  }, [cancelFade, stopAudio]);
-
   const applyAllVolumes = useCallback((nextSettings: AudioSettings) => {
     const musicBlocked = nextSettings.muted || !nextSettings.musicEnabled;
     const activeScene = sceneAudio.current;
@@ -119,20 +108,14 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       if (musicBlocked) {
         activeScene.pause();
       } else if (unlockedRef.current && targetVolume > 0) {
-        void safePlay(activeScene);
+        void playExclusiveMusic(activeScene);
       }
     }
-    for (const [layer, audio] of Object.entries(layerAudio.current) as Array<[MusicLayer, HTMLAudioElement]>) {
+    for (const audio of Object.values(layerAudio.current)) {
+      if (!audio) continue;
       cancelFade(audio);
-      const config = musicLayers[layer];
-      const intensity = layerTargets.current[layer] ?? 0;
-      const targetVolume = musicBlocked ? 0 : config.volume * nextSettings.volume * intensity;
-      setAudioVolume(audio, targetVolume);
-      if (musicBlocked || targetVolume === 0) {
-        audio.pause();
-      } else if (unlockedRef.current) {
-        void safePlay(audio);
-      }
+      audio.pause();
+      setAudioVolume(audio, 0);
     }
   }, [cancelFade, stopRetiredScenes]);
 
@@ -159,14 +142,12 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   const unlock = useCallback(() => {
     setUnlocked(true);
     if (sceneAudio.current && settingsRef.current.musicEnabled && !settingsRef.current.muted) {
-      void safePlay(sceneAudio.current);
+      void playExclusiveMusic(sceneAudio.current);
     }
-    for (const [layer, audio] of Object.entries(layerAudio.current) as Array<[MusicLayer, HTMLAudioElement]>) {
-      if ((layerTargets.current[layer] ?? 0) > 0 && settingsRef.current.musicEnabled && !settingsRef.current.muted) {
-        void safePlay(audio);
-      }
+    for (const audio of Object.values(layerAudio.current)) {
+      stopAudio(audio);
     }
-  }, []);
+  }, [stopAudio]);
 
   useEffect(() => {
     const handlePointer = () => unlock();
@@ -195,15 +176,19 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     const current = sceneAudio.current;
     const duck = Boolean(options.duck);
     stopRetiredScenes(current ?? undefined);
+    for (const audio of Object.values(layerAudio.current)) {
+      stopAudio(audio);
+    }
     if (current?.dataset.scene === nextScene) {
       sceneDuck.current = duck;
       const targetVolume = settingsRef.current.muted || !settingsRef.current.musicEnabled
         ? 0
         : config.volume * settingsRef.current.volume * (duck ? 0.42 : 1);
-      if (unlockedRef.current && targetVolume > 0) void safePlay(current);
+      if (unlockedRef.current && targetVolume > 0) void playExclusiveMusic(current);
       fadeTo(current, targetVolume, 260);
       return;
     }
+    stopAudio(current);
     const next = new Audio(config.path);
     next.loop = config.loop;
     next.preload = "auto";
@@ -214,32 +199,15 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       : config.volume * settingsRef.current.volume * (duck ? 0.42 : 1);
     setAudioVolume(next, 0);
     sceneAudio.current = next;
-    if (unlockedRef.current && targetVolume > 0) void safePlay(next);
-    if (current) retiredSceneAudio.current = [...retiredSceneAudio.current, current];
-    crossfade(current, next, targetVolume, 620);
-  }, [crossfade, fadeTo, stopRetiredScenes]);
+    if (unlockedRef.current && targetVolume > 0) void playExclusiveMusic(next);
+    fadeTo(next, targetVolume, 260);
+  }, [fadeTo, stopAudio, stopRetiredScenes]);
 
   const setLayerIntensity = useCallback((layer: MusicLayer, intensity: number) => {
     const clamped = Math.max(0, Math.min(1, intensity));
     layerTargets.current[layer] = clamped;
-    const config = musicLayers[layer];
-    let audio = layerAudio.current[layer];
-    if (!audio) {
-      audio = new Audio(config.path);
-      audio.loop = true;
-      audio.preload = "auto";
-      audio.dataset.layer = layer;
-      setAudioVolume(audio, 0);
-      layerAudio.current[layer] = audio;
-    }
-    const targetVolume = settingsRef.current.muted || !settingsRef.current.musicEnabled
-      ? 0
-      : config.volume * settingsRef.current.volume * clamped;
-    if (unlockedRef.current && targetVolume > 0) void safePlay(audio);
-    fadeTo(audio, targetVolume, 420, () => {
-      if (targetVolume === 0) audio?.pause();
-    });
-  }, [fadeTo]);
+    stopAudio(layerAudio.current[layer]);
+  }, [stopAudio]);
 
   const value = useMemo<AudioContextValue>(() => ({
     unlocked,
