@@ -8,13 +8,13 @@
 
 **语言：** [EN](README.md) · [CN](README.zh-CN.md)
 
-[概念](#概念) · [玩法](#玩法) · [系统设计](#系统设计) · [技术架构](#技术架构) · [本地运行](#本地运行)
+[概念](#概念) · [项目截图](#项目截图) · [玩法](#玩法) · [系统设计](#系统设计) · [技术架构](#技术架构) · [本地运行](#本地运行)
 
 **Pan Yulan · Huang Xuanning · Wu Sitong · Du Sihan · Wang Zhiran**
 
 <br />
 
-<img src="public/images/background-king-with-figure.png" alt="皇帝的信息流视觉背景" width="82%" />
+<img src="public/images/report/title-screen.jpg" alt="皇帝的信息流标题页" width="82%" />
 
 </div>
 
@@ -33,6 +33,18 @@
 在安徒生的故事里，谎言能够维持，并不是因为布料真的可信，而是因为公开怀疑是危险的。官员称赞自己看不见的东西，人群表演一致，而孩子那句直白的话之所以重要，是因为它打破了公共发言的规则。《皇帝的信息流》把这个结构重新媒介化为一个中英双语 Next.js 网页游戏：一个每条发布都会带来后果的宫廷发布台。
 
 最终项目包含标题页、新手教程、操作台、游客与账号游玩、云存档、档案、成就、音频、多结局、本地确定性规则，以及带离线 fallback 的宫廷 AI 回应。在线 AI 可以丰富改写、评论、对话、指引和报告，但核心玩法和结局仍由本地规则计算，保证可复现和可测试。
+
+## 项目截图
+
+以下图片均来自最终 group report 文档。
+
+| 宫廷发布台 | 新手教程 |
+|---|---|
+| <img src="public/images/report/palace-feed-desk.jpg" alt="宫廷发布台 dashboard" width="100%" /> | <img src="public/images/report/tutorial-briefing.jpg" alt="新手教程弹窗" width="100%" /> |
+
+| 隐藏结局：真相由众人说出 |
+|---|
+| <img src="public/images/report/crowd-speaks-ending.png" alt="真相由众人说出隐藏结局" width="100%" /> |
 
 ## 玩法
 

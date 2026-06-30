@@ -8,13 +8,13 @@
 
 **Language:** [EN](README.md) · [CN](README.zh-CN.md)
 
-[Concept](#concept) · [Gameplay](#gameplay) · [System Design](#system-design) · [Technical Architecture](#technical-architecture) · [Run Locally](#run-locally)
+[Concept](#concept) · [Screenshots](#screenshots) · [Gameplay](#gameplay) · [System Design](#system-design) · [Technical Architecture](#technical-architecture) · [Run Locally](#run-locally)
 
 **Pan Yulan · Huang Xuanning · Wu Sitong · Du Sihan · Wang Zhiran**
 
 <br />
 
-<img src="public/images/background-king-with-figure.png" alt="The Emperor's Feed visual background" width="82%" />
+<img src="public/images/report/title-screen.jpg" alt="The Emperor's Feed title screen" width="82%" />
 
 </div>
 
@@ -33,6 +33,18 @@ The player enters the palace media office as the **Palace Feed Editor**. Before 
 In Andersen's story, the lie survives because public doubt is dangerous. Officials praise what they cannot see, the crowd performs agreement, and the child's plain sentence matters because it breaks the rules of public speech. *The Emperor's Feed* remediates that structure as a bilingual Next.js web game: a palace publishing desk where every post has consequences.
 
 The finished project includes a title screen, tutorial, operational dashboard, account and guest play, cloud saves, archive records, achievements, layered audio, multiple endings, deterministic game rules, and Palace AI responses with offline fallback text. Live AI can enrich rewrites, comments, dialogue, guidance, and reports, but the core game loop and endings remain rule-based and reproducible.
+
+## Screenshots
+
+The images below are taken from the final group report document.
+
+| Palace Feed Desk | Tutorial Briefing |
+|---|---|
+| <img src="public/images/report/palace-feed-desk.jpg" alt="Palace Feed Desk dashboard" width="100%" /> | <img src="public/images/report/tutorial-briefing.jpg" alt="Tutorial briefing modal" width="100%" /> |
+
+| Hidden Ending: The Crowd Speaks |
+|---|
+| <img src="public/images/report/crowd-speaks-ending.png" alt="The Crowd Speaks hidden ending" width="100%" /> |
 
 ## Gameplay
 
