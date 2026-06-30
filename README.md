@@ -168,13 +168,13 @@ docs/                        Handoff and copy-review notes
 
 ## Team Contributions
 
-| Member | Main Role | Workload |
-|---|---|---:|
-| Pan Yulan | Team leader, creative direction, architecture, main development, final polish | 40% |
-| Huang Xuanning | Development support, UI improvement, technical demo preparation | 20% |
-| Wu Sitong | Content organization, story logic review, route testing, player-flow feedback | 15% |
-| Du Sihan | Visual references, media support, presentation assets, demo recording/editing | 15% |
-| Wang Zhiran | Documentation, report drafting, references, proofreading, formatting | 10% |
+| Member | Main Role |
+|---|---|
+| Pan Yulan | Team leader, creative direction, architecture, main development, final polish |
+| Huang Xuanning | Development support, UI improvement, technical demo preparation |
+| Wu Sitong | Content organization, story logic review, route testing, player-flow feedback |
+| Du Sihan | Visual references, media support, presentation assets, demo recording/editing |
+| Wang Zhiran | Documentation, report drafting, references, proofreading, formatting |
 
 ## Design Statement
 
@@ -271,13 +271,13 @@ pnpm exec playwright install chromium
 
 ## 小组分工
 
-| 成员 | 主要角色 | 工作量 |
-|---|---|---:|
-| Pan Yulan | 组长、创意方向、系统架构、主要开发、最终整合 | 40% |
-| Huang Xuanning | 开发支持、UI 优化、技术演示准备 | 20% |
-| Wu Sitong | 内容整理、叙事逻辑检查、路线测试、玩家流程反馈 | 15% |
-| Du Sihan | 视觉参考、媒体支持、展示素材、demo 录制与剪辑 | 15% |
-| Wang Zhiran | 文档、报告初稿、参考资料、校对与格式整理 | 10% |
+| 成员 | 主要角色 |
+|---|---|
+| Pan Yulan | 组长、创意方向、系统架构、主要开发、最终整合 |
+| Huang Xuanning | 开发支持、UI 优化、技术演示准备 |
+| Wu Sitong | 内容整理、叙事逻辑检查、路线测试、玩家流程反馈 |
+| Du Sihan | 视觉参考、媒体支持、展示素材、demo 录制与剪辑 |
+| Wang Zhiran | 文档、报告初稿、参考资料、校对与格式整理 |
 
 ## 设计说明
 
